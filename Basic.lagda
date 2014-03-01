@@ -33,8 +33,8 @@ Agda's standard library symbols.
 
 \begin{code}
 data Exp : TyExp → Set where
-    V              : ∀ {t} → (v : ⁅ t ⁆) → Exp t
-    _+ₒ_            : (e₁ e₂ : Exp ℕₒ) → Exp ℕₒ
+    V                : ∀ {t} → (v : ⁅ t ⁆) → Exp t
+    _+ₒ_             : (e₁ e₂ : Exp ℕₒ) → Exp ℕₒ
     ifₒ_thenₒ_elseₒ_ : ∀ {t} → (c : Exp 𝔹ₒ) → (eₜ eₑ : Exp t) → Exp t
 
 infixl 4 _+ₒ_
@@ -49,7 +49,42 @@ open Data.Nat using (_+_)
 open Data.Bool using (if_then_else_)
 
 ⟦_⟧ : {t : TyExp} → Exp t → ⁅ t ⁆
-⟦ V v ⟧                    = v
-⟦ e₁ +ₒ e₂ ⟧                = ⟦ e₁ ⟧ + ⟦ e₂ ⟧
+⟦ V v ⟧                      = v
+⟦ e₁ +ₒ e₂ ⟧                 = ⟦ e₁ ⟧ + ⟦ e₂ ⟧
 ⟦ ifₒ_thenₒ_elseₒ_ c e₁ e₂ ⟧ = if ⟦ c ⟧ then ⟦ e₁ ⟧ else ⟦ e₂ ⟧ 
+\end{code}
+
+Now we move towards the second semantics for our expression language:
+compilation to bytecode and execution of bytecode in an abstract machine.
+
+First, we define "typed stacks", which are stacks indexed by lists of TyExp.
+Each element of the stack has therefore a corresponding type.
+
+\begin{code}
+open import Data.List using ([]; _∷_) renaming (List to [_])
+
+StackType : Set
+StackType = [ TyExp ]
+
+data Stack : StackType → Set where
+    ε   : Stack []
+    _▷_ : ∀ {t ts} → ⁅ t ⁆ → Stack ts → Stack (t ∷ ts)
+
+top : ∀ {t ts} → Stack (t ∷ ts) → ⁅ t ⁆
+top (v ▷ s) = v
+\end{code}
+
+To complete the definition of the abstract machine,
+we need to list the instructions of the bytecode operating on it, and give its semantics.
+
+In the listing of the bytecode instructions,
+it should be noted that each instruction is a function from _typed stack_ to typed stack.
+
+\begin{code}
+data Bytecode : StackType → StackType → Set where
+    SKIP : ∀ {s}    → Bytecode s s
+    PUSH : ∀ {t s}  → ⁅ t ⁆ → Bytecode s (t ∷ s)
+    ADD  : ∀ {s}    → Bytecode (ℕₒ ∷ ℕₒ ∷ s) (ℕₒ ∷ s)
+    IF   : ∀ {s s′} → (t : Bytecode s s′) → (e : Bytecode s s′) → Bytecode (𝔹ₒ ∷ s) s′
+    _⟫_  : ∀ {s₀ s₁ s₂} → Bytecode s₀ s₁ → Bytecode s₁ s₂ → Bytecode s₀ s₂
 \end{code}
