@@ -70,6 +70,8 @@ data Stack : StackType → Set where
     ε   : Stack []
     _▷_ : ∀ {t ts} → ⁅ t ⁆ → Stack ts → Stack (t ∷ ts)
 
+infixr 4 _▷_
+
 top : ∀ {t ts} → Stack (t ∷ ts) → ⁅ t ⁆
 top (v ▷ s) = v
 \end{code}
@@ -85,6 +87,39 @@ data Bytecode : StackType → StackType → Set where
     SKIP : ∀ {s}    → Bytecode s s
     PUSH : ∀ {t s}  → ⁅ t ⁆ → Bytecode s (t ∷ s)
     ADD  : ∀ {s}    → Bytecode (ℕₒ ∷ ℕₒ ∷ s) (ℕₒ ∷ s)
-    IF   : ∀ {s s′} → (t : Bytecode s s′) → (e : Bytecode s s′) → Bytecode (𝔹ₒ ∷ s) s′
+    IF   : ∀ {s s′} → Bytecode s s′ → Bytecode s s′ → Bytecode (𝔹ₒ ∷ s) s′
     _⟫_  : ∀ {s₀ s₁ s₂} → Bytecode s₀ s₁ → Bytecode s₁ s₂ → Bytecode s₀ s₂
+
+infixl 4 _⟫_
+
+open Data.Bool using (true; false)
+
+exec : ∀ {s s′} → Bytecode s s′ → Stack s → Stack s′
+exec SKIP s               = s
+exec (PUSH v) s           = v ▷ s
+exec ADD (n ▷ m ▷ s)      = n + m ▷ s
+exec (IF t e) (true  ▷ s) = exec t s
+exec (IF t e) (false ▷ s) = exec e s
+exec (c₁ ⟫ c₂) s          = exec c₂ (exec c₁ s)
+\end{code}
+
+Now, having our source and "target" languages,
+we are ready to define the compiler from one to the other:
+
+\begin{code}
+compile : ∀ {t s} → Exp t → Bytecode s (t ∷ s)
+compile (V v)                   = PUSH v
+compile (e₁ +ₒ e₂)              = compile e₂ ⟫ compile e₁ ⟫ ADD
+compile (ifₒ c thenₒ t elseₒ e) = compile c ⟫ IF (compile t) (compile e)
+\end{code}
+
+\begin{code}
+open import Relation.Binary.PropositionalEquality using (_≡_; refl; sym)
+
+correct : ∀ {t st} → (e : Exp t) → (s : Stack st) → ⟦ e ⟧ ▷ s ≡ exec (compile e) s
+correct (V v) s = refl
+correct (e₁ +ₒ e₂) s rewrite sym (correct e₂ s) | sym (correct e₁ (⟦ e₂ ⟧ ▷ s)) = refl
+correct (ifₒ c thenₒ t elseₒ e) s rewrite sym (correct c s) with ⟦ c ⟧
+... | true = correct t s
+... | false = correct e s
 \end{code}
