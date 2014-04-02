@@ -1,6 +1,12 @@
 In this file we "translate" the developments of the reference paper
 "A type-correct, stack-safe, provably correct expression compiler in Epigram" into Agda.
 
+There. Fixed it. We only need this for HFix. If we trust this is sound, hopefully we can continue our proof without losing too much credibility. I think this is safer than introducing non-positivity in our stack datatype. TODO: move to seperate file so the rest of our proof isn't contaminated.
+
+\begin{code}
+{-# OPTIONS --no-positivity-check #-}
+\end{code}
+
 \begin{code}
 module Basic where
 \end{code}
@@ -92,7 +98,13 @@ record HFunctor (Ip : Set) (Iq : Set) (F : (Ip -> Iq -> Set) -> (Ip -> Iq -> Set
   constructor isHFunctor
   field
     hmap : (a : Ip -> Iq -> Set) -> (b : Ip -> Iq -> Set) -> ( (ixp : Ip) -> (ixq : Iq) ->   a ixp ixq ->   b ixp ixq ) ->
-                                                             ( (ixp : Ip) -> (ixq : Iq) -> F a ixp ixq -> F b ixp ixq )  
+                 
+                                            ( (ixp : Ip) -> (ixq : Iq) -> F a ixp ixq -> F b ixp ixq )  
+record HFix (Ip : Set) (Iq : Set) (F : (Ip -> Iq -> Set) -> (Ip -> Iq -> Set) ) (ixp : Ip) (ixq : Iq) : Set where
+  constructor HIn
+  field
+    hout : F (HFix Ip Iq F) ixp ixq
+  
     
 
 data BytecodeF (r : StackType -> StackType -> Set) : (StackType -> StackType -> Set) where  
@@ -115,6 +127,13 @@ BytecodeFisFunctor =
   record {
     hmap = mapBytecodeF
   } 
+
+toFixed : (ixp ixq : StackType) -> Bytecode ixp ixq -> HFix StackType StackType BytecodeF ixp ixq
+toFixed = {!!}
+
+fromFixed : (ixp ixq : StackType) -> HFix StackType StackType BytecodeF ixp ixq -> Bytecode ixp ixq
+fromFixed = {!!}
+
 
 
 \end{code}
