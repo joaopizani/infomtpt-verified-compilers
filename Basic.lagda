@@ -97,9 +97,9 @@ data Bytecode : StackType → StackType → Set where
 record HFunctor (Ip : Set) (Iq : Set) (F : (Ip -> Iq -> Set) -> (Ip -> Iq -> Set)) : Set₁ where
   constructor isHFunctor
   field
-    hmap : (a : Ip -> Iq -> Set) -> (b : Ip -> Iq -> Set) -> ( (ixp : Ip) -> (ixq : Iq) ->   a ixp ixq ->   b ixp ixq ) ->
-                 
-                                            ( (ixp : Ip) -> (ixq : Iq) -> F a ixp ixq -> F b ixp ixq )  
+    hmap : (a : Ip -> Iq -> Set) -> (b : Ip -> Iq -> Set) 
+         -> ( (ixp : Ip) -> (ixq : Iq) ->   a ixp ixq ->   b ixp ixq )
+         -> ( (ixp : Ip) -> (ixq : Iq) -> F a ixp ixq -> F b ixp ixq )  
 record HFix (Ip : Set) (Iq : Set) (F : (Ip -> Iq -> Set) -> (Ip -> Iq -> Set) ) (ixp : Ip) (ixq : Iq) : Set where
   constructor HIn
   field
@@ -134,7 +134,10 @@ toFixed = {!!}
 fromFixed : (ixp ixq : StackType) -> HFix StackType StackType BytecodeF ixp ixq -> Bytecode ixp ixq
 fromFixed = {!!}
 
-
+fold : (r : StackType -> StackType -> Set) 
+    -> ( (ixp ixq : StackType) -> BytecodeF r ixp ixq                        -> r ixp ixq) 
+    -> ( (ixp ixq : StackType) -> HFix StackType StackType BytecodeF ixp ixq -> r ixp ixq)
+fold = {!!}
 
 \end{code}
 
