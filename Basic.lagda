@@ -1,8 +1,13 @@
 In this file we "translate" the developments of the reference paper
 "A type-correct, stack-safe, provably correct expression compiler in Epigram" into Agda.
 
+There. Fixed it. We only need this for HFix. If we trust this is sound, hopefully we can continue our proof without losing too much credibility. I think this is safer than introducing non-positivity in our stack datatype. TODO: move to seperate file so the rest of our proof isn't contaminated.
+
 \begin{code}
+{-# OPTIONS --no-positivity-check #-}
 module Basic where
+
+open import Data.Bool using (true; false)
 \end{code}
 
 First of all, as our expression language is typed, we need a _language of types_
@@ -92,7 +97,6 @@ data Bytecode : StackType → StackType → Set where
 
 infixl 4 _⟫_
 
-open Data.Bool using (true; false)
 
 exec : ∀ {s s′} → Bytecode s s′ → Stack s → Stack s′
 exec SKIP s               = s
@@ -113,6 +117,8 @@ compile (e₁ +ₒ e₂)              = compile e₂ ⟫ compile e₁ ⟫ ADD
 compile (ifₒ c thenₒ t elseₒ e) = compile c ⟫ IF (compile t) (compile e)
 \end{code}
 
+The correctness proof for the simple, tree-based bytecode.
+
 \begin{code}
 open import Relation.Binary.PropositionalEquality using (_≡_; refl; sym)
 
@@ -122,4 +128,50 @@ correct (e₁ +ₒ e₂) s rewrite sym (correct e₂ s) | sym (correct e₁ (⟦
 correct (ifₒ c thenₒ t elseₒ e) s rewrite sym (correct c s) with ⟦ c ⟧
 ... | true = correct t s
 ... | false = correct e s
+\end{code}
+
+A functor representation for the bytecode, so that we can proof tree ↔ graph equivalence.
+
+\begin{code}
+record HFunctor (Ip : Set) (Iq : Set) (F : (Ip -> Iq -> Set) -> (Ip -> Iq -> Set)) : Set₁ where
+  constructor isHFunctor
+  field
+    hmap : (a : Ip -> Iq -> Set) -> (b : Ip -> Iq -> Set) 
+         -> ( (ixp : Ip) -> (ixq : Iq) ->   a ixp ixq ->   b ixp ixq )
+         -> ( (ixp : Ip) -> (ixq : Iq) -> F a ixp ixq -> F b ixp ixq )  
+
+record HFix (Ip : Set) (Iq : Set) (F : (Ip -> Iq -> Set) -> (Ip -> Iq -> Set) ) (ixp : Ip) (ixq : Iq) : Set where
+  constructor HIn
+  field
+    hout : F (HFix Ip Iq F) ixp ixq
+  
+    
+
+data BytecodeF (r : StackType -> StackType -> Set) : (StackType -> StackType -> Set) where  
+    SKIP' : ∀ {s}    → BytecodeF r s s
+    PUSH' : ∀ {t s}  → ⁅ t ⁆ → BytecodeF r s (t ∷ s)
+    ADD'  : ∀ {s}    → BytecodeF r (ℕₒ ∷ ℕₒ ∷ s) (ℕₒ ∷ s)
+    IF'   : ∀ {s s′} → (t : r s s′) → (e : r s s′) → BytecodeF r (𝔹ₒ ∷ s) s′
+    _⟫⟫_  : ∀ {s₀ s₁ s₂} → r s₀ s₁ → r s₁ s₂ → BytecodeF r s₀ s₂
+
+mapBytecodeF : (a b : StackType -> StackType -> Set) -> ( (ixp : StackType) -> (ixq : StackType) ->           a ixp ixq ->           b ixp ixq) 
+                                                     -> ( (ixp : StackType) -> (ixq : StackType) -> BytecodeF a ixp ixq -> BytecodeF b ixp ixq)
+mapBytecodeF = {!!}
+
+BytecodeFisFunctor : HFunctor StackType StackType BytecodeF
+BytecodeFisFunctor =
+  record {
+    hmap = mapBytecodeF
+  } 
+
+toFixed : (ixp ixq : StackType) -> Bytecode ixp ixq -> HFix StackType StackType BytecodeF ixp ixq
+toFixed = {!!}
+
+fromFixed : (ixp ixq : StackType) -> HFix StackType StackType BytecodeF ixp ixq -> Bytecode ixp ixq
+fromFixed = {!!}
+
+fold : (r : StackType -> StackType -> Set) 
+    -> ( (ixp ixq : StackType) -> BytecodeF r ixp ixq                        -> r ixp ixq) 
+    -> ( (ixp ixq : StackType) -> HFix StackType StackType BytecodeF ixp ixq -> r ixp ixq)
+fold = {!!}
 \end{code}
