@@ -5,9 +5,10 @@ In this file we "translate" the developments of the reference paper
 {-# OPTIONS --no-positivity-check #-}
 module Basic where
 
-open import Data.Bool using (true; false)
+open import Data.Bool using (true; false; if_then_else_) renaming (Bool to 𝔹)
 open import Data.List using ([]; _∷_; replicate; _++_) renaming (List to [_])
 open import Data.Vec using (Vec) renaming ([] to ε; _∷_ to _◁_)
+open import Data.Nat using (ℕ; _+_)
 \end{code}
 
 First of all, as our expression language is typed, we need a _language of types_
@@ -16,20 +17,19 @@ subscripted with a lower-case "o" (OH):
 
 \begin{code}
 data TyExp : Set where
-    ℕₒ : TyExp
-    𝔹ₒ : TyExp
+    ℕₒ  : TyExp
+    𝔹ₒ  : TyExp
+    Vecₒ : TyExp → ℕ → TyExp
 \end{code}
 
 Together with defining the object language types,
 we define a mapping from object language types into Agda types.
 
 \begin{code}
-open import Data.Nat using (ℕ)
-open import Data.Bool using () renaming (Bool to 𝔹)
-
 ⁅_⁆ : TyExp → Set
-⁅ ℕₒ ⁆ = ℕ
-⁅ 𝔹ₒ ⁆ = 𝔹
+⁅ ℕₒ      ⁆ = ℕ
+⁅ 𝔹ₒ      ⁆ = 𝔹
+⁅ Vecₒ σ n ⁆ = Vec ⁅ σ ⁆ n
 \end{code}
 
 Now we can define an inductive family for the expressions of our object language,
@@ -39,8 +39,10 @@ Agda's standard library symbols.
 \begin{code}
 data Exp : TyExp → Set where
     V                : ∀ {t} → (v : ⁅ t ⁆) → Exp t
-    _+ₒ_             : (e₁ e₂ : Exp ℕₒ) → Exp ℕₒ
-    ifₒ_thenₒ_elseₒ_ : ∀ {t} → (c : Exp 𝔹ₒ) → (eₜ eₑ : Exp t) → Exp t
+    _+ₒ_              : (e₁ e₂ : Exp ℕₒ) → Exp ℕₒ
+    ifₒ_thenₒ_elseₒ_   : ∀ {t} → (c : Exp 𝔹ₒ) → (eₜ eₑ : Exp t) → Exp t
+    εₒ                : ∀ {σ} → Exp (Vecₒ σ 0)
+    _∷ₒ_              : ∀ {σ n} → σ → Exp (Vecₒ σ n) → Exp (Vecₒ σ (suc n))
 
 infixl 4 _+ₒ_
 \end{code}
@@ -50,13 +52,11 @@ Evaluation takes a _typed expression in out object language_ to a _corresponding
 We denote evaluation by using the usual "semantic brackets", "⟦" and "⟧".
 
 \begin{code}
-open Data.Nat using (_+_)
-open Data.Bool using (if_then_else_)
-
 ⟦_⟧ : {t : TyExp} → Exp t → ⁅ t ⁆
 ⟦ V v ⟧                      = v
 ⟦ e₁ +ₒ e₂ ⟧                 = ⟦ e₁ ⟧ + ⟦ e₂ ⟧
-⟦ ifₒ_thenₒ_elseₒ_ c e₁ e₂ ⟧ = if ⟦ c ⟧ then ⟦ e₁ ⟧ else ⟦ e₂ ⟧ 
+⟦ ifₒ_thenₒ_elseₒ_ c e₁ e₂ ⟧  = if ⟦ c ⟧ then ⟦ e₁ ⟧ else ⟦ e₂ ⟧
+⟦ []ₒ ⟧                       = ε
 \end{code}
 
 Now we move towards the second semantics for our expression language:
