@@ -1,13 +1,13 @@
 In this file we "translate" the developments of the reference paper
 "A type-correct, stack-safe, provably correct expression compiler in Epigram" into Agda.
 
-There. Fixed it. We only need this for HFix. If we trust this is sound, hopefully we can continue our proof without losing too much credibility. I think this is safer than introducing non-positivity in our stack datatype. TODO: move to seperate file so the rest of our proof isn't contaminated.
-
 \begin{code}
 {-# OPTIONS --no-positivity-check #-}
 module Basic where
 
 open import Data.Bool using (true; false)
+open import Data.List using ([]; _∷_; replicate; _++_) renaming (List to [_])
+open import Data.Vec using (Vec) renaming ([] to ε; _∷_ to _◁_)
 \end{code}
 
 First of all, as our expression language is typed, we need a _language of types_
@@ -66,7 +66,6 @@ First, we define "typed stacks", which are stacks indexed by lists of TyExp.
 Each element of the stack has therefore a corresponding type.
 
 \begin{code}
-open import Data.List using ([]; _∷_) renaming (List to [_])
 
 StackType : Set
 StackType = [ TyExp ]
@@ -91,6 +90,7 @@ it should be noted that each instruction is a function from _typed stack_ to typ
 data Bytecode : StackType → StackType → Set where
     SKIP : ∀ {s}    → Bytecode s s
     PUSH : ∀ {t s}  → ⁅ t ⁆ → Bytecode s (t ∷ s)
+    PUSHVEC : ∀ {σ s n} → Vec ⁅ σ ⁆ n → Bytecode s (replicate n σ ++ s) 
     ADD  : ∀ {s}    → Bytecode (ℕₒ ∷ ℕₒ ∷ s) (ℕₒ ∷ s)
     IF   : ∀ {s s′} → Bytecode s s′ → Bytecode s s′ → Bytecode (𝔹ₒ ∷ s) s′
     _⟫_  : ∀ {s₀ s₁ s₂} → Bytecode s₀ s₁ → Bytecode s₁ s₂ → Bytecode s₀ s₂
@@ -101,6 +101,8 @@ infixl 4 _⟫_
 exec : ∀ {s s′} → Bytecode s s′ → Stack s → Stack s′
 exec SKIP s               = s
 exec (PUSH v) s           = v ▷ s
+exec (PUSHVEC ε)        s = s
+exec (PUSHVEC (x ◁ xs)) s = x ▷ exec (PUSHVEC xs) s
 exec ADD (n ▷ m ▷ s)      = n + m ▷ s
 exec (IF t e) (true  ▷ s) = exec t s
 exec (IF t e) (false ▷ s) = exec e s
@@ -131,6 +133,11 @@ correct (ifₒ c thenₒ t elseₒ e) s rewrite sym (correct c s) with ⟦ c ⟧
 \end{code}
 
 A functor representation for the bytecode, so that we can proof tree ↔ graph equivalence.
+
+There. Fixed it. We only need this for HFix.
+If we trust this is sound, hopefully we can continue our proof without losing too much credibility.
+I think this is safer than introducing non-positivity in our stack datatype.
+TODO: move to seperate file so the rest of our proof isn't contaminated.
 
 \begin{code}
 record HFunctor (Ip : Set) (Iq : Set) (F : (Ip -> Iq -> Set) -> (Ip -> Iq -> Set)) : Set₁ where
