@@ -143,9 +143,9 @@ TODO: move to seperate file so the rest of our proof isn't contaminated.
 record HFunctor (Ip : Set) (Iq : Set) (F : (Ip -> Iq -> Set) -> (Ip -> Iq -> Set)) : Set₁ where
   constructor isHFunctor
   field
-    hmap : (a : Ip -> Iq -> Set) -> (b : Ip -> Iq -> Set) 
-         -> ( (ixp : Ip) -> (ixq : Iq) ->   a ixp ixq ->   b ixp ixq )
-         -> ( (ixp : Ip) -> (ixq : Iq) -> F a ixp ixq -> F b ixp ixq )  
+    hmap : {a : Ip -> Iq -> Set} -> {b : Ip -> Iq -> Set} 
+         -> ( {ixp : Ip} -> {ixq : Iq} ->   a ixp ixq ->   b ixp ixq )
+         -> ( {ixp : Ip} -> {ixq : Iq} -> F a ixp ixq -> F b ixp ixq )  
 
 record HFix (Ip : Set) (Iq : Set) (F : (Ip -> Iq -> Set) -> (Ip -> Iq -> Set) ) (ixp : Ip) (ixq : Iq) : Set where
   constructor HIn
@@ -161,8 +161,8 @@ data BytecodeF (r : StackType -> StackType -> Set) : (StackType -> StackType -> 
     IF'   : ∀ {s s′} → (t : r s s′) → (e : r s s′) → BytecodeF r (𝔹ₒ ∷ s) s′
     _⟫⟫_  : ∀ {s₀ s₁ s₂} → r s₀ s₁ → r s₁ s₂ → BytecodeF r s₀ s₂
 
-mapBytecodeF : (a b : StackType -> StackType -> Set) -> ( (ixp : StackType) -> (ixq : StackType) ->           a ixp ixq ->           b ixp ixq) 
-                                                     -> ( (ixp : StackType) -> (ixq : StackType) -> BytecodeF a ixp ixq -> BytecodeF b ixp ixq)
+mapBytecodeF : {a b : StackType -> StackType -> Set} -> ( {ixp ixq : StackType} ->           a ixp ixq ->           b ixp ixq) 
+                                                     -> ( {ixp ixq : StackType} -> BytecodeF a ixp ixq -> BytecodeF b ixp ixq)
 mapBytecodeF = {!!}
 
 BytecodeFisFunctor : HFunctor StackType StackType BytecodeF
@@ -177,8 +177,10 @@ toFixed = {!!}
 fromFixed : (ixp ixq : StackType) -> HFix StackType StackType BytecodeF ixp ixq -> Bytecode ixp ixq
 fromFixed = {!!}
 
-fold : (r : StackType -> StackType -> Set) 
-    -> ( (ixp ixq : StackType) -> BytecodeF r ixp ixq                        -> r ixp ixq) 
-    -> ( (ixp ixq : StackType) -> HFix StackType StackType BytecodeF ixp ixq -> r ixp ixq)
-fold = {!!}
+fold : {r : StackType -> StackType -> Set}
+    -> ( {ixp ixq : StackType} -> BytecodeF r ixp ixq                        -> r ixp ixq) 
+    -> ( {ixp ixq : StackType} -> HFix StackType StackType BytecodeF ixp ixq -> r ixp ixq)
+fold alg (HIn r) = 
+  let hmap = HFunctor.hmap BytecodeFisFunctor
+  in alg (hmap (fold alg) r)
 \end{code}
