@@ -13,10 +13,10 @@ record HFunctor {Ip Iq : Set} (F : (Ip -> Iq -> Set) -> (Ip -> Iq -> Set)) : Set
          -> ( {ixp : Ip} -> {ixq : Iq} ->   a ixp ixq ->   b ixp ixq )
          -> ( {ixp : Ip} -> {ixq : Iq} -> F a ixp ixq -> F b ixp ixq )  
 
-record HFix {Ip Iq : Set} (F : (Ip -> Iq -> Set) -> (Ip -> Iq -> Set) ) (ixp : Ip) (ixq : Iq) : Set where
+record HTree {Ip Iq : Set} (F : (Ip -> Iq -> Set) -> (Ip -> Iq -> Set) ) (ixp : Ip) (ixq : Iq) : Set where
   constructor HIn
   field
-    hout : F (HFix F) ixp ixq
+    hout : F (HTree F) ixp ixq
   
     
 
@@ -42,27 +42,27 @@ BytecodeFisFunctor =
     hmap = mapBytecodeF
   } 
 
-toFixed : {ixp ixq : StackType} -> Bytecode ixp ixq -> HFix BytecodeF ixp ixq
-toFixed Basic.SKIP = HIn SKIP
-toFixed (Basic.PUSH x) = HIn (PUSH x)
-toFixed Basic.ADD = HIn ADD
-toFixed (Basic.IF bc₁ bc₂) = HIn (IF (toFixed bc₁) (toFixed bc₂))
-toFixed (bc₁ Basic.⟫ bc₂) = HIn (toFixed bc₁ ⟫ toFixed bc₂)  
+toTree : {ixp ixq : StackType} -> Bytecode ixp ixq -> HTree BytecodeF ixp ixq
+toTree Basic.SKIP = HIn SKIP
+toTree (Basic.PUSH x) = HIn (PUSH x)
+toTree Basic.ADD = HIn ADD
+toTree (Basic.IF bc₁ bc₂) = HIn (IF (toTree bc₁) (toTree bc₂))
+toTree (bc₁ Basic.⟫ bc₂) = HIn (toTree bc₁ ⟫ toTree bc₂)  
 
-fromFixed : {ixp ixq : StackType} -> HFix BytecodeF ixp ixq -> Bytecode ixp ixq
-fromFixed (HIn SKIP) = Basic.SKIP
-fromFixed (HIn (PUSH x)) = Basic.PUSH x
-fromFixed (HIn ADD) = Basic.ADD
-fromFixed (HIn (IF t e)) = Basic.IF (fromFixed t) (fromFixed e)
-fromFixed (HIn (c₁ ⟫ c₂)) = fromFixed c₁ Basic.⟫ fromFixed c₂
+fromTree : {ixp ixq : StackType} -> HTree BytecodeF ixp ixq -> Bytecode ixp ixq
+fromTree (HIn SKIP) = Basic.SKIP
+fromTree (HIn (PUSH x)) = Basic.PUSH x
+fromTree (HIn ADD) = Basic.ADD
+fromTree (HIn (IF t e)) = Basic.IF (fromTree t) (fromTree e)
+fromTree (HIn (c₁ ⟫ c₂)) = fromTree c₁ Basic.⟫ fromTree c₂
 
 fold : {Ip Iq : Set} 
     -> {F : (Ip -> Iq -> Set) -> (Ip -> Iq -> Set)}
     -> HFunctor F
        
     -> {r : Ip -> Iq -> Set}
-    -> ( {ixp : Ip} {ixq : Iq} ->      F r ixp ixq -> r ixp ixq) 
-    -> ( {ixp : Ip} {ixq : Iq} -> HFix F   ixp ixq -> r ixp ixq)
+    -> ( {ixp : Ip} {ixq : Iq} ->       F r ixp ixq -> r ixp ixq) 
+    -> ( {ixp : Ip} {ixq : Iq} -> HTree F   ixp ixq -> r ixp ixq)
 fold functor alg (HIn r) = 
   let hmap = HFunctor.hmap functor
   in alg (hmap (fold functor alg) r)
