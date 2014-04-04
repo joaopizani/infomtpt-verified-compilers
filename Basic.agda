@@ -20,7 +20,7 @@ data TyScalarₛ : Set where
 
 data Tyₛ : Set where
     Sₛ   : (α : TyScalarₛ) → Tyₛ
-    Vecₛ : (β : TyScalarₛ) → ℕ → Tyₛ
+    Vecₛ : (β : TyScalarₛ) → (n : ℕ) → Tyₛ
 
 -- Together with defining the object language types,
 -- we define a mapping from object language types into Agda types.
@@ -71,9 +71,14 @@ toStackType (Vecₛ α n) = replicate n α
 
 data Stack : StackType → Set where
     ε    : Stack []
-    _▽_  : ∀ {α σ'} → ⁅ Sₛ α ⁆ → Stack σ' → Stack (α ∷ σ')
+    _▽_  : ∀ {α σ'} → ⁅ α ⁆' → Stack σ' → Stack (α ∷ σ')
 
 infixr 4 _▽_
+
+_▽▽_ : ∀ {σ s} → (x : ⁅ σ ⁆) → Stack s → Stack (toStackType σ ++ s)
+_▽▽_ {Sₛ α}           {t} x        s = x ▽ s
+_▽▽_ {Vecₛ β 0}       {t} ε        s = s
+_▽▽_ {Vecₛ β (suc n)} {t} (x ◁ xs) s = _▽_ {β} x (_▽▽_ {Vecₛ β n} {t} xs s)
 
 -- To complete the definition of the abstract machine,
 -- we need to list the instructions of the bytecode operating on it, and give its semantics.
@@ -107,16 +112,14 @@ compile εₛ                      = SKIP
 compile (x ◁ₛ xs)               = compile xs ⟫ compile x
 
 
--- TODO: have to change correctness statement (not SINGLE VALUE anymore on the stack)
-
 -- The correctness proof for the simple, tree-based bytecode.
--- correct : ∀ {σ σ'} → (e : Src σ) → (s : Stack σ') → ⟦ e ⟧ ▽ s ≡ exec (compile e) s
--- correct (V v) s = refl
--- correct (e₁ +ₒ e₂) s rewrite sym (correct e₂ s) | sym (correct e₁ (⟦ e₂ ⟧ ▽ s)) = refl
--- correct (ifₒ c thenₒ t elseₒ e) s rewrite sym (correct c s) with ⟦ c ⟧
--- ... | true = correct t s
--- ... | false = correct e s
--- correct εₒ s = {!!}
--- correct (x ◁ₒ xs) s = {!!}
+correct : ∀ {σ s'} → (e : Src σ) → (s : Stack s') → _▽▽_ {σ} {s'} ⟦ e ⟧ s ≡ exec (compile e) s
+correct (vₛ x) s = refl
+correct (e₁ +ₛ e₂) s rewrite sym (correct e₂ s) | sym (correct e₁ (⟦ e₂ ⟧ ▽ s)) = refl
+correct (ifₛ c thenₛ t elseₛ e) s rewrite sym (correct c s) with ⟦ c ⟧
+... | true = correct t s
+... | false = correct e s
+correct εₛ s = refl
+correct (x ◁ₛ xs) s rewrite correct x s | correct xs s = {!!}
 
 -- A functor representation for the bytecode, so that we can proof tree ↔ graph equivalence.
