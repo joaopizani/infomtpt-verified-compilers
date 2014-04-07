@@ -132,5 +132,10 @@ execT = foldTree BytecodeFisFunctor execAlg
 execG : ∀ {s s'} → HGraph BytecodeF s s' -> Stack s -> Stack s'
 execG = foldGraph BytecodeFisFunctor execAlg
 
- 
+unravel : 
+     {Ip Iq : Set} 
+  -> {F : (Ip -> Iq -> Set) -> (Ip -> Iq -> Set)} 
+  -> {ipx : Ip} -> {ipq : Iq} 
+  -> HFunctor F -> HGraph F ipx ipq -> HTree F ipx ipq
+unravel functor = foldGraph functor HTreeIn
 
