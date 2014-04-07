@@ -129,9 +129,11 @@ correctSc (ifₛ c thenₛ t elseₛ e) s
 correct : ∀ {σ s'} → (e : Src σ) → (s : Stack s')
           → evalPrepend {s'} {σ} ⟦ e ⟧  s ≡ exec (compile e) s
 correct {Sₛ α}           e s = correctSc e s
-correct {Vecₛ β n}       (ifₛ c thenₛ t elseₛ e) s = {!!}
+correct {Vecₛ β n}       (ifₛ c thenₛ t elseₛ e) s
+  rewrite sym (correctSc c s) with ⟦ c ⟧
+... | true  = correct t s
+... | false = correct e s
 correct {Vecₛ β .0}      εₛ s = refl
 correct {Vecₛ β (suc m)} {s'} (x ◁ₛ xs) s
     rewrite sym (correct xs s)
           | sym (correctSc x (evalPrepend {s'} {Vecₛ β m} ⟦ xs ⟧ s)) = refl
-
