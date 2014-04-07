@@ -3,13 +3,15 @@ module BytecodeF where
 
 open import Data.List using (_∷_)
 
+open import Level
+
 open import Basic using (𝔹ₛ; ℕₛ; StackType; Bytecode; ⁅_⁆')
 
 
-record HFunctor {Ip Iq : Set} (F : (Ip -> Iq -> Set) -> (Ip -> Iq -> Set)) : Set₁ where
+record HFunctor {i : Level} {Ip Iq : Set i} (F : (Ip -> Iq -> Set i) -> (Ip -> Iq -> Set i)) : Set (suc i) where
   constructor isHFunctor
   field
-    hmap : {a : Ip -> Iq -> Set} -> {b : Ip -> Iq -> Set} 
+    hmap : {a : Ip -> Iq -> Set i} -> {b : Ip -> Iq -> Set i} 
          -> ( {ixp : Ip} -> {ixq : Iq} ->   a ixp ixq ->   b ixp ixq )
          -> ( {ixp : Ip} -> {ixq : Iq} -> F a ixp ixq -> F b ixp ixq )  
 
@@ -19,13 +21,12 @@ record HTree {Ip Iq : Set} (F : (Ip -> Iq -> Set) -> (Ip -> Iq -> Set) ) (ixp : 
     treeOut : F (HTree F) ixp ixq
 
 data HGraph' {Ip Iq : Set} (F : (Ip -> Iq -> Set) -> (Ip -> Iq -> Set) ) (v : Set) (ixp : Ip) (ixq : Iq) : Set where
-  HGraphIn : F (HGraph' F v) ixp ixq -> HGraph' F v ixp ixq
+  HGraphIn  : F (HGraph' F v) ixp ixq -> HGraph' F v ixp ixq
   HGraphLet : (HGraph' F v ixp ixq) -> (v -> HGraph' F v ixp ixq) -> HGraph' F v ixp ixq  
   HGraphVar : v -> HGraph' F v ixp ixq
 
 data HGraph {Ip Iq : Set} (F : (Ip -> Iq -> Set) -> (Ip -> Iq -> Set) ) (ixp : Ip) (ixq : Iq) : Set₁ where
-  mkHGraph : (v : Set) -> (HGraph' F v ixp ixq) -> HGraph F ixp ixq
-
+  mkHGraph : ( {v : Set} -> (HGraph' F v ixp ixq) ) -> HGraph F ixp ixq
 
 data BytecodeF (r : StackType -> StackType -> Set) : (StackType -> StackType -> Set) where  
     SKIP : ∀ {s}    → BytecodeF r s s
@@ -63,13 +64,44 @@ fromTree (HTreeIn ADD) = Basic.ADD
 fromTree (HTreeIn (IF t e)) = Basic.IF (fromTree t) (fromTree e)
 fromTree (HTreeIn (c₁ ⟫ c₂)) = fromTree c₁ Basic.⟫ fromTree c₂
 
-fold : {Ip Iq : Set} 
-    -> {F : (Ip -> Iq -> Set) -> (Ip -> Iq -> Set)}
-    -> HFunctor F
-       
+foldTree :
+       {Ip Iq : Set} 
+    -> {F : (Ip -> Iq -> Set) -> (Ip -> Iq -> Set)}       
     -> {r : Ip -> Iq -> Set}
+    -> HFunctor F
     -> ( {ixp : Ip} {ixq : Iq} ->       F r ixp ixq -> r ixp ixq) 
     -> ( {ixp : Ip} {ixq : Iq} -> HTree F   ixp ixq -> r ixp ixq)
-fold functor alg (HTreeIn r) = 
+foldTree functor alg (HTreeIn r) = 
   let hmap = HFunctor.hmap functor
-  in alg (hmap (fold functor alg) r)
+  in alg (hmap (foldTree functor alg) r)
+
+foldGraph' :
+       {V : Set}
+    -> {Ip Iq : Set} 
+    -> {F : (Ip -> Iq -> Set) -> (Ip -> Iq -> Set)}       
+    -> {r : Ip -> Iq -> Set}
+    -> HFunctor F
+    -> ( {ixp : Ip} {ixq : Iq} -> V -> r ixp ixq )
+    -> ( {ixp : Ip} {ixq : Iq} -> r ixp ixq -> (V -> r ixp ixq) -> r ixp ixq)
+    -> ( {ixp : Ip} {ixq : Iq} ->         F r ixp ixq -> r ixp ixq) 
+    -> ( {ixp : Ip} {ixq : Iq} -> HGraph' F V ixp ixq -> r ixp ixq)
+foldGraph' functor v l alg (HGraphIn r) = 
+  let hmap = HFunctor.hmap functor
+  in alg (hmap (foldGraph' functor v l alg) r)
+foldGraph' functor v l alg (HGraphLet e f) = l (foldGraph' functor v l alg e) (λ x → foldGraph' functor v l alg (f x)) 
+foldGraph' functor v l alg (HGraphVar x) = v x
+
+foldGraph :
+       {V : Set}
+    -> {Ip Iq : Set} 
+    -> {F : (Ip -> Iq -> Set) -> (Ip -> Iq -> Set)}       
+    -> {r : Ip -> Iq -> Set}
+    -> HFunctor F
+    -> ( {ixp : Ip} {ixq : Iq} -> V                             -> r ixp ixq)
+    -> ( {ixp : Ip} {ixq : Iq} -> r ixp ixq -> (V -> r ixp ixq) -> r ixp ixq)
+    -> ( {ixp : Ip} {ixq : Iq} ->        F r ixp ixq            -> r ixp ixq) 
+    -> ( {ixp : Ip} {ixq : Iq} -> HGraph F   ixp ixq            -> r ixp ixq)
+foldGraph functor l v alg (mkHGraph g) = foldGraph' functor l v alg g
+
+
+
