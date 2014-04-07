@@ -5,13 +5,18 @@ open import Data.List using (_∷_)
 
 open import Level
 
-open import Basic using (𝔹ₛ; ℕₛ; StackType; Bytecode; ⁅_⁆')
+open import Data.Bool using (true; false; if_then_else_) renaming (Bool to 𝔹)
+open import Data.List using (List; []; _∷_; replicate; _++_; [_])
+open import Data.Vec using (Vec) renaming ([] to ε; _∷_ to _◁_)
+open import Data.Nat using (ℕ; _+_; suc)
+
+open import Basic using (𝔹ₛ; ℕₛ; _▽_; StackType; Stack; Bytecode; ⁅_⁆')
 
 
-record HFunctor {i : Level} {Ip Iq : Set i} (F : (Ip -> Iq -> Set i) -> (Ip -> Iq -> Set i)) : Set (suc i) where
+record HFunctor {Ip Iq : Set} (F : (Ip -> Iq -> Set) -> (Ip -> Iq -> Set)) : Set₁ where
   constructor isHFunctor
   field
-    hmap : {a : Ip -> Iq -> Set i} -> {b : Ip -> Iq -> Set i} 
+    hmap : {a : Ip -> Iq -> Set} -> {b : Ip -> Iq -> Set} 
          -> ( {ixp : Ip} -> {ixq : Iq} ->   a ixp ixq ->   b ixp ixq )
          -> ( {ixp : Ip} -> {ixq : Iq} -> F a ixp ixq -> F b ixp ixq )  
 
@@ -113,4 +118,19 @@ foldGraph :
 foldGraph functor = foldGraphFull functor (λ v → v) (λ e f → f e)
 
 
+execAlg : ∀ {s s′} → BytecodeF (λ t t' → Stack t → Stack t') s s′ → Stack s → Stack s′
+execAlg SKIP        s           = s
+execAlg (PUSH v)    s           = v ▽ s
+execAlg ADD         (n ▽ m ▽ s) = (n + m) ▽ s
+execAlg (IF t e)    (true  ▽ s) = t s
+execAlg (IF t e)    (false ▽ s) = e s
+execAlg (c₁ ⟫ c₂)   s           = c₂ (c₁ s)
+
+execT : ∀ {s s'} → HTree BytecodeF s s' -> Stack s -> Stack s'
+execT = foldTree BytecodeFisFunctor execAlg
+
+execG : ∀ {s s'} → HGraph BytecodeF s s' -> Stack s -> Stack s'
+execG = foldGraph BytecodeFisFunctor execAlg
+
+ 
 
