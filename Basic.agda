@@ -75,11 +75,6 @@ data Stack : StackType → Set where
 
 infixr 4 _▽_
 
-_▽▽_ : ∀ {σ s} → (x : ⁅ σ ⁆) → Stack s → Stack (toStackType σ ++ s)
-_▽▽_ {Sₛ α}           {t} x        s = x ▽ s
-_▽▽_ {Vecₛ β 0}       {t} ε        s = s
-_▽▽_ {Vecₛ β (suc n)} {t} (x ◁ xs) s = _▽_ {β} x (_▽▽_ {Vecₛ β n} {t} xs s)
-
 -- To complete the definition of the abstract machine,
 -- we need to list the instructions of the bytecode operating on it, and give its semantics.
 
@@ -95,12 +90,12 @@ data Bytecode : StackType → StackType → Set where
 infixl 4 _⟫_
 
 exec : ∀ {s s′} → Bytecode s s′ → Stack s → Stack s′
-exec SKIP      s           = s
-exec (PUSH v)  s           = v ▽ s
-exec ADD       (n ▽ m ▽ s) = n + m ▽ s
-exec (IF t e)  (true  ▽ s) = exec t s
-exec (IF t e)  (false ▽ s) = exec e s
-exec (c₁ ⟫ c₂) s           = exec c₂ (exec c₁ s)
+exec SKIP        s           = s
+exec (PUSH v)    s           = v ▽ s
+exec ADD         (n ▽ m ▽ s) = (n + m) ▽ s
+exec (IF t e)    (true  ▽ s) = exec t s
+exec (IF t e)    (false ▽ s) = exec e s
+exec (c₁ ⟫ c₂)   s           = exec c₂ (exec c₁ s)
 
 -- Now, having our source and "target" languages,
 -- we are ready to define the compiler from one to the other:
@@ -112,14 +107,31 @@ compile εₛ                      = SKIP
 compile (x ◁ₛ xs)               = compile xs ⟫ compile x
 
 
--- The correctness proof for the simple, tree-based bytecode.
-correct : ∀ {σ s'} → (e : Src σ) → (s : Stack s') → _▽▽_ {σ} {s'} ⟦ e ⟧ s ≡ exec (compile e) s
-correct (vₛ x) s = refl
-correct (e₁ +ₛ e₂) s rewrite sym (correct e₂ s) | sym (correct e₁ (⟦ e₂ ⟧ ▽ s)) = refl
-correct (ifₛ c thenₛ t elseₛ e) s rewrite sym (correct c s) with ⟦ c ⟧
-... | true = correct t s
-... | false = correct e s
-correct εₛ s = refl
-correct (x ◁ₛ xs) s rewrite correct x s | correct xs s = {!!}
+evalPrepend : {t : StackType} {σ : Tyₛ} (v : ⁅ σ ⁆) → Stack t → Stack (toStackType σ ++ t)
+evalPrepend {t} {Sₛ α}      v s =  v ▽ s
+evalPrepend {t} {Vecₛ β .0} ε s = s
+evalPrepend {t} {Vecₛ β (suc m)} (x ◁ xs) s = x ▽ evalPrepend {t} {Vecₛ β m} xs s
 
--- A functor representation for the bytecode, so that we can proof tree ↔ graph equivalence.
+
+correctSc : {α : TyScalarₛ} {s' : StackType} (e : Src (Sₛ α)) (s : Stack s')
+                → ⟦ e ⟧ ▽ s ≡ exec (compile e) s
+correctSc (vₛ v) s = refl
+correctSc (e₁ +ₛ e₂) s
+  rewrite sym (correctSc e₂ s)
+        | sym (correctSc e₁ (⟦ e₂ ⟧ ▽ s)) = refl
+correctSc (ifₛ c thenₛ t elseₛ e) s
+  rewrite sym (correctSc c s) with ⟦ c ⟧
+... | true  = correctSc t s
+... | false = correctSc e s
+
+
+-- The correctness proof for the simple, tree-based bytecode.
+correct : ∀ {σ s'} → (e : Src σ) → (s : Stack s')
+          → evalPrepend {s'} {σ} ⟦ e ⟧  s ≡ exec (compile e) s
+correct {Sₛ α}           e s = correctSc e s
+correct {Vecₛ β n}       (ifₛ c thenₛ t elseₛ e) s = {!!}
+correct {Vecₛ β .0}      εₛ s = refl
+correct {Vecₛ β (suc m)} {s'} (x ◁ₛ xs) s
+    rewrite sym (correct xs s)
+          | sym (correctSc x (evalPrepend {s'} {Vecₛ β m} ⟦ xs ⟧ s)) = refl
+
