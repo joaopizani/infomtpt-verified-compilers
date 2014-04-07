@@ -20,13 +20,13 @@ record HTree {Ip Iq : Set} (F : (Ip -> Iq -> Set) -> (Ip -> Iq -> Set) ) (ixp : 
   field
     treeOut : F (HTree F) ixp ixq
 
-data HGraph' {Ip Iq : Set} (F : (Ip -> Iq -> Set) -> (Ip -> Iq -> Set) ) (v : Set) (ixp : Ip) (ixq : Iq) : Set where
+data HGraph' {Ip Iq : Set} (F : (Ip -> Iq -> Set) -> (Ip -> Iq -> Set) ) (v : Ip -> Iq -> Set) (ixp : Ip) (ixq : Iq) : Set where
   HGraphIn  : F (HGraph' F v) ixp ixq -> HGraph' F v ixp ixq
-  HGraphLet : (HGraph' F v ixp ixq) -> (v -> HGraph' F v ixp ixq) -> HGraph' F v ixp ixq  
-  HGraphVar : v -> HGraph' F v ixp ixq
+  HGraphLet : (HGraph' F v ixp ixq) -> (v ixp ixq -> HGraph' F v ixp ixq) -> HGraph' F v ixp ixq  
+  HGraphVar : v ixp ixq -> HGraph' F v ixp ixq
 
 data HGraph {Ip Iq : Set} (F : (Ip -> Iq -> Set) -> (Ip -> Iq -> Set) ) (ixp : Ip) (ixq : Iq) : Set₁ where
-  mkHGraph : ( {v : Set} -> (HGraph' F v ixp ixq) ) -> HGraph F ixp ixq
+  mkHGraph : ( {v : Ip -> Iq -> Set} -> (HGraph' F v ixp ixq) ) -> HGraph F ixp ixq
 
 data BytecodeF (r : StackType -> StackType -> Set) : (StackType -> StackType -> Set) where  
     SKIP : ∀ {s}    → BytecodeF r s s
@@ -76,13 +76,13 @@ foldTree functor alg (HTreeIn r) =
   in alg (hmap (foldTree functor alg) r)
 
 foldGraph' :
-       {V : Set}
-    -> {Ip Iq : Set} 
-    -> {F : (Ip -> Iq -> Set) -> (Ip -> Iq -> Set)}       
+       {Ip Iq : Set} 
+    -> {F : (Ip -> Iq -> Set) -> (Ip -> Iq -> Set)}
+    -> {V : Ip -> Iq -> Set}      
     -> {r : Ip -> Iq -> Set}
     -> HFunctor F
-    -> ( {ixp : Ip} {ixq : Iq} -> V -> r ixp ixq )
-    -> ( {ixp : Ip} {ixq : Iq} -> r ixp ixq -> (V -> r ixp ixq) -> r ixp ixq)
+    -> ( {ixp : Ip} {ixq : Iq} -> V ixp ixq -> r ixp ixq )
+    -> ( {ixp : Ip} {ixq : Iq} -> r ixp ixq -> (V ixp ixq -> r ixp ixq) -> r ixp ixq)
     -> ( {ixp : Ip} {ixq : Iq} ->         F r ixp ixq -> r ixp ixq) 
     -> ( {ixp : Ip} {ixq : Iq} -> HGraph' F V ixp ixq -> r ixp ixq)
 foldGraph' functor v l alg (HGraphIn r) = 
@@ -91,17 +91,26 @@ foldGraph' functor v l alg (HGraphIn r) =
 foldGraph' functor v l alg (HGraphLet e f) = l (foldGraph' functor v l alg e) (λ x → foldGraph' functor v l alg (f x)) 
 foldGraph' functor v l alg (HGraphVar x) = v x
 
+foldGraphFull :
+       {Ip Iq : Set} 
+    -> {F : (Ip -> Iq -> Set) -> (Ip -> Iq -> Set)}       
+    -> {r : Ip -> Iq -> Set}
+    -> {V : Ip -> Iq -> Set}
+    -> HFunctor F
+    -> ( {ixp : Ip} {ixq : Iq} -> V ixp ixq                     -> r ixp ixq)
+    -> ( {ixp : Ip} {ixq : Iq} -> r ixp ixq -> (V ixp ixq -> r ixp ixq) -> r ixp ixq)
+    -> ( {ixp : Ip} {ixq : Iq} ->        F r ixp ixq            -> r ixp ixq) 
+    -> ( {ixp : Ip} {ixq : Iq} -> HGraph F   ixp ixq            -> r ixp ixq)
+foldGraphFull functor l v alg (mkHGraph g) = foldGraph' functor l v alg g
+
 foldGraph :
-       {V : Set}
-    -> {Ip Iq : Set} 
+       {Ip Iq : Set} 
     -> {F : (Ip -> Iq -> Set) -> (Ip -> Iq -> Set)}       
     -> {r : Ip -> Iq -> Set}
     -> HFunctor F
-    -> ( {ixp : Ip} {ixq : Iq} -> V                             -> r ixp ixq)
-    -> ( {ixp : Ip} {ixq : Iq} -> r ixp ixq -> (V -> r ixp ixq) -> r ixp ixq)
-    -> ( {ixp : Ip} {ixq : Iq} ->        F r ixp ixq            -> r ixp ixq) 
-    -> ( {ixp : Ip} {ixq : Iq} -> HGraph F   ixp ixq            -> r ixp ixq)
-foldGraph functor l v alg (mkHGraph g) = foldGraph' functor l v alg g
+    -> ( {ixp : Ip} {ixq : Iq} ->        F r ixp ixq -> r ixp ixq) 
+    -> ( {ixp : Ip} {ixq : Iq} -> HGraph F   ixp ixq -> r ixp ixq)
+foldGraph functor = foldGraphFull functor (λ v → v) (λ e f → f e)
 
 
 
