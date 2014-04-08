@@ -10,8 +10,9 @@ open import Data.List using (List; []; _∷_; replicate; _++_; [_])
 open import Data.Vec using (Vec) renaming ([] to ε; _∷_ to _◁_)
 open import Data.Nat using (ℕ; _+_; suc)
 
-open import Basic using (𝔹ₛ; ℕₛ; _▽_; StackType; Src; Stack; Bytecode; ⁅_⁆')
+open import Basic using (𝔹ₛ; ℕₛ; _▽_; StackType; toStackType; Src; Stack; Bytecode; ⁅_⁆')
 
+open import Basic using (Src; vₛ; _+ₛ_; ifₛ_thenₛ_elseₛ_; _◁ₛ_; εₛ)
 
 record HFunctor {Ip Iq : Set} (F : (Ip -> Iq -> Set) -> (Ip -> Iq -> Set)) : Set₁ where
   constructor isHFunctor
@@ -174,11 +175,19 @@ unravel :
 unravel functor = foldGraph functor HTreeIn
 
 
-{-
-compile : ∀ {σ s} → Src σ → Bytecode s (toStackType σ ++ s)
-compile (vₛ x)                  = PUSH x
-compile (e₁ +ₛ e₂)              = compile e₂ ⟫ compile e₁ ⟫ ADD
-compile (ifₛ c thenₛ t elseₛ e) = compile c ⟫ IF (compile t) (compile e)
-compile εₛ                      = SKIP
-compile (x ◁ₛ xs)               = compile xs ⟫ compile x
--}
+compileT : ∀ {σ s} → Src σ → HTree BytecodeF s (toStackType σ ++ s)
+compileT (vₛ x)                  = PUSH_T x
+compileT (e₁ +ₛ e₂)              = (compileT e₂ ⟫T compileT e₁) ⟫T ADD_T
+compileT (ifₛ c thenₛ t elseₛ e) = compileT c ⟫T IF_T (compileT t) (compileT e)
+compileT εₛ                      = SKIP_T
+compileT (x ◁ₛ xs)               = compileT xs ⟫T compileT x
+
+compileG' : ∀ {σ s} → Src σ → ∀ {v} → HGraph' BytecodeF v s (toStackType σ ++ s)
+compileG' (vₛ x)                  = PUSH_G x
+compileG' (e₁ +ₛ e₂)              = (compileG' e₂ ⟫G compileG' e₁) ⟫G ADD_G
+compileG' (ifₛ c thenₛ t elseₛ e) = compileG' c ⟫G IF_G (compileG' t) (compileG' e)
+compileG' εₛ                      = SKIP_G
+compileG' (x ◁ₛ xs)               = compileG' xs ⟫G compileG' x
+
+compileG : ∀ {σ s} → Src σ → HGraph BytecodeF s (toStackType σ ++ s)
+compileG src = mkHGraph (compileG' src)
