@@ -9,6 +9,8 @@ open import Data.Bool using (true; false; if_then_else_) renaming (Bool to 𝔹)
 open import Data.List using (List; []; _∷_; replicate; _++_; [_])
 open import Data.Vec using (Vec) renaming ([] to ε; _∷_ to _◁_)
 open import Data.Nat using (ℕ; _+_; suc)
+open import Relation.Binary.PropositionalEquality using (_≡_; refl; sym)
+
 
 open import Basic using (𝔹ₛ; ℕₛ; _▽_; StackType; toStackType; Src; Stack; Bytecode; ⁅_⁆')
 
@@ -175,19 +177,20 @@ unravel :
 unravel functor = foldGraph functor HTreeIn
 
 
-compileT : ∀ {σ s} → Src σ → HTree BytecodeF s (toStackType σ ++ s)
+compileT : {s : StackType} → ∀ {σ} → Src σ → HTree BytecodeF s (toStackType σ ++ s)
 compileT (vₛ x)                  = PUSH_T x
 compileT (e₁ +ₛ e₂)              = (compileT e₂ ⟫T compileT e₁) ⟫T ADD_T
 compileT (ifₛ c thenₛ t elseₛ e) = compileT c ⟫T IF_T (compileT t) (compileT e)
 compileT εₛ                      = SKIP_T
 compileT (x ◁ₛ xs)               = compileT xs ⟫T compileT x
 
-compileG' : ∀ {σ s} → Src σ → ∀ {v} → HGraph' BytecodeF v s (toStackType σ ++ s)
+compileG' : {s : StackType} → ∀ {σ} → Src σ → ∀ {v} → HGraph' BytecodeF v s (toStackType σ ++ s)
 compileG' (vₛ x)                  = PUSH_G x
 compileG' (e₁ +ₛ e₂)              = (compileG' e₂ ⟫G compileG' e₁) ⟫G ADD_G
 compileG' (ifₛ c thenₛ t elseₛ e) = compileG' c ⟫G IF_G (compileG' t) (compileG' e)
 compileG' εₛ                      = SKIP_G
 compileG' (x ◁ₛ xs)               = compileG' xs ⟫G compileG' x
 
-compileG : ∀ {σ s} → Src σ → HGraph BytecodeF s (toStackType σ ++ s)
+compileG : {s : StackType} → ∀ {σ} -> Src σ → HGraph BytecodeF s (toStackType σ ++ s)
 compileG src = mkHGraph (compileG' src)
+
