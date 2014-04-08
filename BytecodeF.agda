@@ -9,7 +9,7 @@ open import Data.Bool using (true; false; if_then_else_) renaming (Bool to 𝔹)
 open import Data.List using (List; []; _∷_; replicate; _++_; [_])
 open import Data.Vec using (Vec) renaming ([] to ε; _∷_ to _◁_)
 open import Data.Nat using (ℕ; _+_; suc)
-open import Relation.Binary.PropositionalEquality using (_≡_; refl; sym)
+open import Relation.Binary.PropositionalEquality using (_≡_; refl; sym; cong)
 
 
 open import Basic using (𝔹ₛ; ℕₛ; _▽_; StackType; toStackType; Stack; Bytecode; ⁅_⁆')
@@ -195,21 +195,28 @@ compileG' (x ◁ₛ xs)               = compileG' xs ⟫G compileG' x
 compileG : {s : StackType} → ∀ {σ} -> Src σ → HGraph BytecodeF s (toStackType σ ++ s)
 compileG src = mkHGraph (compileG' src)
 
-correctT : ∀ {σ s'} → (e : Src σ) → (s : Stack s')
-         → evalPrepend {s'} {σ} ⟦ e ⟧  s ≡ execT (compileT e) s
+correctT : ∀ {σ s'} → (e : Src σ) 
+         → ∀ s → evalPrepend {s'} {σ} ⟦ e ⟧  s ≡ execT (compileT e) s
 correctT = {!!}
 
-Lemma₁ : {s : StackType} → ∀ {σ} → { src : Src σ }  → compileT {s} src ≡ unravel BytecodeFisFunctor (compileG {s} src)
+Lemma₁ : {s : StackType} 
+       → ∀ {σ} 
+       → { src : Src σ } → compileT {s} src ≡ unravel BytecodeFisFunctor (compileG {s} src)
 Lemma₁ = {!!}
 
-Theorem₂ :
+Theorem :
     ∀ {Ip Iq} → ∀ {r}
   → ∀ {F} → (functor : HFunctor F)
   → {alg : ∀ {ixp ixq} → F r ixp ixq → r ixp ixq}
   → {ixp : Ip} {ixq : Iq} 
   → ∀ graph → foldGraph functor alg {ixp} {ixq} graph ≡ foldTree  functor alg {ixp} {ixq} (unravel functor graph)
-Theorem₂ = {!!}
+Theorem = {!!}
 
-correctG : ∀ {σ s'} → (e : Src σ) → (s : Stack s')
-         → evalPrepend {s'} {σ} ⟦ e ⟧  s ≡ execG (compileG e) s
+Lemma₂ : {s s' : StackType} → (graph : HGraph BytecodeF s s')
+       → ∀ r → execG graph r ≡ execT (unravel BytecodeFisFunctor graph) r
+Lemma₂ = {!!}
+
+
+correctG : ∀ {σ s'} → (e : Src σ)
+         → ∀ s → evalPrepend {s'} {σ} ⟦ e ⟧  s ≡ execG (compileG e) s
 correctG = {!!}
