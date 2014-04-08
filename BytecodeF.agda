@@ -12,9 +12,10 @@ open import Data.Nat using (ℕ; _+_; suc)
 open import Relation.Binary.PropositionalEquality using (_≡_; refl; sym)
 
 
-open import Basic using (𝔹ₛ; ℕₛ; _▽_; StackType; toStackType; Src; Stack; Bytecode; ⁅_⁆')
+open import Basic using (𝔹ₛ; ℕₛ; _▽_; StackType; toStackType; Stack; Bytecode; ⁅_⁆')
 
 open import Basic using (Src; vₛ; _+ₛ_; ifₛ_thenₛ_elseₛ_; _◁ₛ_; εₛ)
+open import Basic using (evalPrepend; ⟦_⟧)
 
 record HFunctor {Ip Iq : Set} (F : (Ip -> Iq -> Set) -> (Ip -> Iq -> Set)) : Set₁ where
   constructor isHFunctor
@@ -194,3 +195,21 @@ compileG' (x ◁ₛ xs)               = compileG' xs ⟫G compileG' x
 compileG : {s : StackType} → ∀ {σ} -> Src σ → HGraph BytecodeF s (toStackType σ ++ s)
 compileG src = mkHGraph (compileG' src)
 
+correctT : ∀ {σ s'} → (e : Src σ) → (s : Stack s')
+         → evalPrepend {s'} {σ} ⟦ e ⟧  s ≡ execT (compileT e) s
+correctT = {!!}
+
+Lemma₁ : {s : StackType} → ∀ {σ} → { src : Src σ }  → compileT {s} src ≡ unravel BytecodeFisFunctor (compileG {s} src)
+Lemma₁ = {!!}
+
+Theorem₂ :
+    ∀ {Ip Iq} → ∀ {r}
+  → ∀ {F} → (functor : HFunctor F)
+  → {alg : ∀ {ixp ixq} → F r ixp ixq → r ixp ixq}
+  → {ixp : Ip} {ixq : Iq} 
+  → ∀ graph → foldGraph functor alg {ixp} {ixq} graph ≡ foldTree  functor alg {ixp} {ixq} (unravel functor graph)
+Theorem₂ = {!!}
+
+correctG : ∀ {σ s'} → (e : Src σ) → (s : Stack s')
+         → evalPrepend {s'} {σ} ⟦ e ⟧  s ≡ execG (compileG e) s
+correctG = {!!}
