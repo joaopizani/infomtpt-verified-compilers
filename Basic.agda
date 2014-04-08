@@ -83,7 +83,7 @@ infixr 4 _▽_
 data Bytecode : StackType → StackType → Set where
     SKIP : ∀ {s}    → Bytecode s s
     PUSH : ∀ {α s}  → (x : ⁅ α ⁆') → Bytecode s (α ∷ s)
-    ADD  : ∀ {s}    → Bytecode (ℕₛ ∷ ℕₛ ∷ s) (ℕₛ ∷ s)
+    ADD  : ∀ {s}    → Bytecode (ℕₛ ∷ ℕₛ ∷ s) (ℕₛ ∷ s) 
     IF   : ∀ {s s′} → (t : Bytecode s s′) → (e : Bytecode s s′) → Bytecode (𝔹ₛ ∷ s) s′
     _⟫_  : ∀ {s₀ s₁ s₂} → (c₁ : Bytecode s₀ s₁) → (c₂ : Bytecode s₁ s₂) → Bytecode s₀ s₂
 
