@@ -106,6 +106,7 @@ lemmaPlusAppend : {A : Set} (m n : ℕ) (a : A)
 lemmaPlusAppend zero n a = refl
 lemmaPlusAppend (suc m) n a rewrite lemmaPlusAppend m n a = refl
 
+
 -- Now, having our source and "target" languages,
 -- we are ready to define the compiler from one to the other:
 compile : ∀ {σ z s} → Src σ z → Bytecode s (replicate z σ ++ₗ s)
@@ -117,12 +118,13 @@ compile {.σ} {.(suc m + suc n)} {s} (_⟫ₛ_ {σ} {m} {n} e₁ e₂)
           | lemmaPlusAppend n m σ
           | lemmaRepCons n m σ s
       = compile e₁ ⟫ compile e₂
- 
+
 
 prepend : {t : StackType} {n : Sizeₛ} {σ : Tyₛ}
               (v : Vec ⁅ σ ⁆ n) → Stack t → Stack (replicate n σ ++ₗ t)
 prepend ε        s = s
 prepend (x ◁ xs) s = x ▽ prepend xs s
+
 
 correct : ∀ {σ z s'} (e : Src σ z) (s : Stack s') → prepend ⟦ e ⟧ s ≡ exec (compile e) s
 correct (vₛ v) s = refl
