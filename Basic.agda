@@ -88,12 +88,23 @@ open import Algebra
 import Data.Nat.Properties as NatProps
 private
   module NatCS = CommutativeSemiring NatProps.commutativeSemiring
-  module StackTypeMonoid = Monoid (Data.List.monoid Tyₛ)
+  module STMono = Monoid (Data.List.monoid Tyₛ)
   
-lemmaReplicate : {A : Set} (m n : ℕ) (a : A)
+lemmaRepOrder : {A : Set} (m n : ℕ) (a : A)
                  → replicate m a ++ₗ replicate n a ≡ replicate (m + n) a
-lemmaReplicate zero n a = refl
-lemmaReplicate (suc m) n a rewrite lemmaReplicate m n a = refl
+lemmaRepOrder zero n a = refl
+lemmaRepOrder (suc m) n a rewrite lemmaRepOrder m n a = refl
+
+lemmaRepCons : {A : Set} (m n : ℕ) (a : A) (s : List A)
+  →   a ∷ a ∷ (replicate m a ++ₗ replicate n a) ++ₗ s
+     ≡ a ∷ replicate m a ++ₗ a ∷ replicate n a ++ₗ s
+lemmaRepCons zero    k a s = refl
+lemmaRepCons (suc i) k a s rewrite lemmaRepCons i k a s = refl
+
+lemmaPlusAppend : {A : Set} (m n : ℕ) (a : A)
+    → replicate (m + n) a ≡ replicate m a ++ₗ replicate n a
+lemmaPlusAppend zero n a = refl
+lemmaPlusAppend (suc m) n a rewrite lemmaPlusAppend m n a = refl
 
 -- Now, having our source and "target" languages,
 -- we are ready to define the compiler from one to the other:
@@ -103,13 +114,10 @@ compile (e₁ +ₛ e₂)              = compile e₂ ⟫ compile e₁ ⟫ ADD
 compile (ifₛ c thenₛ t elseₛ e) = compile c ⟫ IF (compile t) (compile e)
 compile {.σ} {.(suc m + suc n)} {s} (_⟫ₛ_ {σ} {m} {n} e₁ e₂)
     rewrite NatCS.+-comm m (suc n)
-          | sym (lemmaReplicate n m σ)
-      = {!!}
-
---_⟫_ {s} {replicate m σ ++ₗ s} {replicate n σ ++ₗ replicate m σ ++ₗ s}
---  (compile e₁) (compile e₂)
---          | StackTypeMonoid.assoc (replicate n σ) (replicate m σ) s
-
+          | lemmaPlusAppend n m σ
+          | lemmaRepCons n m σ s
+      = compile e₁ ⟫ compile e₂
+ 
 
 prepend : {t : StackType} {n : Sizeₛ} {σ : Tyₛ}
               (v : Vec ⁅ σ ⁆ n) → Stack t → Stack (replicate n σ ++ₗ t)
@@ -118,10 +126,20 @@ prepend (x ◁ xs) s = x ▽ prepend xs s
 
 correct : ∀ {σ z s'} (e : Src σ z) (s : Stack s') → prepend ⟦ e ⟧ s ≡ exec (compile e) s
 correct (vₛ v) s = refl
+
 correct (x +ₛ y) s
     rewrite sym (correct y s)
-          | sym (correct x (prepend ⟦ y ⟧ s)) = {!!}
-correct (ifₛ c thenₛ t elseₛ e) s
-  rewrite sym (correct c s) with ⟦ c ⟧
-... | cv = {!!}
-correct (e₁ ⟫ₛ e₂) s = {!!}
+          | sym (correct x (prepend ⟦ y ⟧ s))
+    with ⟦ x ⟧ | ⟦ y ⟧
+... | x' ◁ ε | y' ◁ ε = refl
+
+correct (ifₛ c thenₛ t elseₛ e) s with (exec (compile c) s) | sym (correct c s)
+correct (ifₛ c thenₛ t elseₛ e) s | .(prepend ⟦ c ⟧ s) | refl with ⟦ c ⟧
+correct (ifₛ c thenₛ t elseₛ e) s | .(prepend ⟦ c ⟧ s) | refl | true  ◁ ε with (exec (compile t) s) | sym (correct t s)
+correct (ifₛ c thenₛ t elseₛ e) s | .(prepend ⟦ c ⟧ s) | refl | true  ◁ ε | .(prepend ⟦ t ⟧ s) | refl with ⟦ t ⟧
+correct (ifₛ c thenₛ t elseₛ e) s | .(prepend ⟦ c ⟧ s) | refl | true  ◁ ε | .(prepend ⟦ t ⟧ s) | refl | t' ◁ ε = refl
+correct (ifₛ c thenₛ t elseₛ e) s | .(prepend ⟦ c ⟧ s) | refl | false ◁ ε with (exec (compile e) s) | sym (correct e s)
+correct (ifₛ c thenₛ t elseₛ e) s | .(prepend ⟦ c ⟧ s) | refl | false ◁ ε | .(prepend ⟦ e ⟧ s) | refl with ⟦ e ⟧
+correct (ifₛ c thenₛ t elseₛ e) s | .(prepend ⟦ c ⟧ s) | refl | false ◁ ε | .(prepend ⟦ e ⟧ s) | refl | e' ◁ ε = refl
+
+correct {.σ} {.(suc m + suc n)} (_⟫ₛ_ {σ} {m} {n} e₁ e₂) s = {!!}
