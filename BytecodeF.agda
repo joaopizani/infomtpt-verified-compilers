@@ -85,8 +85,8 @@ mapBytecodeF f (IF t e) = IF (f t) (f e)
 mapBytecodeF f (_⟫_ c₁ c₂)= f c₁ ⟫ f c₂
 
 
-BytecodeFisFunctor : HFunctor BytecodeF
-BytecodeFisFunctor =
+BytecodeFunctor : HFunctor BytecodeF
+BytecodeFunctor =
   record {
     hmap = mapBytecodeF
   } 
@@ -105,55 +105,51 @@ fromTree (HTreeIn ADD) = Basic.ADD
 fromTree (HTreeIn (IF t e)) = Basic.IF (fromTree t) (fromTree e)
 fromTree (HTreeIn (c₁ ⟫ c₂)) = fromTree c₁ Basic.⟫ fromTree c₂
 
+
 {-# NO_TERMINATION_CHECK #-}
 foldTree :
        {Ip Iq : Set} 
-    -> {F : (Ip -> Iq -> Set) -> (Ip -> Iq -> Set)}       
+    -> {F : (Ip -> Iq -> Set) -> (Ip -> Iq -> Set)} → {{ functor : HFunctor F }}      
     -> {r : Ip -> Iq -> Set}
-    -> HFunctor F
     -> ( {ixp : Ip} {ixq : Iq} ->       F r ixp ixq -> r ixp ixq) 
     -> ( {ixp : Ip} {ixq : Iq} -> HTree F   ixp ixq -> r ixp ixq)
-foldTree functor alg (HTreeIn r) = 
-  let hmap = HFunctor.hmap functor
-  in alg (hmap (foldTree functor alg) r)
-
+foldTree {{functor}} alg (HTreeIn r) = alg (hmap (foldTree alg) r) 
+  where open HFunctor functor
+ 
 {-# NO_TERMINATION_CHECK #-}
 foldGraph' :
        {Ip Iq : Set} 
-    -> {F : (Ip -> Iq -> Set) -> (Ip -> Iq -> Set)}
+    -> {F : (Ip -> Iq -> Set) -> (Ip -> Iq -> Set)} → {{ functor : HFunctor F }}
     -> {V : Ip -> Iq -> Set}      
     -> {r : Ip -> Iq -> Set}
-    -> HFunctor F
     -> ( {ixp : Ip} {ixq : Iq} -> V ixp ixq -> r ixp ixq )
     -> ( {ixp : Ip} {ixq : Iq} -> r ixp ixq -> (V ixp ixq -> r ixp ixq) -> r ixp ixq)
     -> ( {ixp : Ip} {ixq : Iq} ->         F r ixp ixq -> r ixp ixq) 
     -> ( {ixp : Ip} {ixq : Iq} -> HGraph' F V ixp ixq -> r ixp ixq)
-foldGraph' functor v l alg (HGraphIn r) = 
-  let hmap = HFunctor.hmap functor
-  in alg (hmap (foldGraph' functor v l alg) r)
-foldGraph' functor v l alg (HGraphLet e f) = l (foldGraph' functor v l alg e) (λ x → foldGraph' functor v l alg (f x)) 
-foldGraph' functor v l alg (HGraphVar x) = v x
+foldGraph' {{functor}} v l alg (HGraphIn r) = alg (hmap (foldGraph' v l alg) r)
+  where open HFunctor functor 
+
+foldGraph' v l alg (HGraphLet e f) = l (foldGraph' v l alg e) (λ x → foldGraph' v l alg (f x)) 
+foldGraph' v l alg (HGraphVar x) = v x
 
 foldGraphFull :
        {Ip Iq : Set} 
-    -> {F : (Ip -> Iq -> Set) -> (Ip -> Iq -> Set)}       
+    -> {F : (Ip -> Iq -> Set) -> (Ip -> Iq -> Set)} → {{ functor : HFunctor F }}    
     -> {r : Ip -> Iq -> Set}
     -> {V : Ip -> Iq -> Set}
-    -> HFunctor F
     -> ( {ixp : Ip} {ixq : Iq} -> V ixp ixq                     -> r ixp ixq)
     -> ( {ixp : Ip} {ixq : Iq} -> r ixp ixq -> (V ixp ixq -> r ixp ixq) -> r ixp ixq)
     -> ( {ixp : Ip} {ixq : Iq} ->        F r ixp ixq            -> r ixp ixq) 
     -> ( {ixp : Ip} {ixq : Iq} -> HGraph F   ixp ixq            -> r ixp ixq)
-foldGraphFull functor l v alg (mkHGraph g) = foldGraph' functor l v alg g
+foldGraphFull l v alg (mkHGraph g) = foldGraph' l v alg g
 
 foldGraph :
        {Ip Iq : Set} 
-    -> {F : (Ip -> Iq -> Set) -> (Ip -> Iq -> Set)}       
+    -> {F : (Ip -> Iq -> Set) -> (Ip -> Iq -> Set)} → {{ functor : HFunctor F }}    
     -> {r : Ip -> Iq -> Set}
-    -> HFunctor F
     -> ( {ixp : Ip} {ixq : Iq} ->        F r ixp ixq -> r ixp ixq) 
     -> ( {ixp : Ip} {ixq : Iq} -> HGraph F   ixp ixq -> r ixp ixq)
-foldGraph functor = foldGraphFull functor (λ v → v) (λ e f → f e)
+foldGraph = foldGraphFull (λ v → v) (λ e f → f e)
 
 
 execAlg : ∀ {s s′} → BytecodeF (λ t t' → Stack t → Stack t') s s′ → Stack s → Stack s′
@@ -165,17 +161,17 @@ execAlg (IF t e)    (false ▽ s) = e s
 execAlg (c₁ ⟫ c₂)   s           = c₂ (c₁ s)
 
 execT : ∀ {s s'} → HTree BytecodeF s s' -> Stack s -> Stack s'
-execT = foldTree BytecodeFisFunctor execAlg
+execT = foldTree execAlg
 
 execG : ∀ {s s'} → HGraph BytecodeF s s' -> Stack s -> Stack s'
-execG = foldGraph BytecodeFisFunctor execAlg
+execG = foldGraph  execAlg
 
 unravel : 
      {Ip Iq : Set} 
-  -> {F : (Ip -> Iq -> Set) -> (Ip -> Iq -> Set)} 
+  -> {F : (Ip -> Iq -> Set) -> (Ip -> Iq -> Set)} → {{ functor : HFunctor F }}
   -> {ipx : Ip} -> {ipq : Iq} 
-  -> HFunctor F -> HGraph F ipx ipq -> HTree F ipx ipq
-unravel functor = foldGraph functor HTreeIn
+   -> HGraph F ipx ipq -> HTree F ipx ipq
+unravel = foldGraph HTreeIn
 
 
 compileT : {s : StackType} → ∀ {σ} → Src σ → HTree BytecodeF s (toStackType σ ++ s)
@@ -195,27 +191,27 @@ compileG' (x ◁ₛ xs)               = compileG' xs ⟫G compileG' x
 compileG : {s : StackType} → ∀ {σ} -> Src σ → HGraph BytecodeF s (toStackType σ ++ s)
 compileG src = mkHGraph (compileG' src)
 
-correctT : ∀ {σ s'} → (e : Src σ) 
-         → ∀ s → evalPrepend {s'} {σ} ⟦ e ⟧  s ≡ execT (compileT e) s
-correctT = {!!}
 
 Lemma₁ : {s : StackType} 
        → ∀ {σ} 
-       → { src : Src σ } → compileT {s} src ≡ unravel BytecodeFisFunctor (compileG {s} src)
+       → { src : Src σ } → compileT {s} src ≡ unravel (compileG {s} src)
 Lemma₁ = {!!}
 
 Theorem :
     ∀ {Ip Iq} → ∀ {r}
-  → ∀ {F} → (functor : HFunctor F)
+  → ∀ {F} → {{ functor : HFunctor F }}
   → {alg : ∀ {ixp ixq} → F r ixp ixq → r ixp ixq}
   → {ixp : Ip} {ixq : Iq} 
-  → ∀ graph → foldGraph functor alg {ixp} {ixq} graph ≡ foldTree  functor alg {ixp} {ixq} (unravel functor graph)
+  → ∀ graph → foldGraph alg {ixp} {ixq} graph ≡ foldTree alg {ixp} {ixq} (unravel graph)
 Theorem = {!!}
 
 Lemma₂ : {s s' : StackType} → (graph : HGraph BytecodeF s s')
-       → ∀ r → execG graph r ≡ execT (unravel BytecodeFisFunctor graph) r
+       → ∀ r → execG graph r ≡ execT (unravel graph) r
 Lemma₂ = {!!}
 
+correctT : ∀ {σ s'} → (e : Src σ) 
+         → ∀ s → evalPrepend {s'} {σ} ⟦ e ⟧  s ≡ execT (compileT e) s
+correctT = {!!}
 
 correctG : ∀ {σ s'} → (e : Src σ)
          → ∀ s → evalPrepend {s'} {σ} ⟦ e ⟧  s ≡ execG (compileG e) s
