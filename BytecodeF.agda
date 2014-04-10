@@ -233,11 +233,12 @@ compileT_correct = {!!}
 --                  ≡ execT (toTree . compile e) r 
 --                  ≡ execT (compileT e) r
 
---help1 : 
-
 correctT : ∀ {σ z s'} → (e : Src σ z) 
          → ∀ (r : Stack s') → prepend ⟦ e ⟧  r ≡ execT (compileT e) r
-correctT e r = correct e r ~ cong (λ t → exec t r) (sym (treeIsoTo (compile e))) ~ {!!} ~ cong (λ t → execT t r) (compileT_correct e)
+correctT e r = correct e r 
+             ~ cong (λ t → exec t r) (sym (treeIsoTo (compile e))) 
+             ~ apply r (execT_correct (toTree (compile e))) 
+             ~ cong (λ t → execT t r) (compileT_correct e)
 
 broken_cong : {e : Level} {X : Set e} {R : Set}
      -> (P Q : X -> R)
