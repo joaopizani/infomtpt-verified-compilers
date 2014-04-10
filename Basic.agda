@@ -84,17 +84,9 @@ exec (IF t e)    (true  ▽ s) = exec t s
 exec (IF t e)    (false ▽ s) = exec e s
 exec (c₁ ⟫ c₂)   s           = exec c₂ (exec c₁ s)
 
-open import Algebra
-import Data.Nat.Properties as NatProps
-private
-  module NatCS = CommutativeSemiring NatProps.commutativeSemiring
-  module STMono = Monoid (Data.List.monoid Tyₛ)
-  
-lemmaRepOrder : {A : Set} (m n : ℕ) (a : A)
-                 → replicate m a ++ replicate n a ≡ replicate (m + n) a
-lemmaRepOrder zero n a = refl
-lemmaRepOrder (suc m) n a rewrite lemmaRepOrder m n a = refl
 
+-- Now, having our source and "target" languages,
+-- we are ready to define the compiler from one to the other:
 lemmaConsAppend : {A : Set} (m n : ℕ) (a : A) (s : List A)
   →   a ∷ (replicate m a ++ a ∷ replicate n a) ++ s
      ≡ a ∷ replicate m a ++ a ∷ replicate n a ++ s
@@ -106,9 +98,6 @@ lemmaPlusAppend : {A : Set} (m n : ℕ) (a : A)
 lemmaPlusAppend zero n a = refl
 lemmaPlusAppend (suc m) n a rewrite lemmaPlusAppend m n a = refl
 
-
--- Now, having our source and "target" languages,
--- we are ready to define the compiler from one to the other:
 compile : ∀ {σ z s} → Src σ z → Bytecode s (replicate z σ ++ s)
 compile (vₛ x)                  = PUSH x
 compile (e₁ +ₛ e₂)              = compile e₂ ⟫ compile e₁ ⟫ ADD
@@ -119,13 +108,16 @@ compile {.σ} {.(suc n + suc m)} {s} (_⟫ₛ_ {σ} {m} {n} e₁ e₂)
     = compile e₁ ⟫ compile e₂
 
 
+-- Finally, the statement of correctness for the compiler
 prepend : {t : StackType} {n : Sizeₛ} {σ : Tyₛ}
-              (v : Vec ⁅ σ ⁆ n) → Stack t → Stack (replicate n σ ++ t)
+          (v : Vec ⁅ σ ⁆ n) → Stack t → Stack (replicate n σ ++ t)
 prepend ε        s = s
 prepend (x ◁ xs) s = x ▽ prepend xs s
 
 
-correct : ∀ {σ z s'} (e : Src σ z) (s : Stack s') → prepend ⟦ e ⟧ s ≡ exec (compile e) s
+correct : ∀ {σ z s'} (e : Src σ z) (s : Stack s')
+          → prepend ⟦ e ⟧ s ≡ exec (compile e) s
+
 correct (vₛ v) s = refl
 
 correct (x +ₛ y) s
