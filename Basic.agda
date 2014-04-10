@@ -4,8 +4,8 @@ module Basic where
 -- "A type-correct, stack-safe, provably correct expression compiler in Epigram".
 
 open import Data.Bool using (true; false; if_then_else_) renaming (Bool to 𝔹)
-open import Data.List using (List; []; _∷_; replicate) renaming (_++_ to _++ₗ_)
-open import Data.Vec using (Vec; [_]; head; _++_) renaming ([] to ε; _∷_ to _◁_)
+open import Data.List using (List; []; _∷_; replicate; _++_)
+open import Data.Vec using (Vec; [_]; head) renaming ([] to ε; _∷_ to _◁_; _++_ to _+++_)
 open import Data.Nat using (ℕ; _+_; suc; zero)
 
 open import Relation.Binary.PropositionalEquality using (_≡_; refl; sym)
@@ -35,7 +35,7 @@ data Src : (σ : Tyₛ) → (z : Sizeₛ) → Set where
     vₛ    : ∀ {σ} → (v : ⁅ σ ⁆) → Src σ 1
     _+ₛ_  : (e₁ e₂ : Src ℕₛ 1) → Src ℕₛ 1
     ifₛ_thenₛ_elseₛ_ : ∀ {σ} → (c : Src 𝔹ₛ 1) → (eₜ eₑ : Src σ 1) → Src σ 1
-    _⟫ₛ_  : ∀ {σ m n} → Src σ (suc m) → Src σ (suc n) → Src σ (suc m + suc n)
+    _⟫ₛ_  : ∀ {σ m n} → Src σ (suc m) → Src σ (suc n) → Src σ (suc n + suc m)
 
 infixl 40 _+ₛ_
 
@@ -46,7 +46,7 @@ infixl 40 _+ₛ_
 ⟦ vₛ v ⟧                     = [ v ]
 ⟦ e₁ +ₛ e₂ ⟧                 = [ head ⟦ e₁ ⟧ + head ⟦ e₂ ⟧ ]
 ⟦ ifₛ_thenₛ_elseₛ_ c e₁ e₂ ⟧ = [ if (head ⟦ c ⟧) then (head ⟦ e₁ ⟧) else (head ⟦ e₂ ⟧) ]
-⟦ e₁ ⟫ₛ e₂ ⟧ = ⟦ e₁ ⟧ ++ ⟦ e₂ ⟧
+⟦ e₁ ⟫ₛ e₂ ⟧ = ⟦ e₂ ⟧ +++ ⟦ e₁ ⟧
 
 -- Now we move towards the second semantics for our expression language:
 -- compilation to bytecode and execution of bytecode in an abstract machine.
@@ -91,37 +91,36 @@ private
   module STMono = Monoid (Data.List.monoid Tyₛ)
   
 lemmaRepOrder : {A : Set} (m n : ℕ) (a : A)
-                 → replicate m a ++ₗ replicate n a ≡ replicate (m + n) a
+                 → replicate m a ++ replicate n a ≡ replicate (m + n) a
 lemmaRepOrder zero n a = refl
 lemmaRepOrder (suc m) n a rewrite lemmaRepOrder m n a = refl
 
-lemmaRepCons : {A : Set} (m n : ℕ) (a : A) (s : List A)
-  →   a ∷ a ∷ (replicate m a ++ₗ replicate n a) ++ₗ s
-     ≡ a ∷ replicate m a ++ₗ a ∷ replicate n a ++ₗ s
-lemmaRepCons zero    k a s = refl
-lemmaRepCons (suc i) k a s rewrite lemmaRepCons i k a s = refl
+lemmaConsAppend : {A : Set} (m n : ℕ) (a : A) (s : List A)
+  →   a ∷ (replicate m a ++ a ∷ replicate n a) ++ s
+     ≡ a ∷ replicate m a ++ a ∷ replicate n a ++ s
+lemmaConsAppend zero n a s = refl
+lemmaConsAppend (suc m) n a s rewrite lemmaConsAppend m n a s = refl
 
 lemmaPlusAppend : {A : Set} (m n : ℕ) (a : A)
-    → replicate (m + n) a ≡ replicate m a ++ₗ replicate n a
+    → replicate (m + n) a ≡ replicate m a ++ replicate n a
 lemmaPlusAppend zero n a = refl
 lemmaPlusAppend (suc m) n a rewrite lemmaPlusAppend m n a = refl
 
 
 -- Now, having our source and "target" languages,
 -- we are ready to define the compiler from one to the other:
-compile : ∀ {σ z s} → Src σ z → Bytecode s (replicate z σ ++ₗ s)
+compile : ∀ {σ z s} → Src σ z → Bytecode s (replicate z σ ++ s)
 compile (vₛ x)                  = PUSH x
 compile (e₁ +ₛ e₂)              = compile e₂ ⟫ compile e₁ ⟫ ADD
 compile (ifₛ c thenₛ t elseₛ e) = compile c ⟫ IF (compile t) (compile e)
-compile {.σ} {.(suc m + suc n)} {s} (_⟫ₛ_ {σ} {m} {n} e₁ e₂)
-    rewrite NatCS.+-comm m (suc n)
-          | lemmaPlusAppend n m σ
-          | lemmaRepCons n m σ s
-      = compile e₁ ⟫ compile e₂
+compile {.σ} {.(suc n + suc m)} {s} (_⟫ₛ_ {σ} {m} {n} e₁ e₂)
+    rewrite lemmaPlusAppend n (suc m) σ
+          | lemmaConsAppend n m σ s
+    = compile e₁ ⟫ compile e₂
 
 
 prepend : {t : StackType} {n : Sizeₛ} {σ : Tyₛ}
-              (v : Vec ⁅ σ ⁆ n) → Stack t → Stack (replicate n σ ++ₗ t)
+              (v : Vec ⁅ σ ⁆ n) → Stack t → Stack (replicate n σ ++ t)
 prepend ε        s = s
 prepend (x ◁ xs) s = x ▽ prepend xs s
 
@@ -144,4 +143,16 @@ correct (ifₛ c thenₛ t elseₛ e) s | .(prepend ⟦ c ⟧ s) | refl | false 
 correct (ifₛ c thenₛ t elseₛ e) s | .(prepend ⟦ c ⟧ s) | refl | false ◁ ε | .(prepend ⟦ e ⟧ s) | refl with ⟦ e ⟧
 correct (ifₛ c thenₛ t elseₛ e) s | .(prepend ⟦ c ⟧ s) | refl | false ◁ ε | .(prepend ⟦ e ⟧ s) | refl | e' ◁ ε = refl
 
-correct {.σ} {.(suc m + suc n)} (_⟫ₛ_ {σ} {m} {n} e₁ e₂) s = {!!}
+correct {.σ} {.(suc n + suc m)} {s'} (_⟫ₛ_ {σ} {m} {n} e₁ e₂) s = {!!}
+
+--compile {.σ} {.(suc n + suc m)} {s} (_⟫ₛ_ {σ} {m} {n} e₁ e₂)
+--    rewrite lemmaPlusAppend n (suc m) σ
+--          | lemmaConsAppend n m σ s
+--    = compile e₁ ⟫ compile e₂
+
+--lemmaPlusAppend : {A : Set} (m n : ℕ) (a : A)
+--    → replicate (m + n) a ≡ replicate m a ++ replicate n a
+
+--lemmaConsAppend : {A : Set} (m n : ℕ) (a : A) (s : List A)
+--  →   a ∷ (replicate m a ++ a ∷ replicate n a) ++ s
+--     ≡ a ∷ replicate m a ++ a ∷ replicate n a ++ s
