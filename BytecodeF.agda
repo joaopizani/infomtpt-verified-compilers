@@ -9,10 +9,10 @@ open import Data.Bool using (true; false; if_then_else_) renaming (Bool to 𝔹)
 open import Data.List using (List; []; _∷_; replicate; [_]) renaming (_++_ to _++ₗ_)
 open import Data.Vec using (Vec) renaming ([] to ε; _∷_ to _◁_)
 open import Data.Nat using (ℕ; _+_; suc)
-open import Relation.Binary.PropositionalEquality using (_≡_; refl; sym; cong)
+open import Relation.Binary.PropositionalEquality using (_≡_; refl; sym; trans; subst; cong)
 
 
-open import Basic using (𝔹ₛ; ℕₛ; _▽_; StackType; Stack; Bytecode; ⁅_⁆)
+open import Basic using (𝔹ₛ; ℕₛ; _▽_; StackType; Stack; Bytecode; ⁅_⁆; exec; correct; compile)
 
 open import Basic using (Src; vₛ; _+ₛ_; ifₛ_thenₛ_elseₛ_; _⟫ₛ_)
 open import Basic using (prepend; ⟦_⟧ )
@@ -105,6 +105,12 @@ fromTree (HTreeIn ADD) = Basic.ADD
 fromTree (HTreeIn (IF t e)) = Basic.IF (fromTree t) (fromTree e)
 fromTree (HTreeIn (c₁ ⟫ c₂)) = fromTree c₁ Basic.⟫ fromTree c₂
 
+treeIsoTo : {ixp ixq : StackType} -> (code : Bytecode ixp ixq) -> fromTree (toTree code) ≡ code
+treeIsoTo = {!!}
+
+treeIsoFrom : {ixp ixq : StackType} -> (tree : HTree BytecodeF ixp ixq) -> toTree (fromTree tree) ≡ tree
+treeIsoFrom = {!!}
+
 
 {-# NO_TERMINATION_CHECK #-}
 foldTree :
@@ -113,7 +119,7 @@ foldTree :
     -> {r : Ip -> Iq -> Set}
     -> ( {ixp : Ip} {ixq : Iq} ->       F r ixp ixq -> r ixp ixq) 
     -> ( {ixp : Ip} {ixq : Iq} -> HTree F   ixp ixq -> r ixp ixq)
-foldTree {{functor}} alg (HTreeIn r) = alg (hmap (foldTree alg) r) 
+foldTree {{functor}} alg (HTreeIn r) = {!!} -- alg (hmap (foldTree alg) r) 
   where open HFunctor functor
  
 {-# NO_TERMINATION_CHECK #-}
@@ -126,7 +132,7 @@ foldGraph' :
     -> ( {ixp : Ip} {ixq : Iq} -> r ixp ixq -> (V ixp ixq -> r ixp ixq) -> r ixp ixq)
     -> ( {ixp : Ip} {ixq : Iq} ->         F r ixp ixq -> r ixp ixq) 
     -> ( {ixp : Ip} {ixq : Iq} -> HGraph' F V ixp ixq -> r ixp ixq)
-foldGraph' {{functor}} v l alg (HGraphIn r) = alg (hmap (foldGraph' v l alg) r)
+foldGraph' {{functor}} v l alg (HGraphIn r) = {!!} -- alg (hmap (foldGraph' v l alg) r)
   where open HFunctor functor 
 
 foldGraph' v l alg (HGraphLet e f) = l (foldGraph' v l alg e) (λ x → foldGraph' v l alg (f x)) 
@@ -190,28 +196,66 @@ compileG' (a ⟫ₛ b) = {!!}
 compileG : {s : StackType} → ∀ {z σ} -> Src σ z → HGraph BytecodeF s (replicate z σ ++ₗ s)
 compileG src = mkHGraph (compileG' src)
 
+_~_ : {a : Level} {A : Set a} {i j k : A} → i ≡ j → j ≡ k → i ≡ k
+_~_ = trans
+
+infixl 3 _~_
 
 Lemma₁ : {s : StackType} 
        → ∀ {σ z} 
-       → { src : Src σ z} → compileT {s} src ≡ unravel (compileG {s} src)
+       → ( src : Src σ z) → compileT {s} src ≡ unravel (compileG {s} src)
 Lemma₁ = {!!}
 
 Theorem :
     ∀ {Ip Iq} → ∀ {r}
   → ∀ {F} → {{ functor : HFunctor F }}
-  → {alg : ∀ {ixp ixq} → F r ixp ixq → r ixp ixq}
+  → (alg : ∀ {ixp ixq} → F r ixp ixq → r ixp ixq)
   → {ixp : Ip} {ixq : Iq} 
   → ∀ graph → foldGraph alg {ixp} {ixq} graph ≡ foldTree alg {ixp} {ixq} (unravel graph)
 Theorem = {!!}
 
-Lemma₂ : {s s' : StackType} → (graph : HGraph BytecodeF s s')
-       → ∀ r → execG graph r ≡ execT (unravel graph) r
-Lemma₂ = {!!}
+apply : {X Y : Set} -> {f g : X -> Y} -> (x : X) -> f ≡ g -> f x ≡ g x
+apply x refl = refl
+
+Lemma₂ : {s s' : StackType} → (r : Stack s) 
+       → (graph : HGraph BytecodeF s s')
+       →  execG graph r ≡ execT (unravel graph) r
+Lemma₂ {s} {s'} r graph = apply r (Theorem execAlg graph)
+
+execT_correct : ∀ {s s'} → (tree : HTree BytecodeF s s') -> exec (fromTree tree) ≡ execT tree
+execT_correct = {!!}
+
+compileT_correct : ∀ {σ z s} → (e : Src σ z) -> toTree {s} (compile e) ≡ compileT e
+compileT_correct = {!!}
+
+-- prepend ⟦ e ⟧  r ≡ exec (compile e) r 
+--                  ≡ exec (fromTree . toTree . compile e) r 
+--                  ≡ execT (toTree . compile e) r 
+--                  ≡ execT (compileT e) r
+
+--help1 : 
 
 correctT : ∀ {σ z s'} → (e : Src σ z) 
-         → ∀ (s : Stack s') → prepend ⟦ e ⟧  s ≡ execT (compileT e) s
-correctT = {!!}
+         → ∀ (r : Stack s') → prepend ⟦ e ⟧  r ≡ execT (compileT e) r
+correctT e r = correct e r ~ cong (λ t → exec t r) (sym (treeIsoTo (compile e))) ~ {!!} ~ cong (λ t → execT t r) (compileT_correct e)
 
-correctG : ∀ {σ z s'} → (e : Src σ z)
-         → ∀ (s : Stack s') → prepend ⟦ e ⟧  s ≡ execG (compileG e) s
-correctG = {!!}
+broken_cong : {e : Level} {X : Set e} {R : Set}
+     -> (P Q : X -> R)
+     -> (a b : X) 
+     -> ((x : X) -> P x ≡ Q x) -> a ≡ b 
+     -> P a ≡ Q b
+broken_cong P Q a .a f refl = f a 
+
+
+correctG : ∀ {σ z s}
+         → (e : Src σ z) → ∀ (r : Stack s) → execG (compileG e) r ≡ prepend ⟦ e ⟧  r
+correctG e r = 
+  let step1 = broken_cong (λ g → execG g r) 
+         (λ g → execT (unravel g) r) 
+         (compileG e) (compileG e) 
+         (Lemma₂ r) refl
+      step2 = broken_cong (λ g → execT g r) 
+          (λ g → execT g r)  
+          (unravel (compileG e)) (compileT e)
+          (λ t → refl) (sym (Lemma₁ e))
+  in step1 ~ step2 ~ sym (correctT e r)
