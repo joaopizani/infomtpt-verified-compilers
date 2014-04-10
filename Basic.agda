@@ -32,10 +32,10 @@ Sizeₛ : Set
 Sizeₛ = ℕ
 
 data Src : (σ : Tyₛ) → (z : Sizeₛ) → Set where
-    vₛ              : ∀ {σ} → (v : ⁅ σ ⁆) → Src σ 1
-    _+ₛ_            : (e₁ e₂ : Src ℕₛ 1) → Src ℕₛ 1
+    vₛ    : ∀ {σ} → (v : ⁅ σ ⁆) → Src σ 1
+    _+ₛ_  : (e₁ e₂ : Src ℕₛ 1) → Src ℕₛ 1
     ifₛ_thenₛ_elseₛ_ : ∀ {σ} → (c : Src 𝔹ₛ 1) → (eₜ eₑ : Src σ 1) → Src σ 1
-    _⟫ₛ_            : ∀ {σ m n} → Src σ m → Src σ n → Src σ (m + n)
+    _⟫ₛ_  : ∀ {σ m n} → Src σ (suc m) → Src σ (suc n) → Src σ (suc m + suc n)
 
 infixl 40 _+ₛ_
 
@@ -101,24 +101,26 @@ compile : ∀ {σ z s} → Src σ z → Bytecode s (replicate z σ ++ₗ s)
 compile (vₛ x)                  = PUSH x
 compile (e₁ +ₛ e₂)              = compile e₂ ⟫ compile e₁ ⟫ ADD
 compile (ifₛ c thenₛ t elseₛ e) = compile c ⟫ IF (compile t) (compile e)
-compile {.σ} {.(m + n)} {s} (_⟫ₛ_ {σ} {m} {n} e₁ e₂)
-    rewrite NatCS.+-comm m n
+compile {.σ} {.(suc m + suc n)} {s} (_⟫ₛ_ {σ} {m} {n} e₁ e₂)
+    rewrite NatCS.+-comm m (suc n)
           | sym (lemmaReplicate n m σ)
-          | StackTypeMonoid.assoc (replicate n σ) (replicate m σ) s
-        = _⟫_ {s} {replicate m σ ++ₗ s} {replicate n σ ++ₗ replicate m σ ++ₗ s}
-            (compile e₁) (compile e₂)
+      = {!!}
+
+--_⟫_ {s} {replicate m σ ++ₗ s} {replicate n σ ++ₗ replicate m σ ++ₗ s}
+--  (compile e₁) (compile e₂)
+--          | StackTypeMonoid.assoc (replicate n σ) (replicate m σ) s
 
 
-evalPrepend : {t : StackType} {n : Sizeₛ} {σ : Tyₛ}
+prepend : {t : StackType} {n : Sizeₛ} {σ : Tyₛ}
               (v : Vec ⁅ σ ⁆ n) → Stack t → Stack (replicate n σ ++ₗ t)
-evalPrepend ε        s = s
-evalPrepend (x ◁ xs) s = x ▽ evalPrepend xs s
+prepend ε        s = s
+prepend (x ◁ xs) s = x ▽ prepend xs s
 
-correct : ∀ {σ z s'} (e : Src σ z) (s : Stack s') → evalPrepend ⟦ e ⟧ s ≡ exec (compile e) s
+correct : ∀ {σ z s'} (e : Src σ z) (s : Stack s') → prepend ⟦ e ⟧ s ≡ exec (compile e) s
 correct (vₛ v) s = refl
-correct (e₁ +ₛ e₂) s = {!!}
-  -- rewrite sym (correct e₂ s)
-        -- | sym (correct e₁ (evalPrepend ⟦ e₂ ⟧ s)) = refl
+correct (x +ₛ y) s
+    rewrite sym (correct y s)
+          | sym (correct x (prepend ⟦ y ⟧ s)) = {!!}
 correct (ifₛ c thenₛ t elseₛ e) s
   rewrite sym (correct c s) with ⟦ c ⟧
 ... | cv = {!!}
