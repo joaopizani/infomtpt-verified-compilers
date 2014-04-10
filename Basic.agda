@@ -95,6 +95,9 @@ lemmaReplicate : {A : Set} (m n : ℕ) (a : A)
 lemmaReplicate zero n a = refl
 lemmaReplicate (suc m) n a rewrite lemmaReplicate m n a = refl
 
+postulate compile : ∀ {σ z s} → Src σ z → Bytecode s (replicate z σ ++ₗ s)
+
+{-
 -- Now, having our source and "target" languages,
 -- we are ready to define the compiler from one to the other:
 compile : ∀ {σ z s} → Src σ z → Bytecode s (replicate z σ ++ₗ s)
@@ -105,7 +108,7 @@ compile {.σ} {.(suc m + suc n)} {s} (_⟫ₛ_ {σ} {m} {n} e₁ e₂)
     rewrite NatCS.+-comm m (suc n)
           | sym (lemmaReplicate n m σ)
       = {!!}
-
+-}
 --_⟫_ {s} {replicate m σ ++ₗ s} {replicate n σ ++ₗ replicate m σ ++ₗ s}
 --  (compile e₁) (compile e₂)
 --          | StackTypeMonoid.assoc (replicate n σ) (replicate m σ) s
@@ -116,6 +119,9 @@ prepend : {t : StackType} {n : Sizeₛ} {σ : Tyₛ}
 prepend ε        s = s
 prepend (x ◁ xs) s = x ▽ prepend xs s
 
+postulate correct : ∀ {σ z s'} (e : Src σ z) (s : Stack s') → prepend ⟦ e ⟧ s ≡ exec (compile e) s
+
+{-
 correct : ∀ {σ z s'} (e : Src σ z) (s : Stack s') → prepend ⟦ e ⟧ s ≡ exec (compile e) s
 correct (vₛ v) s = refl
 correct (x +ₛ y) s
@@ -125,3 +131,4 @@ correct (ifₛ c thenₛ t elseₛ e) s
   rewrite sym (correct c s) with ⟦ c ⟧
 ... | cv = {!!}
 correct (e₁ ⟫ₛ e₂) s = {!!}
+-}

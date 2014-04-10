@@ -6,16 +6,16 @@ open import Data.List using (_∷_)
 open import Level
 
 open import Data.Bool using (true; false; if_then_else_) renaming (Bool to 𝔹)
-open import Data.List using (List; []; _∷_; replicate; _++_; [_])
+open import Data.List using (List; []; _∷_; replicate; [_]) renaming (_++_ to _++ₗ_)
 open import Data.Vec using (Vec) renaming ([] to ε; _∷_ to _◁_)
 open import Data.Nat using (ℕ; _+_; suc)
 open import Relation.Binary.PropositionalEquality using (_≡_; refl; sym; cong)
 
 
-open import Basic using (𝔹ₛ; ℕₛ; _▽_; StackType; toStackType; Stack; Bytecode; ⁅_⁆')
+open import Basic using (𝔹ₛ; ℕₛ; _▽_; StackType; Stack; Bytecode; ⁅_⁆)
 
-open import Basic using (Src; vₛ; _+ₛ_; ifₛ_thenₛ_elseₛ_; _◁ₛ_; εₛ)
-open import Basic using (evalPrepend; ⟦_⟧)
+open import Basic using (Src; vₛ; _+ₛ_; ifₛ_thenₛ_elseₛ_; _⟫ₛ_)
+open import Basic using (prepend; ⟦_⟧ )
 
 record HFunctor {Ip Iq : Set} (F : (Ip -> Iq -> Set) -> (Ip -> Iq -> Set)) : Set₁ where
   constructor isHFunctor
@@ -39,7 +39,7 @@ data HGraph {Ip Iq : Set} (F : (Ip -> Iq -> Set) -> (Ip -> Iq -> Set) ) (ixp : I
 
 data BytecodeF (r : StackType -> StackType -> Set) : (StackType -> StackType -> Set) where  
     SKIP : ∀ {s}    → BytecodeF r s s
-    PUSH : ∀ {α s}  → (x : ⁅ α ⁆') → BytecodeF r s (α ∷ s)
+    PUSH : ∀ {α s}  → (x : ⁅ α ⁆) → BytecodeF r s (α ∷ s)
     ADD  : ∀ {s}    → BytecodeF r (ℕₛ ∷ ℕₛ ∷ s) (ℕₛ ∷ s)
     IF   : ∀ {s s′} → (t : r s s′) → (e : r s s′) → BytecodeF r (𝔹ₛ ∷ s) s′
     _⟫_  : ∀ {s₀ s₁ s₂} → (c₁ : r s₀ s₁) → (c₂ : r s₁ s₂) → BytecodeF r s₀ s₂
@@ -47,7 +47,7 @@ data BytecodeF (r : StackType -> StackType -> Set) : (StackType -> StackType -> 
 SKIP_T : ∀ {s} -> HTree BytecodeF s s
 SKIP_T = HTreeIn SKIP
 
-PUSH_T : ∀ {α s} -> (x : ⁅ α ⁆') → HTree BytecodeF s (α ∷ s)
+PUSH_T : ∀ {α s} -> (x : ⁅ α ⁆) → HTree BytecodeF s (α ∷ s)
 PUSH_T x = HTreeIn (PUSH x) 
 
 ADD_T : ∀ {s} -> HTree BytecodeF (ℕₛ ∷ ℕₛ ∷ s) (ℕₛ ∷ s)
@@ -62,7 +62,7 @@ _⟫T_ f g = HTreeIn (f ⟫ g)
 SKIP_G : ∀ {v s} -> HGraph' BytecodeF v s s
 SKIP_G = HGraphIn SKIP
 
-PUSH_G : ∀ {v α s} -> (x : ⁅ α ⁆') → HGraph' BytecodeF v s (α ∷ s)
+PUSH_G : ∀ {v α s} -> (x : ⁅ α ⁆) → HGraph' BytecodeF v s (α ∷ s)
 PUSH_G x = HGraphIn (PUSH x) 
 
 ADD_G : ∀ {v s} -> HGraph' BytecodeF v (ℕₛ ∷ ℕₛ ∷ s) (ℕₛ ∷ s)
@@ -174,27 +174,26 @@ unravel :
 unravel = foldGraph HTreeIn
 
 
-compileT : {s : StackType} → ∀ {σ} → Src σ → HTree BytecodeF s (toStackType σ ++ s)
+compileT : {s : StackType} → ∀ {z σ} → Src σ z → HTree BytecodeF s (replicate z σ ++ₗ s)
 compileT (vₛ x)                  = PUSH_T x
 compileT (e₁ +ₛ e₂)              = (compileT e₂ ⟫T compileT e₁) ⟫T ADD_T
 compileT (ifₛ c thenₛ t elseₛ e) = compileT c ⟫T IF_T (compileT t) (compileT e)
-compileT εₛ                      = SKIP_T
-compileT (x ◁ₛ xs)               = compileT xs ⟫T compileT x
+compileT (a ⟫ₛ b) = {!!}
 
-compileG' : {s : StackType} → ∀ {σ} → Src σ → ∀ {v} → HGraph' BytecodeF v s (toStackType σ ++ s)
+compileG' : {s : StackType} → ∀ {z σ} → Src σ z → ∀ {v} → HGraph' BytecodeF v s (replicate z σ ++ₗ s)
 compileG' (vₛ x)                  = PUSH_G x
 compileG' (e₁ +ₛ e₂)              = (compileG' e₂ ⟫G compileG' e₁) ⟫G ADD_G
 compileG' (ifₛ c thenₛ t elseₛ e) = compileG' c ⟫G IF_G (compileG' t) (compileG' e)
-compileG' εₛ                      = SKIP_G
-compileG' (x ◁ₛ xs)               = compileG' xs ⟫G compileG' x
+compileG' (a ⟫ₛ b) = {!!}
 
-compileG : {s : StackType} → ∀ {σ} -> Src σ → HGraph BytecodeF s (toStackType σ ++ s)
+
+compileG : {s : StackType} → ∀ {z σ} -> Src σ z → HGraph BytecodeF s (replicate z σ ++ₗ s)
 compileG src = mkHGraph (compileG' src)
 
 
 Lemma₁ : {s : StackType} 
-       → ∀ {σ} 
-       → { src : Src σ } → compileT {s} src ≡ unravel (compileG {s} src)
+       → ∀ {σ z} 
+       → { src : Src σ z} → compileT {s} src ≡ unravel (compileG {s} src)
 Lemma₁ = {!!}
 
 Theorem :
@@ -209,10 +208,10 @@ Lemma₂ : {s s' : StackType} → (graph : HGraph BytecodeF s s')
        → ∀ r → execG graph r ≡ execT (unravel graph) r
 Lemma₂ = {!!}
 
-correctT : ∀ {σ s'} → (e : Src σ) 
-         → ∀ s → evalPrepend {s'} {σ} ⟦ e ⟧  s ≡ execT (compileT e) s
+correctT : ∀ {σ z s'} → (e : Src σ z) 
+         → ∀ (s : Stack s') → prepend ⟦ e ⟧  s ≡ execT (compileT e) s
 correctT = {!!}
 
-correctG : ∀ {σ s'} → (e : Src σ)
-         → ∀ s → evalPrepend {s'} {σ} ⟦ e ⟧  s ≡ execG (compileG e) s
+correctG : ∀ {σ z s'} → (e : Src σ z)
+         → ∀ (s : Stack s') → prepend ⟦ e ⟧  s ≡ execG (compileG e) s
 correctG = {!!}
