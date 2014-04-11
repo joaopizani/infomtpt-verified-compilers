@@ -119,7 +119,7 @@ foldTree :
     -> {r : Ip -> Iq -> Set}
     -> ( {ixp : Ip} {ixq : Iq} ->       F r ixp ixq -> r ixp ixq) 
     -> ( {ixp : Ip} {ixq : Iq} -> HTree F   ixp ixq -> r ixp ixq)
-foldTree {{functor}} alg (HTreeIn r) = {!!} -- alg (hmap (foldTree alg) r) 
+foldTree {{functor}} alg (HTreeIn r) = alg (hmap (foldTree alg) r) 
   where open HFunctor functor
  
 {-# NO_TERMINATION_CHECK #-}
@@ -132,7 +132,7 @@ foldGraph' :
     -> ( {ixp : Ip} {ixq : Iq} -> r ixp ixq -> (V ixp ixq -> r ixp ixq) -> r ixp ixq)
     -> ( {ixp : Ip} {ixq : Iq} ->         F r ixp ixq -> r ixp ixq) 
     -> ( {ixp : Ip} {ixq : Iq} -> HGraph' F V ixp ixq -> r ixp ixq)
-foldGraph' {{functor}} v l alg (HGraphIn r) = {!!} -- alg (hmap (foldGraph' v l alg) r)
+foldGraph' {{functor}} v l alg (HGraphIn r) = alg (hmap (foldGraph' v l alg) r)
   where open HFunctor functor 
 
 foldGraph' v l alg (HGraphLet e f) = l (foldGraph' v l alg e) (λ x → foldGraph' v l alg (f x)) 
@@ -170,12 +170,11 @@ execT : ∀ {s s'} → HTree BytecodeF s s' -> Stack s -> Stack s'
 execT = foldTree execAlg
 
 execTcorrect : ∀ {s s'} → (tree : HTree BytecodeF s s') -> exec (fromTree tree) ≡ execT tree
-execTcorrect (HTreeIn SKIP) = {!!}
-execTcorrect (HTreeIn (PUSH x)) = {!!}
+execTcorrect (HTreeIn SKIP) = refl
+execTcorrect (HTreeIn (PUSH x)) = refl
 execTcorrect (HTreeIn ADD) = {!!}
 execTcorrect (HTreeIn (IF t e)) = {!!}
 execTcorrect (HTreeIn (c₁ ⟫ c₂)) = {!!}
-
 
 
 execG : ∀ {s s'} → HGraph BytecodeF s s' -> Stack s -> Stack s'
@@ -185,7 +184,7 @@ unravel :
      {Ip Iq : Set} 
   -> {F : (Ip -> Iq -> Set) -> (Ip -> Iq -> Set)} → {{ functor : HFunctor F }}
   -> {ipx : Ip} -> {ipq : Iq} 
-   -> HGraph F ipx ipq -> HTree F ipx ipq
+  -> HGraph F ipx ipq -> HTree F ipx ipq
 unravel = foldGraph HTreeIn
 
 
@@ -199,7 +198,10 @@ compileT {.σ} {.(suc n + suc m)} {s} (_⟫ₛ_ {σ} {m} {n} e₁ e₂)
     = compileT e₁ ⟫T compileT e₂
 
 compileTcorrect : ∀ {σ z s} → (e : Src σ z) -> toTree {s} (compile e) ≡ compileT e
-compileTcorrect = {!!}
+compileTcorrect (vₛ v) = refl
+compileTcorrect (src +ₛ src₁) = {!!}
+compileTcorrect (ifₛ src thenₛ src₁ elseₛ src₂) = {!!}
+compileTcorrect (src ⟫ₛ src₁) = {!!}
 
 
 compileG' : ∀ {σ z s} → Src σ z → ∀ {v} → HGraph' BytecodeF v s (replicate z σ ++ₗ s)
