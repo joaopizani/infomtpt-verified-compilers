@@ -114,10 +114,18 @@ fromTree (HTreeIn (IF t e)) = Basic.IF (fromTree t) (fromTree e)
 fromTree (HTreeIn (c₁ ⟫ c₂)) = fromTree c₁ Basic.⟫ fromTree c₂
 
 treeIsoTo : {ixp ixq : StackType} -> (code : Bytecode ixp ixq) -> fromTree (toTree code) ≡ code
-treeIsoTo = {!!}
+treeIsoTo Basic.SKIP = refl
+treeIsoTo (Basic.PUSH x) = refl
+treeIsoTo Basic.ADD = refl
+treeIsoTo (Basic.IF t f) rewrite treeIsoTo t | treeIsoTo f = refl
+treeIsoTo (a Basic.⟫ b) rewrite treeIsoTo a | treeIsoTo b = refl
 
 treeIsoFrom : {ixp ixq : StackType} -> (tree : HTree BytecodeF ixp ixq) -> toTree (fromTree tree) ≡ tree
-treeIsoFrom = {!!}
+treeIsoFrom (HTreeIn SKIP) = refl
+treeIsoFrom (HTreeIn (PUSH x)) = refl
+treeIsoFrom (HTreeIn ADD) = refl
+treeIsoFrom (HTreeIn (IF t f)) rewrite treeIsoFrom t | treeIsoFrom f =  refl
+treeIsoFrom (HTreeIn (a ⟫ b)) rewrite treeIsoFrom a | treeIsoFrom b = refl
 
 -- {-# NO_TERMINATION_CHECK #-}
 foldTree :
