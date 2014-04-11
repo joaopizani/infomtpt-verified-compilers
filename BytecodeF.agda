@@ -3,7 +3,7 @@ module BytecodeF where
 
 open import Data.List using (_∷_)
 
-open import Level
+open import Level renaming ( suc to zuc )
 
 open import Data.Bool using (true; false; if_then_else_) renaming (Bool to 𝔹)
 open import Data.List using (List; []; _∷_; replicate; [_]) renaming (_++_ to _++ₗ_)
@@ -14,7 +14,7 @@ open import Relation.Binary.PropositionalEquality using (_≡_; refl; sym; trans
 
 open import Basic using (𝔹ₛ; ℕₛ; _▽_; StackType; Stack; Bytecode; ⁅_⁆; exec; correct; compile)
 
-open import Basic using (Src; vₛ; _+ₛ_; ifₛ_thenₛ_elseₛ_; _⟫ₛ_)
+open import Basic using (Src; vₛ; _+ₛ_; ifₛ_thenₛ_elseₛ_; _⟫ₛ_; lemmaPlusAppend; lemmaConsAppend)
 open import Basic using (prepend; ⟦_⟧ )
 
 record HFunctor {Ip Iq : Set} (F : (Ip -> Iq -> Set) -> (Ip -> Iq -> Set)) : Set₁ where
@@ -169,6 +169,15 @@ execAlg (c₁ ⟫ c₂)   s           = c₂ (c₁ s)
 execT : ∀ {s s'} → HTree BytecodeF s s' -> Stack s -> Stack s'
 execT = foldTree execAlg
 
+execTcorrect : ∀ {s s'} → (tree : HTree BytecodeF s s') -> exec (fromTree tree) ≡ execT tree
+execTcorrect (HTreeIn SKIP) = {!!}
+execTcorrect (HTreeIn (PUSH x)) = {!!}
+execTcorrect (HTreeIn ADD) = {!!}
+execTcorrect (HTreeIn (IF t e)) = {!!}
+execTcorrect (HTreeIn (c₁ ⟫ c₂)) = {!!}
+
+
+
 execG : ∀ {s s'} → HGraph BytecodeF s s' -> Stack s -> Stack s'
 execG = foldGraph  execAlg
 
@@ -180,18 +189,27 @@ unravel :
 unravel = foldGraph HTreeIn
 
 
-compileT : {s : StackType} → ∀ {z σ} → Src σ z → HTree BytecodeF s (replicate z σ ++ₗ s)
+compileT : ∀ {σ z s} → Src σ z → HTree BytecodeF s (replicate z σ ++ₗ s)
 compileT (vₛ x)                  = PUSH_T x
 compileT (e₁ +ₛ e₂)              = (compileT e₂ ⟫T compileT e₁) ⟫T ADD_T
 compileT (ifₛ c thenₛ t elseₛ e) = compileT c ⟫T IF_T (compileT t) (compileT e)
-compileT (a ⟫ₛ b) = {!!}
+compileT {.σ} {.(suc n + suc m)} {s} (_⟫ₛ_ {σ} {m} {n} e₁ e₂) 
+    rewrite lemmaPlusAppend n (suc m) σ
+          | lemmaConsAppend n m σ s
+    = compileT e₁ ⟫T compileT e₂
 
-compileG' : {s : StackType} → ∀ {z σ} → Src σ z → ∀ {v} → HGraph' BytecodeF v s (replicate z σ ++ₗ s)
+compileTcorrect : ∀ {σ z s} → (e : Src σ z) -> toTree {s} (compile e) ≡ compileT e
+compileTcorrect = {!!}
+
+
+compileG' : ∀ {σ z s} → Src σ z → ∀ {v} → HGraph' BytecodeF v s (replicate z σ ++ₗ s)
 compileG' (vₛ x)                  = PUSH_G x
 compileG' (e₁ +ₛ e₂)              = (compileG' e₂ ⟫G compileG' e₁) ⟫G ADD_G
 compileG' (ifₛ c thenₛ t elseₛ e) = compileG' c ⟫G IF_G (compileG' t) (compileG' e)
-compileG' (a ⟫ₛ b) = {!!}
-
+compileG' {.σ} {.(suc n + suc m)} {s} (_⟫ₛ_ {σ} {m} {n} e₁ e₂) 
+    rewrite lemmaPlusAppend n (suc m) σ
+          | lemmaConsAppend n m σ s
+    = compileG' e₁ ⟫G compileG' e₂
 
 compileG : {s : StackType} → ∀ {z σ} -> Src σ z → HGraph BytecodeF s (replicate z σ ++ₗ s)
 compileG src = mkHGraph (compileG' src)
@@ -203,8 +221,11 @@ infixl 3 _~_
 
 Lemma₁ : {s : StackType} 
        → ∀ {σ z} 
-       → ( src : Src σ z) → compileT {s} src ≡ unravel (compileG {s} src)
-Lemma₁ = {!!}
+       → ( src : Src σ z) → compileT {σ} {z} {s} src ≡ unravel (compileG {s} src)
+Lemma₁ (vₛ v) = {!!}
+Lemma₁ (src +ₛ src₁) = {!!}
+Lemma₁ (ifₛ src thenₛ src₁ elseₛ src₂) = {!!}
+Lemma₁ (src ⟫ₛ src₁) = {!!}
 
 Theorem :
     ∀ {Ip Iq} → ∀ {r}
@@ -222,12 +243,6 @@ Lemma₂ : {s s' : StackType} → (r : Stack s)
        →  execG graph r ≡ execT (unravel graph) r
 Lemma₂ {s} {s'} r graph = apply r (Theorem execAlg graph)
 
-execT_correct : ∀ {s s'} → (tree : HTree BytecodeF s s') -> exec (fromTree tree) ≡ execT tree
-execT_correct = {!!}
-
-compileT_correct : ∀ {σ z s} → (e : Src σ z) -> toTree {s} (compile e) ≡ compileT e
-compileT_correct = {!!}
-
 -- prepend ⟦ e ⟧  r ≡ exec (compile e) r 
 --                  ≡ exec (fromTree . toTree . compile e) r 
 --                  ≡ execT (toTree . compile e) r 
@@ -237,8 +252,8 @@ correctT : ∀ {σ z s'} → (e : Src σ z)
          → ∀ (r : Stack s') → prepend ⟦ e ⟧  r ≡ execT (compileT e) r
 correctT e r = correct e r 
              ~ cong (λ t → exec t r) (sym (treeIsoTo (compile e))) 
-             ~ apply r (execT_correct (toTree (compile e))) 
-             ~ cong (λ t → execT t r) (compileT_correct e)
+             ~ apply r (execTcorrect (toTree (compile e))) 
+             ~ cong (λ t → execT t r) (compileTcorrect e)
 
 broken_cong : {e : Level} {X : Set e} {R : Set}
      -> (P Q : X -> R)
