@@ -8,7 +8,7 @@ open import Data.List using (List; []; _∷_; replicate; _++_)
 open import Data.Vec using (Vec; [_]; head) renaming ([] to ε; _∷_ to _◁_; _++_ to _+++_)
 open import Data.Nat using (ℕ; _+_; suc; zero)
 
-open import Relation.Binary.PropositionalEquality using (_≡_; refl; sym)
+open import Relation.Binary.PropositionalEquality using (_≡_; refl; sym; trans; cong)
 
 
 -- First of all, as our expression language is typed, we need a language of types
@@ -85,18 +85,23 @@ exec (IF t e)    (false ▽ s) = exec e s
 exec (c₁ ⟫ c₂)   s           = exec c₂ (exec c₁ s)
 
 
+_~_ : {α : Set} {a b c : α} → a ≡ b → b ≡ c → a ≡ c
+_~_ = trans
+
+infixl 5 _~_
+
 -- Now, having our source and "target" languages,
 -- we are ready to define the compiler from one to the other:
 lemmaConsAppend : {A : Set} (m n : ℕ) (a : A) (s : List A)
   →   a ∷ (replicate m a ++ a ∷ replicate n a) ++ s
      ≡ a ∷ replicate m a ++ a ∷ replicate n a ++ s
 lemmaConsAppend zero n a s = refl
-lemmaConsAppend (suc m) n a s rewrite lemmaConsAppend m n a s = refl
+lemmaConsAppend (suc m) n a s = cong (_∷_ a) (lemmaConsAppend m n a s)
 
 lemmaPlusAppend : {A : Set} (m n : ℕ) (a : A)
     → replicate (m + n) a ≡ replicate m a ++ replicate n a
 lemmaPlusAppend zero n a = refl
-lemmaPlusAppend (suc m) n a rewrite lemmaPlusAppend m n a = refl
+lemmaPlusAppend (suc m) n a = cong (_∷_ a) (lemmaPlusAppend m n a)
 
 compile : ∀ {σ z s} → Src σ z → Bytecode s (replicate z σ ++ s)
 compile (vₛ x)                  = PUSH x
@@ -116,14 +121,14 @@ prepend (x ◁ xs) s = x ▽ prepend xs s
 
 
 correct : ∀ {σ z s'} (e : Src σ z) (s : Stack s')
-          → prepend ⟦ e ⟧ s ≡ exec (compile e) s
+         → prepend ⟦ e ⟧ s ≡ exec (compile e) s
 
 correct (vₛ v) s = refl
 
 correct (x +ₛ y) s
-    rewrite sym (correct y s)
-          | sym (correct x (prepend ⟦ y ⟧ s))
-    with ⟦ x ⟧ | ⟦ y ⟧
+   rewrite sym (correct y s)
+         | sym (correct x (prepend ⟦ y ⟧ s))
+   with ⟦ x ⟧ | ⟦ y ⟧
 ... | x' ◁ ε | y' ◁ ε = refl
 
 correct (ifₛ c thenₛ t elseₛ e) s with (exec (compile c) s) | sym (correct c s)
@@ -137,14 +142,15 @@ correct (ifₛ c thenₛ t elseₛ e) s | .(prepend ⟦ c ⟧ s) | refl | false 
 
 correct {.σ} {.(suc n + suc m)} {s'} (_⟫ₛ_ {σ} {m} {n} e₁ e₂) s = {!!}
 
---compile {.σ} {.(suc n + suc m)} {s} (_⟫ₛ_ {σ} {m} {n} e₁ e₂)
---    rewrite lemmaPlusAppend n (suc m) σ
---          | lemmaConsAppend n m σ s
---    = compile e₁ ⟫ compile e₂
-
---lemmaPlusAppend : {A : Set} (m n : ℕ) (a : A)
---    → replicate (m + n) a ≡ replicate m a ++ replicate n a
-
---lemmaConsAppend : {A : Set} (m n : ℕ) (a : A) (s : List A)
---  →   a ∷ (replicate m a ++ a ∷ replicate n a) ++ s
---     ≡ a ∷ replicate m a ++ a ∷ replicate n a ++ s
+--
+----compile {.σ} {.(suc n + suc m)} {s} (_⟫ₛ_ {σ} {m} {n} e₁ e₂
+----    rewrite lemmaPlusAppend n (suc m) σ
+----          | lemmaConsAppend n m σ s
+----    = compile e₁ ⟫ compile e₂
+--
+----lemmaPlusAppend : {A : Set} (m n : ℕ) (a : A)
+----    → replicate (m + n) a ≡ replicate m a ++ replicate n a
+--
+----lemmaConsAppend : {A : Set} (m n : ℕ) (a : A) (s : List A)
+----  →   a ∷ (replicate m a ++ a ∷ replicate n a) ++ s
+----     ≡ a ∷ replicate m a ++ a ∷ replicate n a ++ s
