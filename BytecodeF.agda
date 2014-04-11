@@ -251,6 +251,19 @@ Lemma₁ (src +ₛ src₁) = {!!}
 Lemma₁ (ifₛ src thenₛ src₁ elseₛ src₂) = {!!}
 Lemma₁ (src ⟫ₛ src₁) = {!!}
 
+data Unit : Set where
+  T : Unit
+
+fusion : 
+     ∀ {Ip Iq r} → ∀ {F} 
+  -> {{ functor : HFunctor F }}
+  -> (b : ∀ {c} -> ( {ixp : Ip} -> {ixq : Iq} -> F c ixp ixq -> c ixp ixq) -> {ixp : Ip} -> {ixq : Iq} -> c ixp ixq)       
+  -> (alg : ∀ {ixp ixq} → F r ixp ixq → r ixp ixq)
+  -> (ixp : Ip) (ixq : Iq)
+  -> b alg {ixp} {ixq} ≡ foldTree alg {ixp} {ixq} (b HTreeIn {ixp} {ixq})
+fusion = {!!}
+
+
 Theorem :
     ∀ {Ip Iq} → ∀ {F} → 
     {{ functor : HFunctor F }} → 
@@ -258,7 +271,9 @@ Theorem :
   → (alg : ∀ {ixp ixq} → F r ixp ixq → r ixp ixq)
   → {ixp : Ip} {ixq : Iq} 
   → ∀ graph → foldGraph alg {ixp} {ixq} graph ≡ foldTree alg {ixp} {ixq} (unravel graph)
-Theorem = {!!}
+Theorem alg graph =
+  let r = fusion (λ a → foldGraph a graph)
+  in {!!}
 
 apply : {X Y : Set} -> {f g : X -> Y} -> (x : X) -> f ≡ g -> f x ≡ g x
 apply x refl = refl
