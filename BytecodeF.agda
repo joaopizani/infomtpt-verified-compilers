@@ -127,16 +127,20 @@ treeIsoFrom (HTreeIn ADD) = refl
 treeIsoFrom (HTreeIn (IF t f)) rewrite treeIsoFrom t | treeIsoFrom f =  refl
 treeIsoFrom (HTreeIn (a ⟫ b)) rewrite treeIsoFrom a | treeIsoFrom b = refl
 
--- {-# NO_TERMINATION_CHECK #-}
-foldTree :
-       {Ip Iq : Set} 
-    -> {F : (Ip -> Iq -> Set) -> (Ip -> Iq -> Set)} -> 
-       {{ functor : HFunctor F }}      
-    -> {r : Ip -> Iq -> Set}
-    -> ( {ixp : Ip} {ixq : Iq} ->       F r ixp ixq -> r ixp ixq) 
-    -> ( {ixp : Ip} {ixq : Iq} -> HTree F   ixp ixq -> r ixp ixq)
-foldTree {{functor}} alg (HTreeIn r) = {!!} -- alg (hmap (foldTree alg) r) 
+{-
+{-# NO_TERMINATION_CHECK #-}
+foldTree : 
+        {Ip Iq : Set} 
+     -> {F : (Ip -> Iq -> Set) -> (Ip -> Iq -> Set)} -> 
+        {{ functor : HFunctor F }} 
+     -> {r : Ip -> Iq -> Set} 
+     -> ( {ixp : Ip} {ixq : Iq} -> F r ixp ixq -> r ixp ixq) 
+     -> ( {ixp : Ip} {ixq : Iq} -> HTree F   ixp ixq -> r ixp ixq)
+foldTree {{functor}} alg (HTreeIn r) = alg (hmap (foldTree alg) r) 
   where open HFunctor functor
+-}
+
+postulate foldTree : {Ip Iq : Set} -> {F : (Ip -> Iq -> Set) -> (Ip -> Iq -> Set)} -> {{ functor : HFunctor F }} -> {r : Ip -> Iq -> Set} -> ( {ixp : Ip} {ixq : Iq} -> F r ixp ixq -> r ixp ixq) -> ( {ixp : Ip} {ixq : Iq} -> HTree F   ixp ixq -> r ixp ixq)
  
 -- {-# NO_TERMINATION_CHECK #-}
 foldGraph' :
@@ -189,7 +193,7 @@ execT = foldTree execAlg
 
 execTcorrect : ∀ {s s'} → (tree : HTree BytecodeF s s') -> exec (fromTree tree) ≡ execT tree
 execTcorrect (HTreeIn SKIP) = {!!}
-execTcorrect (HTreeIn (PUSH x)) = refl
+execTcorrect (HTreeIn (PUSH x)) = {!!}
 execTcorrect (HTreeIn ADD) = {!!}
 execTcorrect (HTreeIn (IF t e)) = {!!}
 execTcorrect (HTreeIn (c₁ ⟫ c₂)) = {!!}
