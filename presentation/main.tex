@@ -1,0 +1,89 @@
+\documentclass[notes]{beamer}
+
+% Beamer style
+\usetheme[style=plain]{uu}
+
+
+%% Standard packages
+\usepackage{graphicx}
+\usepackage{mathtools}
+\usepackage{amssymb}
+\usepackage{hyperref}
+\usepackage{color}
+
+%% unicode support, for text and code :)
+\usepackage[utf8x]{inputenc}
+\usepackage{ucs}
+\usepackage{autofe}
+
+
+%% Minted syntax highlighting
+\usepackage{minted}
+\usepackage{fancyvrb}
+\usepackage{inconsolata}
+\usemintedstyle{default}
+
+%% Haskell
+\newmint{haskell}{mathescape,fontfamily=tt,fontsize=\footnotesize}
+\newmintedfile{haskell}{xleftmargin=20pt,mathescape,fontfamily=tt,fontsize=\footnotesize}
+\newminted{haskell}{xleftmargin=20pt,gobble=12,mathescape,fontfamily=tt,fontsize=\footnotesize}
+
+
+%% PDF metainformation
+\usepackage{datetime}
+\usepackage{ifpdf}
+\ifpdf
+\pdfinfo{
+    /Author (Joao Paulo Pizani Flor, Wout Elsinghorst)
+    /Title (Proving Compiler Correctness with Dependent Types)
+    /Keywords (Agda, Dependently-typed programming, Compiler correctness, typed bytecode)
+    /CreationDate (D:\pdfdate)
+}
+\fi
+
+
+%% LaTeX meta-information
+\title[Compiler Correctness]{Proving Compiler Correctness with Dependent Types}
+
+\date{\today}
+\author[J. P. Pizani Flor, W. Elsignhorst]{
+    João Paulo Pizani Flor \\
+    Wout Elsinghorst
+}
+
+\institute[Utrecht University] {
+    Department of Information and Computing Sciences \\
+    Utrecht University
+}
+
+\subject{Agda, Dependently-typed programming, Compiler correctness, typed bytecode}
+
+
+
+
+%% The document itself
+\begin{document}
+    \begin{frame}
+        \titlepage
+    \end{frame}
+
+    \begin{frame}
+        \frametitle{Table of Contents}
+        \tableofcontents
+    \end{frame}
+
+
+    %% Sections
+    \input{section1.tex}
+    \input{section2.tex}
+    \input{section3.tex}
+
+
+    \begin{frame}[plain]
+        \begin{center}
+            \par{\Huge{Thank you!}}
+            \vspace{2.0cm}
+            \par{\Huge{Questions?}}
+        \end{center}
+    \end{frame}
+\end{document}
