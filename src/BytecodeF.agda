@@ -1,21 +1,17 @@
 {-# OPTIONS --no-positivity-check #-}
 module BytecodeF where
 
-open import Data.List using (_∷_)
-
 open import Level renaming ( suc to zuc )
-
 open import Data.Bool using (true; false; if_then_else_) renaming (Bool to 𝔹)
 open import Data.List using (List; []; _∷_; replicate; [_]) renaming (_++_ to _++ₗ_)
 open import Data.Vec using (Vec) renaming ([] to ε; _∷_ to _◁_)
 open import Data.Nat using (ℕ; _+_; suc)
 open import Relation.Binary.PropositionalEquality using (_≡_; refl; sym; trans; subst; cong)
 
+open import Source using (𝔹ₛ; ℕₛ; ⁅_⁆; Src; vₛ; _+ₛ_; ifₛ_thenₛ_elseₛ_; _⟫ₛ_; ⟦_⟧)
+open import Bytecode using (_▽_; StackType; Stack; Bytecode; exec)
+open import Compiler using (correct; compile; lemmaPlusAppend; lemmaConsAppend; prepend)
 
-open import Basic using (𝔹ₛ; ℕₛ; _▽_; StackType; Stack; Bytecode; ⁅_⁆; exec; correct; compile)
-
-open import Basic using (Src; vₛ; _+ₛ_; ifₛ_thenₛ_elseₛ_; _⟫ₛ_; lemmaPlusAppend; lemmaConsAppend)
-open import Basic using (prepend; ⟦_⟧ )
 
 record HFunctor {Ip Iq : Set} (F : (Ip -> Iq -> Set) -> (Ip -> Iq -> Set)) : Set₁ where
   constructor isHFunctor
@@ -100,25 +96,25 @@ BytecodeFunctor =
   } 
 
 toTree : {ixp ixq : StackType} -> Bytecode ixp ixq -> HTree BytecodeF ixp ixq
-toTree Basic.SKIP = HTreeIn SKIP
-toTree (Basic.PUSH x) = HTreeIn (PUSH x)
-toTree Basic.ADD = HTreeIn ADD
-toTree (Basic.IF bc₁ bc₂) = HTreeIn (IF (toTree bc₁) (toTree bc₂))
-toTree (bc₁ Basic.⟫ bc₂) = HTreeIn (toTree bc₁ ⟫ toTree bc₂)  
+toTree Bytecode.SKIP = HTreeIn SKIP
+toTree (Bytecode.PUSH x) = HTreeIn (PUSH x)
+toTree Bytecode.ADD = HTreeIn ADD
+toTree (Bytecode.IF bc₁ bc₂) = HTreeIn (IF (toTree bc₁) (toTree bc₂))
+toTree (bc₁ Bytecode.⟫ bc₂) = HTreeIn (toTree bc₁ ⟫ toTree bc₂)  
 
 fromTree : {ixp ixq : StackType} -> HTree BytecodeF ixp ixq -> Bytecode ixp ixq
-fromTree (HTreeIn SKIP) = Basic.SKIP
-fromTree (HTreeIn (PUSH x)) = Basic.PUSH x
-fromTree (HTreeIn ADD) = Basic.ADD
-fromTree (HTreeIn (IF t e)) = Basic.IF (fromTree t) (fromTree e)
-fromTree (HTreeIn (c₁ ⟫ c₂)) = fromTree c₁ Basic.⟫ fromTree c₂
+fromTree (HTreeIn SKIP) = Bytecode.SKIP
+fromTree (HTreeIn (PUSH x)) = Bytecode.PUSH x
+fromTree (HTreeIn ADD) = Bytecode.ADD
+fromTree (HTreeIn (IF t e)) = Bytecode.IF (fromTree t) (fromTree e)
+fromTree (HTreeIn (c₁ ⟫ c₂)) = fromTree c₁ Bytecode.⟫ fromTree c₂
 
 treeIsoTo : {ixp ixq : StackType} -> (code : Bytecode ixp ixq) -> fromTree (toTree code) ≡ code
-treeIsoTo Basic.SKIP = refl
-treeIsoTo (Basic.PUSH x) = refl
-treeIsoTo Basic.ADD = refl
-treeIsoTo (Basic.IF t f) rewrite treeIsoTo t | treeIsoTo f = refl
-treeIsoTo (a Basic.⟫ b) rewrite treeIsoTo a | treeIsoTo b = refl
+treeIsoTo Bytecode.SKIP = refl
+treeIsoTo (Bytecode.PUSH x) = refl
+treeIsoTo Bytecode.ADD = refl
+treeIsoTo (Bytecode.IF t f) rewrite treeIsoTo t | treeIsoTo f = refl
+treeIsoTo (a Bytecode.⟫ b) rewrite treeIsoTo a | treeIsoTo b = refl
 
 treeIsoFrom : {ixp ixq : StackType} -> (tree : HTree BytecodeF ixp ixq) -> toTree (fromTree tree) ≡ tree
 treeIsoFrom (HTreeIn SKIP) = refl
