@@ -128,6 +128,9 @@ prepend : {t : StackType} {n : Sizeₛ} {σ : Tyₛ}
 prepend ε        s = s
 prepend (x ◁ xs) s = x ▽ prepend xs s
 
+lemmaCoerce : {st st₁ st₂ : StackType} {c₁ : Bytecode st st₁} {c₂ : Bytecode st st₂}
+              (eq : st₁ ≡ st₂) (s : Stack st) → exec (coerce eq c₁) s ≡ exec c₂ s
+lemmaCoerce refl s = {!!}
 
 correct : ∀ {σ z s'} (e : Src σ z) (s : Stack s') → prepend ⟦ e ⟧ s ≡ exec (compile e) s
 
