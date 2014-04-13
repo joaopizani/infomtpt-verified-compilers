@@ -74,12 +74,8 @@ correct (x +ₛ y) s
 
 correct (ifₛ c thenₛ t elseₛ e) s with (exec (compile c) s) | sym (correct c s)
 correct (ifₛ c thenₛ t elseₛ e) s | .(prepend ⟦ c ⟧ s) | refl with ⟦ c ⟧
-correct (ifₛ c thenₛ t elseₛ e) s | .(prepend ⟦ c ⟧ s) | refl | true  ◁ ε with (exec (compile t) s) | sym (correct t s)
-correct (ifₛ c thenₛ t elseₛ e) s | .(prepend ⟦ c ⟧ s) | refl | true  ◁ ε | .(prepend ⟦ t ⟧ s) | refl with ⟦ t ⟧
-correct (ifₛ c thenₛ t elseₛ e) s | .(prepend ⟦ c ⟧ s) | refl | true  ◁ ε | .(prepend ⟦ t ⟧ s) | refl | t' ◁ ε = refl
-correct (ifₛ c thenₛ t elseₛ e) s | .(prepend ⟦ c ⟧ s) | refl | false ◁ ε with (exec (compile e) s) | sym (correct e s)
-correct (ifₛ c thenₛ t elseₛ e) s | .(prepend ⟦ c ⟧ s) | refl | false ◁ ε | .(prepend ⟦ e ⟧ s) | refl with ⟦ e ⟧
-correct (ifₛ c thenₛ t elseₛ e) s | .(prepend ⟦ c ⟧ s) | refl | false ◁ ε | .(prepend ⟦ e ⟧ s) | refl | e' ◁ ε = refl
+correct (ifₛ c thenₛ t elseₛ e) s | .(prepend ⟦ c ⟧ s) | refl | true  ◁ ε rewrite correct t s = refl
+correct (ifₛ c thenₛ t elseₛ e) s | .(prepend ⟦ c ⟧ s) | refl | false ◁ ε rewrite correct e s = refl
 
 correct {.σ} {.(suc n + suc m)} {s'} (_⟫ₛ_ {σ} {m} {n} e₁ e₂) s = {!!}
 

@@ -28,7 +28,8 @@ Sizeₛ = ℕ
 data Src : (σ : Tyₛ) → (z : Sizeₛ) → Set where
     vₛ    : ∀ {σ} → (v : ⁅ σ ⁆) → Src σ 1
     _+ₛ_  : (e₁ e₂ : Src ℕₛ 1) → Src ℕₛ 1
-    ifₛ_thenₛ_elseₛ_ : ∀ {σ} → (c : Src 𝔹ₛ 1) → (eₜ eₑ : Src σ 1) → Src σ 1
+    ifₛ_thenₛ_elseₛ_ : ∀ {σ n} → (c : Src 𝔹ₛ 1)
+                        → (eₜ eₑ : Src σ (suc n)) → Src σ (suc n)
     _⟫ₛ_  : ∀ {σ m n} → Src σ (suc m) → Src σ (suc n) → Src σ (suc n + suc m)
 
 infixl 40 _+ₛ_
@@ -41,8 +42,8 @@ infixl 40 _+ₛ_
 mutual
     ⟦_⟧ : {σ : Tyₛ} {z : Sizeₛ} → (e : Src σ z) → Vec ⁅ σ ⁆ z
     ⟦ vₛ v ⟧                     = [ v ]
-    ⟦ e₁ +ₛ e₂ ⟧                 = [ ⟦ e₁ ⟧' + ⟦ e₂ ⟧' ]
-    ⟦ ifₛ_thenₛ_elseₛ_ c e₁ e₂ ⟧ = [ if ⟦ c ⟧' then ⟦ e₁ ⟧' else ⟦ e₂ ⟧' ]
+    ⟦ e₁ +ₛ e₂ ⟧                 = [ ⟦ e₁ ⟧' + ⟦ e₂ ⟧' ] 
+    ⟦ ifₛ_thenₛ_elseₛ_ c e₁ e₂ ⟧ = if ⟦ c ⟧' then ⟦ e₁ ⟧ else ⟦ e₂ ⟧
     ⟦ e₁ ⟫ₛ e₂ ⟧                 = ⟦ e₂ ⟧ +++ ⟦ e₁ ⟧
 
     ⟦_⟧' : {σ : Tyₛ} {z' : Sizeₛ} → (e : Src σ (suc z')) → ⁅ σ ⁆
