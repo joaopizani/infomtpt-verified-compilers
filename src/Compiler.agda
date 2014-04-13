@@ -31,6 +31,13 @@ lemmaPlusAppend (suc m) n a = cong (_∷_ a) (lemmaPlusAppend m n a)
 coerce : {s s₁ s₂ : StackType} → s₁ ≡ s₂ → Bytecode s s₁ → Bytecode s s₂
 coerce refl b = b
 
+coerceStack : {s₁ s₂ : StackType} → s₁ ≡ s₂ → Stack s₁ → Stack s₂
+coerceStack refl s = s
+
+lemmaStack : {st : StackType} {c : Bytecode st _}
+             → ∀ eq → ∀ s → exec (coerce eq c) s ≡ exec c (coerceStack eq s)
+lemmaStack refl s = refl
+
 _~_ : {α : Set} {a b c : α} → a ≡ b → b ≡ c → a ≡ c
 _~_ = trans  -- just an easier-to-use notation for transitivity
 infixr 5 _~_
@@ -52,9 +59,8 @@ prepend : ∀ {t n σ} → (v : Vec ⁅ σ ⁆ n) → Stack t → Stack (rep n �
 prepend ε        s = s
 prepend (x ◁ xs) s = x ▽ prepend xs s
 
-lemmaCoerce : ∀ {c} → ∀ eq → coerce eq c ≡ c
-lemmaCoerce refl = refl
-
+-- lemmaCoerce : ∀ {c} → ∀ eq → coerce eq c ≡ c
+-- lemmaCoerce refl = refl
 
 correct : ∀ {σ z s'} (e : Src σ z) (s : Stack s') → prepend ⟦ e ⟧ s ≡ exec (compile e) s
 
@@ -75,7 +81,6 @@ correct (ifₛ c thenₛ t elseₛ e) s | .(prepend ⟦ c ⟧ s) | refl | false 
 correct (ifₛ c thenₛ t elseₛ e) s | .(prepend ⟦ c ⟧ s) | refl | false ◁ ε | .(prepend ⟦ e ⟧ s) | refl with ⟦ e ⟧
 correct (ifₛ c thenₛ t elseₛ e) s | .(prepend ⟦ c ⟧ s) | refl | false ◁ ε | .(prepend ⟦ e ⟧ s) | refl | e' ◁ ε = refl
 
-correct {.σ} {.(suc n + suc m)} {s'} (_⟫ₛ_ {σ} {m} {n} e₁ e₂) s
-    rewrite lemmaCoerce
-                {compile e₁ ⟫ compile e₂}
-                (lemmaConsAppend n m σ s'  ~  cong (λ l → σ ∷ l ++ s') (lemmaPlusAppend n (suc m) σ)) = {!!}
+correct {.σ} {.(suc n + suc m)} {s'} (_⟫ₛ_ {σ} {m} {n} e₁ e₂) s = {!!}
+
+--(lemmaConsAppend n m σ s' ~ cong (λ l → σ ∷ l ++ s') (lemmaPlusAppend n (suc m) σ))
