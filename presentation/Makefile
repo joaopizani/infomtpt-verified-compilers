@@ -8,8 +8,8 @@ section%.tex: section%.md ; pandoc $< -t beamer -o $@
 
 clean:
 	latexmk -c main.tex
-	rm -f *.nav *.snm *.vrb *.pyg *.out.pyg
+	rm -f *.nav *.snm *.vrb *.pyg *.out.pyg *.ptb
 
 veryclean: clean
 	rm -f main.pdf
-	rm -f section*.tex
+	rm -f section*.tex agda-latex/*.tex

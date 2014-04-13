@@ -8,3 +8,5 @@
 *.snm
 *.toc
 *.vrb
+*.ptb
+agda-latex

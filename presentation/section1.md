@@ -8,6 +8,8 @@ Context
 
   * The type of the interpreter states type preservation
 
+\ExecuteMetaData[agda-latex/Code.tex]{nat}
+
 
 Compiler correctness
 --------------------
