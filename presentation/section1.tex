@@ -1,0 +1,66 @@
+\section{Problem description}
+
+    \subsection{Context}
+        \begin{frame}
+            \frametitle{Source code, Stack code, eval, compile, exec}
+
+            \begin{itemize}
+                \item The type of the interpreter states type preservation
+            \end{itemize}
+
+            \ExecuteMetaData[agda-latex/Code.tex]{nat}
+        \end{frame}
+
+
+    \subsection{Compiler correctness}
+        \begin{frame}
+            \frametitle{What does "correct" mean?}
+
+            \begin{itemize}
+                \item Commutative diagram?
+            \end{itemize}
+        \end{frame}
+
+
+    \subsection{Extending the source language}
+        \begin{frame}
+            \frametitle{Extension}
+
+            \begin{itemize}
+                \item Sequencing expressions
+                \item Enables "branching", but with _shared suffix_
+            \end{itemize}
+        \end{frame}
+
+        \begin{frame}
+            \frametitle{Code duplication}
+
+            \begin{itemize}
+                \item The "normal" _compile_ function will duplicate the common suffix
+                \item Having Bytecode defined as _graph_ (structured graph) instead of tree
+                    would solve this problem
+                    \begin{itemize}
+                        \item But proofs would be harder
+                    \end{itemize}
+            \end{itemize}
+        \end{frame}
+
+        \begin{frame}
+            \frametitle{Graph and tree representations are equivalent}
+
+            \begin{itemize}
+                \item Equations
+                \item Make Bytecode a functor (BytecodeF)
+                    \begin{itemize}
+                        \item Two type-level fixpoint operators give two different Bytecode versions:
+                        \begin{itemize}
+                            \item HTree gives us BytecodeT
+                            \item HGraph gives us BytecodeG
+                        \end{itemize}
+                    \end{itemize}
+
+                \item Now for the implementation
+            \end{itemize}
+        \end{frame}
+
+
