@@ -10,7 +10,7 @@ open import Relation.Binary.PropositionalEquality using (_≡_; refl; sym; trans
 
 open import Source using (𝔹ₛ; ℕₛ; ⁅_⁆; Src; vₛ; _+ₛ_; ifₛ_thenₛ_elseₛ_; _⟫ₛ_; ⟦_⟧)
 open import Bytecode using (_▽_; StackType; Stack; Bytecode; exec)
-open import Compiler using (correct; compile; lemmaPlusAppend; lemmaConsAppend; prepend)
+open import Compiler using (correct; compile; lemmaPlusAppend; _~_; lemmaConsAppend; prepend; rep)
 
 
 record HFunctor {Ip Iq : Set} (F : (Ip -> Iq -> Set) -> (Ip -> Iq -> Set)) : Set₁ where
@@ -205,15 +205,19 @@ unravel :
   -> HGraph F ipx ipq -> HTree F ipx ipq
 unravel = foldGraph HTreeIn
 
+coerce : {A : Set} → (F : A → Set) → {s₁ s₂ : A} → s₁ ≡ s₂ → F s₁ → F s₂
+coerce _ refl b = b
 
 compileT : ∀ {σ z s} → Src σ z → HTree BytecodeF s (replicate z σ ++ₗ s)
 compileT (vₛ x)                  = PUSH_T x
 compileT (e₁ +ₛ e₂)              = (compileT e₂ ⟫T compileT e₁) ⟫T ADD_T
 compileT (ifₛ c thenₛ t elseₛ e) = compileT c ⟫T IF_T (compileT t) (compileT e)
 compileT {.σ} {.(suc n + suc m)} {s} (_⟫ₛ_ {σ} {m} {n} e₁ e₂) 
-    rewrite lemmaPlusAppend n (suc m) σ
-          | lemmaConsAppend n m σ s
-    = compileT e₁ ⟫T compileT e₂
+    = coerce (HTree BytecodeF s)
+      (lemmaConsAppend n m σ s
+       ~ cong (λ l → σ ∷ l ++ₗ s) (lemmaPlusAppend n (suc m) σ))
+      (compileT e₁ ⟫T compileT e₂)
+
 
 compileTcorrect : ∀ {σ z s} → (e : Src σ z) -> toTree {s} (compile e) ≡ compileT e
 compileTcorrect (vₛ v) = refl
@@ -221,23 +225,18 @@ compileTcorrect (src +ₛ src₁) = {!!}
 compileTcorrect (ifₛ src thenₛ src₁ elseₛ src₂) = {!!}
 compileTcorrect (src ⟫ₛ src₁) = {!!}
 
-
-compileG' : ∀ {σ z s} → Src σ z → ∀ {v} → HGraph' BytecodeF v s (replicate z σ ++ₗ s)
+compileG' : ∀ {σ z s} → Src σ z → ∀ {v} → HGraph' BytecodeF v s (rep z σ ++ₗ s)
 compileG' (vₛ x)                  = PUSH_G x
 compileG' (e₁ +ₛ e₂)              = (compileG' e₂ ⟫G compileG' e₁) ⟫G ADD_G
 compileG' (ifₛ c thenₛ t elseₛ e) = compileG' c ⟫G IF_G (compileG' t) (compileG' e)
-compileG' {.σ} {.(suc n + suc m)} {s} (_⟫ₛ_ {σ} {m} {n} e₁ e₂) 
-    rewrite lemmaPlusAppend n (suc m) σ
-          | lemmaConsAppend n m σ s
-    = compileG' e₁ ⟫G compileG' e₂
+compileG' {.σ} {.(suc n + suc m)} {s} (_⟫ₛ_ {σ} {m} {n} e₁ e₂) {v}
+    = coerce (HGraph' BytecodeF v s)
+      (lemmaConsAppend n m σ s
+       ~ cong (λ l → σ ∷ l ++ₗ s) (lemmaPlusAppend n (suc m) σ))
+      (compileG' e₁ ⟫G compileG' e₂)
 
 compileG : {s : StackType} → ∀ {z σ} -> Src σ z → HGraph BytecodeF s (replicate z σ ++ₗ s)
 compileG src = mkHGraph (compileG' src)
-
-_~_ : {a : Level} {A : Set a} {i j k : A} → i ≡ j → j ≡ k → i ≡ k
-_~_ = trans
-
-infixl 3 _~_
 
 Lemma₁ : {s : StackType} 
        → ∀ {σ z} 
@@ -268,7 +267,7 @@ Theorem :
   → {ixp : Ip} {ixq : Iq} 
   → ∀ graph → foldGraph alg {ixp} {ixq} graph ≡ foldTree alg {ixp} {ixq} (unravel graph)
 Theorem alg graph =
-  let r = fusion (λ a → foldGraph a graph)
+  let r = fusion {!!} -- (λ a → foldGraph a graph)
   in {!!}
 
 apply : {X Y : Set} -> {f g : X -> Y} -> (x : X) -> f ≡ g -> f x ≡ g x
