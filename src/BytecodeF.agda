@@ -250,12 +250,13 @@ data Unit : Set where
   T : Unit
 
 fusion : 
-     ∀ {Ip Iq r} → ∀ {F} 
-  -> {{ functor : HFunctor F }}
-  -> (b : ∀ {c} -> ( {ixp : Ip} -> {ixq : Iq} -> F c ixp ixq -> c ixp ixq) -> {ixp : Ip} -> {ixq : Iq} -> c ixp ixq)       
+     ∀ {Ip Iq r} 
+  -> ∀ {F} -> {{ functor : HFunctor F }}
+  -> {ixp : Ip} {ixq : Iq}
+  -> (b : ∀ {c} -> ( {ixP : Ip} -> {ixQ : Iq} -> F c ixP ixQ -> c ixP ixQ) -> c ixp ixq)       
   -> (alg : ∀ {ixp ixq} → F r ixp ixq → r ixp ixq)
-  -> (ixp : Ip) (ixq : Iq)
-  -> b alg {ixp} {ixq} ≡ foldTree alg {ixp} {ixq} (b HTreeIn {ixp} {ixq})
+  
+  -> b alg ≡ foldTree alg {ixp} {ixq} (b HTreeIn)
 fusion = {!!}
 
 
@@ -263,12 +264,10 @@ Theorem :
     ∀ {Ip Iq} → ∀ {F} → 
     {{ functor : HFunctor F }} → 
     ∀ {r}
-  → (alg : ∀ {ixp ixq} → F r ixp ixq → r ixp ixq)
+  → (alg : {ixp : Ip} → {ixq : Iq} → F r ixp ixq → r ixp ixq)
   → {ixp : Ip} {ixq : Iq} 
   → ∀ graph → foldGraph alg {ixp} {ixq} graph ≡ foldTree alg {ixp} {ixq} (unravel graph)
-Theorem alg graph =
-  let r = fusion {!!} -- (λ a → foldGraph a graph)
-  in {!!}
+Theorem alg {ipx} {ipy} graph = fusion (λ a → foldGraph a graph) alg
 
 apply : {X Y : Set} -> {f g : X -> Y} -> (x : X) -> f ≡ g -> f x ≡ g x
 apply x refl = refl
