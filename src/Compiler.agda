@@ -5,7 +5,7 @@ module Compiler where
 
 open import Data.Bool using (true; false)
 open import Data.List using (List; _∷_; replicate; _++_)
-open import Data.Vec using (Vec) renaming ([] to ε; _∷_ to _◁_)
+open import Data.Vec using (Vec) renaming ([] to ε; _∷_ to _◁_; _++_ to _+++_)
 open import Data.Nat using (ℕ; _+_; suc; zero)
 
 open import Relation.Binary.PropositionalEquality using (_≡_; refl; sym; trans; cong)
@@ -28,14 +28,18 @@ lemmaPlusAppend : {A : Set} (m n : ℕ) (a : A) → rep m a ++ rep n a ≡ rep (
 lemmaPlusAppend zero    n a = refl
 lemmaPlusAppend (suc m) n a = cong (_∷_ a) (lemmaPlusAppend m n a)
 
-coerce : {s s₁ s₂ : StackType} → s₁ ≡ s₂ → Bytecode s s₁ → Bytecode s s₂
-coerce refl b = b
+coerce : {A : Set} → (F : A → Set) → {s₁ s₂ : A} → s₁ ≡ s₂ → F s₁ → F s₂
+coerce _ refl b = b
+
+coerceBytecode : {s s₁ s₂ : StackType} → s₁ ≡ s₂ → Bytecode s s₁ → Bytecode s s₂
+coerceBytecode {s} refl b = coerce (Bytecode s) refl b
 
 coerceStack : {s₁ s₂ : StackType} → s₁ ≡ s₂ → Stack s₁ → Stack s₂
-coerceStack refl s = s
+coerceStack refl s = coerce Stack refl s
 
-lemmaStack : {st : StackType} {c : Bytecode st _}
-             → ∀ eq → ∀ s → exec (coerce eq c) s ≡ exec c (coerceStack eq s)
+lemmaStack :
+ {st st1 st2 : StackType} {c : Bytecode st st1} (eq : st1 ≡ st2) (s : Stack st)
+ → exec (coerceBytecode eq c) s ≡ coerceStack eq (exec c s)
 lemmaStack refl s = refl
 
 _~_ : {α : Set} {a b c : α} → a ≡ b → b ≡ c → a ≡ c
@@ -47,7 +51,7 @@ compile (vₛ x)                  = PUSH x
 compile (e₁ +ₛ e₂)              = compile e₂ ⟫ compile e₁ ⟫ ADD
 compile (ifₛ c thenₛ t elseₛ e) = compile c ⟫ IF (compile t) (compile e)
 compile {.σ} {.(suc n + suc m)} {s} (_⟫ₛ_ {σ} {m} {n} e₁ e₂)
-  = coerce
+  = coerceBytecode
       (lemmaConsAppend n m σ s
        ~ cong (λ l → σ ∷ l ++ s) (lemmaPlusAppend n (suc m) σ))
       (compile e₁ ⟫ compile e₂)
@@ -59,10 +63,12 @@ prepend : ∀ {t n σ} → (v : Vec ⁅ σ ⁆ n) → Stack t → Stack (rep n �
 prepend ε        s = s
 prepend (x ◁ xs) s = x ▽ prepend xs s
 
--- lemmaCoerce : ∀ {c} → ∀ eq → coerce eq c ≡ c
--- lemmaCoerce refl = refl
+lemmaPrepend : ∀ {m n σ t} → (v₁ : Vec ⁅ σ ⁆ m) (v₂ : Vec ⁅ σ ⁆ n) (l : Stack t) → prepend (v₁ +++ v₂) l ≡ prepend v₁ (prepend v₂ l)
+lemmaPrepend v1 v2 l = {!!}
 
-correct : ∀ {σ z s'} (e : Src σ z) (s : Stack s') → prepend ⟦ e ⟧ s ≡ exec (compile e) s
+
+correct : {σ : Tyₛ} {z : Sizeₛ} {s' : StackType} (e : Src σ z) (s : Stack s')
+          → prepend ⟦ e ⟧ s ≡ exec (compile e) s
 
 correct (vₛ v) s = refl
 
@@ -77,6 +83,9 @@ correct (ifₛ c thenₛ t elseₛ e) s | .(prepend ⟦ c ⟧ s) | refl with ⟦
 correct (ifₛ c thenₛ t elseₛ e) s | .(prepend ⟦ c ⟧ s) | refl | true  ◁ ε rewrite correct t s = refl
 correct (ifₛ c thenₛ t elseₛ e) s | .(prepend ⟦ c ⟧ s) | refl | false ◁ ε rewrite correct e s = refl
 
-correct {.σ} {.(suc n + suc m)} {s'} (_⟫ₛ_ {σ} {m} {n} e₁ e₂) s = {!!}
-
---(lemmaConsAppend n m σ s' ~ cong (λ l → σ ∷ l ++ s') (lemmaPlusAppend n (suc m) σ))
+correct {.σ} {.(suc n + suc m)} {s'} (_⟫ₛ_ {σ} {m} {n} e₁ e₂) s
+ rewrite lemmaStack
+         {c = (compile e₁ ⟫ compile e₂)}
+         (lemmaConsAppend n m σ s' ~ cong (λ l → σ ∷ l ++ s') (lemmaPlusAppend n (suc m) σ)) s
+  | sym (correct e₁ s)
+  | sym (correct e₂ (prepend ⟦ e₁ ⟧ s)) = {!!}

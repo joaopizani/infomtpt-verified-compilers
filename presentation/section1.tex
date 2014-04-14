@@ -1,15 +1,15 @@
 \section{Problem description}
 
     \subsection{Context}
-        \begin{frame}
+        \begin{frame}[fragile]
             \frametitle{Source code, Stack code, eval, compile, exec}
 
             \begin{itemize}
                 \item The type of the interpreter states type preservation
             \end{itemize}
 
-            \ExecuteMetaData[agda-latex/Code.tex]{nat}
-        \end{frame}
+            \ExecuteMetaData[agda-latex/Code.tex}
+\end{frame}
 
 
     \subsection{Compiler correctness}
@@ -28,7 +28,7 @@
 
             \begin{itemize}
                 \item Sequencing expressions
-                \item Enables "branching", but with _shared suffix_
+                \item Enables "branching", but with shared suffix
             \end{itemize}
         \end{frame}
 
@@ -36,8 +36,8 @@
             \frametitle{Code duplication}
 
             \begin{itemize}
-                \item The "normal" _compile_ function will duplicate the common suffix
-                \item Having Bytecode defined as _graph_ (structured graph) instead of tree
+                \item The "normal" compile function will duplicate the common suffix
+                \item Having Bytecode defined as graph (structured graph) instead of tree
                     would solve this problem
                     \begin{itemize}
                         \item But proofs would be harder

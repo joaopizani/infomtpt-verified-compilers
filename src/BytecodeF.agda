@@ -10,7 +10,7 @@ open import Relation.Binary.PropositionalEquality using (_≡_; refl; sym; trans
 
 open import Source using (𝔹ₛ; ℕₛ; ⁅_⁆; Src; vₛ; _+ₛ_; ifₛ_thenₛ_elseₛ_; _⟫ₛ_; ⟦_⟧)
 open import Bytecode using (_▽_; StackType; Stack; Bytecode; exec)
-open import Compiler using (correct; compile; lemmaPlusAppend; _~_; lemmaConsAppend; prepend; rep)
+open import Compiler using (correct; compile; lemmaPlusAppend; _~_; lemmaConsAppend; prepend; rep; coerce)
 
 apply : {X Y : Set} -> {f g : X -> Y} -> (x : X) -> f ≡ g -> f x ≡ g x
 apply x refl = refl
@@ -228,9 +228,6 @@ unravel :
      {ipx : Ip} -> {ipq : Iq} 
   -> HGraph F ipx ipq -> HTree F ipx ipq
 unravel = foldGraph HTreeIn
-
-coerce : {A : Set} → (F : A → Set) → {s₁ s₂ : A} → s₁ ≡ s₂ → F s₁ → F s₂
-coerce _ refl b = b
 
 compileT : ∀ {σ z s} → Src σ z → HTree BytecodeF s (replicate z σ ++ₗ s)
 compileT (vₛ x)                  = PUSH_T x
