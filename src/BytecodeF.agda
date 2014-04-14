@@ -12,6 +12,8 @@ open import Source using (𝔹ₛ; ℕₛ; ⁅_⁆; Src; vₛ; _+ₛ_; ifₛ_the
 open import Bytecode using (_▽_; StackType; Stack; Bytecode; exec)
 open import Compiler using (correct; compile; lemmaPlusAppend; _~_; lemmaConsAppend; prepend; rep)
 
+apply : {X Y : Set} -> {f g : X -> Y} -> (x : X) -> f ≡ g -> f x ≡ g x
+apply x refl = refl
 
 record HFunctor {Ip Iq : Set} (F : (Ip -> Iq -> Set) -> (Ip -> Iq -> Set)) : Set₁ where
   constructor isHFunctor
@@ -103,7 +105,7 @@ postulate foldADD : ∀ {r} → {{functor : HFunctor BytecodeF}} → (alg : ∀ 
 
 postulate foldIF : ∀ {r} → {{functor : HFunctor BytecodeF}} → (alg : ∀ {s s'} → BytecodeF r s s' -> r s s') -> ∀ {s s'} → ∀ t e → foldTree alg {𝔹ₛ ∷ s} {s'} (HTreeIn (IF t e)) ≡ alg {𝔹ₛ ∷ s} {s'} (IF (foldTree alg t) (foldTree alg e))
 
-postulate fold⟫ : ∀ {r} → {{functor : HFunctor BytecodeF}} → (alg : ∀ {s s'} → BytecodeF r s s' -> r s s') -> ∀ {s₁ s₂ s₃} → {f : HTree BytecodeF s₁ s₂} {g : HTree BytecodeF s₂ s₃} → foldTree alg {s₁} {s₃} (HTreeIn (f ⟫ g)) ≡ alg {s₁} {s₃} (foldTree alg f ⟫ foldTree alg g)
+postulate fold⟫ : ∀ {r} → {{functor : HFunctor BytecodeF}} → (alg : ∀ {s s'} → BytecodeF r s s' -> r s s') -> ∀ {s₁ s₂ s₃} → (f : HTree BytecodeF s₁ s₂) (g : HTree BytecodeF s₂ s₃) → foldTree alg {s₁} {s₃} (HTreeIn (f ⟫ g)) ≡ alg {s₁} {s₃} (foldTree alg f ⟫ foldTree alg g)
 
 
 
@@ -194,13 +196,28 @@ execAlg (c₁ ⟫ c₂)   s           = c₂ (c₁ s)
 execT : ∀ {s s'} → HTree BytecodeF s s' -> Stack s -> Stack s'
 execT = foldTree execAlg
 
-execTcorrect : ∀ {s s'} → (tree : HTree BytecodeF s s') -> (t : Stack s) -> exec (fromTree tree) t  ≡ execT tree t
-execTcorrect (HTreeIn SKIP) = {!!}
-execTcorrect (HTreeIn (PUSH x)) = {!!}
-execTcorrect (HTreeIn ADD) = {!!}
-execTcorrect (HTreeIn (IF t e)) = {!!}
-execTcorrect (HTreeIn (c₁ ⟫ c₂)) = {!!}
+broken_cong : {e : Level} {X : Set e} {R : Set}
+     -> (P Q : X -> R)
+     -> (a b : X) 
+     -> ((x : X) -> P x ≡ Q x) -> a ≡ b 
+     -> P a ≡ Q b
+broken_cong P Q a .a f refl = f a 
 
+
+execTcorrect : ∀ {s s'} → (tree : HTree BytecodeF s s') -> {t : Stack s} -> execT tree t ≡ exec (fromTree tree) t
+execTcorrect (HTreeIn SKIP) {t} = apply t (foldSKIP execAlg)
+execTcorrect (HTreeIn (PUSH x)) {t} = apply t (foldPUSH execAlg)
+execTcorrect (HTreeIn ADD) {t} with apply t (foldADD execAlg)
+execTcorrect (HTreeIn ADD) {n ▽ m ▽ s} | p = p
+execTcorrect (HTreeIn (IF t e)) {w} with apply w (foldIF execAlg t e)
+execTcorrect (HTreeIn (IF t e)) {true ▽ w}  | p = p ~ execTcorrect t
+execTcorrect (HTreeIn (IF t e)) {false ▽ w} | p = p ~ execTcorrect e
+execTcorrect (HTreeIn (f ⟫ g)) {w} with apply w (fold⟫ execAlg f g)
+execTcorrect (HTreeIn (f ⟫ g)) {w} | p 
+  = p ~ broken_cong (foldTree execAlg g)   (exec (fromTree g)) 
+                    (foldTree execAlg f w) (exec (fromTree f) w) 
+                    (λ m → execTcorrect g {m}) 
+                    (execTcorrect f {w})
 
 execG : ∀ {s s'} → HGraph BytecodeF s s' -> Stack s -> Stack s'
 execG = foldGraph  execAlg
@@ -276,8 +293,7 @@ Theorem :
   → ∀ graph → foldGraph alg {ixp} {ixq} graph ≡ foldTree alg {ixp} {ixq} (unravel graph)
 Theorem alg {ipx} {ipy} graph = fusion (λ a → foldGraph a graph) alg
 
-apply : {X Y : Set} -> {f g : X -> Y} -> (x : X) -> f ≡ g -> f x ≡ g x
-apply x refl = refl
+
 
 Lemma₂ : {s s' : StackType} → (r : Stack s) 
        → (graph : HGraph BytecodeF s s')
@@ -293,16 +309,8 @@ correctT : ∀ {σ z s'} → (e : Src σ z)
          → ∀ (r : Stack s') → prepend ⟦ e ⟧ r ≡ execT (compileT e) r
 correctT e r = correct e r 
              ~ cong (λ t → exec t r) (sym (treeIsoTo (compile e))) 
-             ~ (execTcorrect (toTree (compile e)) r) 
+             ~ sym (execTcorrect (toTree (compile e))) 
              ~ cong (λ t → execT t r) (compileTcorrect e)
-
-broken_cong : {e : Level} {X : Set e} {R : Set}
-     -> (P Q : X -> R)
-     -> (a b : X) 
-     -> ((x : X) -> P x ≡ Q x) -> a ≡ b 
-     -> P a ≡ Q b
-broken_cong P Q a .a f refl = f a 
-
 
 correctG : ∀ {σ z s}
          → (e : Src σ z) → ∀ (r : Stack s) → execG (compileG e) r ≡ prepend ⟦ e ⟧  r
