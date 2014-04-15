@@ -276,10 +276,12 @@ compileG src = mkHGraph (compileG' src)
 Lemma₁ : {s : StackType} 
        → ∀ {σ z} 
        → ( src : Src σ z) → compileT {σ} {z} {s} src ≡ unravel (compileG {s} src)
-Lemma₁ (vₛ v) = {!!}
-Lemma₁ (src +ₛ src₁) = {!!}
-Lemma₁ (ifₛ src thenₛ src₁ elseₛ src₂) = {!!}
-Lemma₁ (src ⟫ₛ src₁) = {!!}
+Lemma₁ (vₛ v) = refl
+Lemma₁ (a +ₛ b) = cong2 (λ x p → HTreeIn (HTreeIn (p ⟫ x) ⟫ HTreeIn ADD )) (Lemma₁ a) (Lemma₁ b)
+Lemma₁ (ifₛ c thenₛ t elseₛ e) = cong3 (λ x p a → HTreeIn (x ⟫ HTreeIn (IF p a))) (Lemma₁ c) (Lemma₁ t) (Lemma₁ e)
+Lemma₁ (f ⟫ₛ g) = {!!}
+
+-- HTreeIn (compileT c ⟫ HTreeIn (IF (compileT t) (compileT e)))
 
 data Unit : Set where
   T : Unit
@@ -293,7 +295,6 @@ fusion :
   -> b alg ≡ foldTree alg {ixp} {ixq} (b HTreeIn)
 fusion {_} {_} {_} {{_}} {ixp} {ixq} b alg with alg {ixp} {ixq}
 ... | alg' = {!!}
-
 
 Theorem :
     ∀ {Ip Iq} → ∀ {F} → 
