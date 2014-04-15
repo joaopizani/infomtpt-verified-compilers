@@ -1,3 +1,4 @@
+\begin{code}
 module Correctness where
 
 open import Source
@@ -116,3 +117,4 @@ correctG e r =
           (unravel (compileG e)) (compileT e)
           (λ t → refl) (sym (Lemma₁ e))
   in step1 ~ step2 ~ (correctT e r)
+\end{code}

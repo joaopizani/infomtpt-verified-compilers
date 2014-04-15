@@ -1,3 +1,4 @@
+\begin{code}
 module Util where
 
 open import Level using ( Level )
@@ -39,3 +40,4 @@ lemmaPlusAppend (suc m) n a = cong (_∷_ a) (lemmaPlusAppend m n a)
 
 coerce : {A : Set} → (F : A → Set) → {s₁ s₂ : A} → s₁ ≡ s₂ → F s₁ → F s₂
 coerce _ refl b = b
+\end{code}

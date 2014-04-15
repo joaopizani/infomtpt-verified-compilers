@@ -1,3 +1,4 @@
+\begin{code}
 module Source where
 
 open import Data.Bool using (if_then_else_) renaming (Bool to 𝔹)
@@ -48,3 +49,4 @@ mutual
 
     ⟦_⟧' : {σ : Tyₛ} {z' : Sizeₛ} → (e : Src σ (suc z')) → ⁅ σ ⁆
     ⟦ e ⟧' = head ⟦ e ⟧
+\end{code}

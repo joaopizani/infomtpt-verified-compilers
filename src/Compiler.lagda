@@ -1,3 +1,4 @@
+\begin{code}
 module Compiler where
 
 -- In this file we "translate" into Agda the developments of the reference paper
@@ -30,7 +31,4 @@ compile {.σ} {.(suc n + suc m)} {s} (_⟫ₛ_ {σ} {m} {n} e₁ e₂)
       (lemmaConsAppend n m σ s
        ~ cong (λ l → σ ∷ l ++ s) (lemmaPlusAppend n (suc m) σ))
       (compile e₁ ⟫ compile e₂)
-
-
-
-
+\end{code}

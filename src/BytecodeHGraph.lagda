@@ -1,3 +1,4 @@
+\begin{code}
 module BytecodeHGraph where
 
 open import HGraph
@@ -43,3 +44,4 @@ compileG' {.σ} {.(suc n + suc m)} {s} (_⟫ₛ_ {σ} {m} {n} e₁ e₂) {v}
 
 compileG : {s : StackType} → ∀ {z σ} -> Src σ z → HGraph BytecodeF s (replicate z σ ++ₗ s)
 compileG src = mkHGraph (compileG' src)
+\end{code}

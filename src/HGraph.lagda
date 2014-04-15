@@ -1,7 +1,6 @@
+\begin{code}
 {-# OPTIONS --no-positivity-check #-}
 {-# OPTIONS --allow-unsolved-metas #-}
-
-
 module HGraph where
 
 open import HFunctor using ( HFunctor )
@@ -59,3 +58,4 @@ unravel :
      {ipx : Ip} -> {ipq : Iq} 
   -> HGraph F ipx ipq -> HTree F ipx ipq
 unravel = foldGraph HTreeIn
+\end{code}

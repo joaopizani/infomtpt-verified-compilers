@@ -1,3 +1,4 @@
+\begin{code}
 module BytecodeHTree where
 
 open import Source using ( Src;  vₛ; _+ₛ_; ifₛ_thenₛ_elseₛ_; _⟫ₛ_; ⁅_⁆; 𝔹ₛ; ℕₛ )
@@ -115,3 +116,4 @@ mutual
   compileTcorrect (ifₛ c thenₛ t elseₛ e) = cong₃ (λ a x p → HTreeIn (a ⟫' HTreeIn (IF' x p))) (compileTcorrect c) (compileTcorrect t) (compileTcorrect e)
   compileTcorrect .{σ} .{suc n + suc m} {s} (_⟫ₛ_ {σ} {m} {n} f g) 
     = coerceIdCompile {suc m} {suc n} {σ} f g {s} {σ ∷ replicate (n + suc m) σ ++ₗ s} (lemmaConsAppend n m σ s ~ cong (λ l → σ ∷ l ++ₗ s) (lemmaPlusAppend n (suc m) σ))
+\end{code}

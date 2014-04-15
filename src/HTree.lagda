@@ -1,6 +1,5 @@
+\begin{code}
 {-# OPTIONS --no-positivity-check #-}
-
-
 module HTree where
 
 open import HFunctor
@@ -39,4 +38,4 @@ fusion {_} {_} {_} {{_}} {ixp} {ixq} b alg with alg {ixp} {ixq}
 -}
 
 postulate fusion : ∀ {Ip Iq r} -> ∀ {F} -> {{ functor : HFunctor F }} -> {ixp : Ip} {ixq : Iq}-> (b : ∀ {c} -> ( {ixP : Ip} -> {ixQ : Iq} -> F c ixP ixQ -> c ixP ixQ) -> c ixp ixq) -> (alg : ∀ {ixp ixq} → F r ixp ixq → r ixp ixq) -> b alg ≡ foldTree alg {ixp} {ixq} (b HTreeIn)
-
+\end{code}
