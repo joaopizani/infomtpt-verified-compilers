@@ -1,64 +1,90 @@
 \section{Problem description}
 
     \subsection{Context}
+
 \begin{frame}[fragile]
-            \frametitle{Source code, Stack code, eval, compile, exec}
+            \frametitle{Source code, Bytecode, eval, compile, exec}
 
-            \begin{itemize}
-                \item The type of the interpreter states type preservation
-            \end{itemize}
+            Source
+                (Add (Val 2) (Val 3))
 
-            \ExecuteMetaData[agda/tex/Code.tex]{nat}
+            Bytecode (stack code, for example):
+                PUSH 2 >> PUSH 3 >> ADD
 \end{frame}
-
 
     \subsection{Compiler correctness}
         \begin{frame}
             \frametitle{What does "correct" mean?}
 
+            ``eval'' defines the semantics of the source language
+            compiler correctness means that the compilers respects this semantics
+
             \begin{itemize}
-                \item Commutative diagram?
+                eval e = exec (compile e)
             \end{itemize}
         \end{frame}
 
 
-    \subsection{Extending the source language}
+        \begin{frame}
+            \frametitle{References}
+            \begin{itemize}
+                \item Stack-safe, type-correct expression compiler
+            \end{itemize}
+        \end{frame}
+    
+
+    \subsection{Sharing}
         \begin{frame}
             \frametitle{Extension}
 
+            "Normal" languages have some sharing constructs
+
+            We wanted to introduce the "simplest possible" extension to the source that
+            generates sharing
+
+            if c then t else e >> suffix
+
             \begin{itemize}
+                \item Why this extension (exceptions -- original idea in the reference paper -- were negative)
                 \item Sequencing expressions
                 \item Enables "branching", but with shared suffix
             \end{itemize}
         \end{frame}
-
-        \begin{frame}
-            \frametitle{Code duplication}
-
+        
             \begin{itemize}
                 \item The "normal" compile function will duplicate the common suffix
                 \item Having Bytecode defined as graph (structured graph) instead of tree
                     would solve this problem
                     \begin{itemize}
-                        \item But proofs would be harder
+                        \item But proofs would be more complex
                     \end{itemize}
             \end{itemize}
         \end{frame}
 
+
+    \subsection{Graph and tree representations}
         \begin{frame}
-            \frametitle{Graph and tree representations are equivalent}
+            \frametitle{What to do}
 
+            \item Have a graph-based compiler, generating code which uses sharing
+            \item Write the correctness proof only for the tree representation,
+              have correctness \textbf{derived} for graphs.
+        \end{frame}
+
+        \begin{frame}
+            \frametitle{Reference}
+            THese guys do it! YAY! :)
+        \end{frame}
+
+        \begin{frame}
+            \frametitle{Project's goals}
+
+            Integrating the approaches of the two ``reference'' papers.
+
+            Our contributions:
             \begin{itemize}
-                \item Equations
-                \item Make Bytecode a functor (BytecodeF)
-                    \begin{itemize}
-                        \item Two type-level fixpoint operators give two different Bytecode versions:
-                        \begin{itemize}
-                            \item HTree gives us BytecodeT
-                            \item HGraph gives us BytecodeG
-                        \end{itemize}
-                    \end{itemize}
-
-                \item Now for the implementation
+                \item (Simplest possible) language extension showing sharing behaviour.
+                \item Proof of correctness for \textbf{stack-safe} a ``simple'' compiler that just duplicates code.
+                \item A way to to lift this \textbf{stack-safe} correctness proof to one for a more \textbf{efficient} compiler.
             \end{itemize}
         \end{frame}

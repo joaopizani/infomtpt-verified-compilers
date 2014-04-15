@@ -1,2 +1,15 @@
 \section{Conclusion}
 
+    \item Developed a framework for producing compiler correctness proofs
+      for languages with sharing constructs, given proofs which don't involve sharing.
+           \item Gave a specific proof for an example language, as ``instance'' of this framework.
+
+    \item Limitations encountered:
+       \item Strictly positive types required
+       \item Totality checker (when defining folds)
+       \item Type checking with positivity check disabled made debugging hard (stack overflow, memory consumption).
+         
+
+    \subsection{Yet to be done}
+        \item Sequence clause of ``basic'' (non-lifted) correctness proof
+        \item Proof a final lemma to complete the lifting (fusion law)

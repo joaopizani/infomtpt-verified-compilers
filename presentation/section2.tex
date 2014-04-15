@@ -1,13 +1,29 @@
 \section{Implementation}
 
-    \subsection{Source code and denotational semantics}
+    \subsection{Source}
+        % Tys and Src datatype
+        % eval
 
+    \subsection{Bytecode}
+        % StackType and Stack
+        % Bytecode
+        % exec
 
-    \subsection{Bytecode and operational semantics}
-
-
-    \subsection{Compiler and compiler correctness}
+    \subsection{Compiler correctness}
+        % compile without the sequence clause (ellipsis)
+        % correct (type and plus)
 
 
     \subsection{Tree/Graph fixpoints and equivalence}
+        % Bytecode / BytecodeF (compare PUSH/IF)
+        % HTree (Fix)
 
+        % Bytecode ~ HTree BytecodeF
+        % from : Bytecode -> HTree BytecodeF
+        % to   : HTree BytecodeF -> Bytecode
+        % correct (on Bytecode) -> correctT (on HTree BytecodeF)
+
+        % graph repr example (example from page 9 of Bahr's paper)
+
+        % Bytecode ~ HGraph BytecodeF
+        % execG . toGraph = exec
