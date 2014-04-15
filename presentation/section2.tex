@@ -28,84 +28,79 @@
             \ExecuteMetaData[agda/tex/Bytecode.tex]{bytecode}
 \end{frame}
 
-        \begin{frame}
+        \begin{frame}[fragile]
             \frametitle{Compiler correctness}
             %% João Pizani wants to present this :)
-            % compile : ∀ {σ z s} → Src σ z → Bytecode s (replicate z σ ++ s)
-            % compile (vₛ x)                  = PUSH x
-            % compile (e₁ +ₛ e₂)              = compile e₂ ⟫ compile e₁ ⟫ ADD
-            % compile ...                     = ...
-            %
-            % correct : {σ : Tyₛ} {z : Sizeₛ} (e : Src σ z)
-            %         → exec (compile e) ≡ ⟦ e ⟧
+            \ExecuteMetaData[agda/tex/Bytecode.tex]{compile}
+            \begin{verbatim}
+correct : {σ : Tyₛ} {z : Sizeₛ} (e : Src σ z)
+        → exec (compile e) ≡ ⟦ e ⟧
+            \end{verbatim}
         \end{frame}
 
 
     \subsection{Lifting to sharing setting}
-        \begin{frame}
+        \begin{frame}[fragile]
             \frametitle{Tree fixpoints}
             %% Wout presents this? :)
-            % data Tree (r : Set -> Set) : Set where
-            %   In (r (Tree r))
-
-            % data HTree (r : StackType -> StackType -> Set) : (ixp : StackType) -> (ixq : StackType) -> Set where
-            %   HTreeIn (r (HTree r)) ixp ixq : HTree r ixp ixq
+            Fixed Point for standard Functors
+            \ExecuteMetaData[agda/tex/Bytecode.tex]{Tree}
+            
+            Fixed Point for indexed Functors
+            \ExecuteMetaData[agda/tex/Bytecode.tex]{HTree}
         \end{frame}
 
-        \begin{frame}
+        \begin{frame}[fragile]
             \frametitle{Bytecode Tree Representation}
             %% Wout presents this? :)
-            % data Bytecode : StackType → StackType → Set where
-            %   PUSH : ∀ {σ s}  → (x : ⁅ σ ⁆) → Bytecode s (σ ∷ s)
-            %   ADD  : ∀ {s}    → Bytecode (ℕₛ ∷ ℕₛ ∷ s) (ℕₛ ∷ s)
-            % 
-            % data BytecodeF (r : StackType -> StackType -> Set) : (StackType -> StackType -> Set
-            %   PUSH' : ∀ {α s}  → (x : ⁅ α ⁆) → BytecodeF r s (α ∷ s)
-            %   ADD'  : ∀ {s}    → BytecodeF r (ℕₛ ∷ ℕₛ ∷ s) (ℕₛ ∷ s)
-            %
-            % `Bytecode` is isomorphic to `HTree BytecodeF`:
-            %   We have: fromGraph . toGraph == id
-            %   But:     toGraph . fromGraph == id
+            \ExecuteMetaData[agda/tex/Bytecode.tex]{bytecode}
+            \ExecuteMetaData[agda/tex/Bytecode.tex]{bytecodeF}
+            `Bytecode` is isomorphic to `HTree BytecodeF`:
+            We have: `fromGraph . toGraph == id`
+            And:     `toGraph . fromGraph == id`
         \end{frame}
                 
-        \begin{frame}
+        \begin{frame}[fragile]
             \frametitle{Correctness on Trees}
             %% Wout presents this? :)
-            % compileT compiles to HTree representation
-            % execT executes HTree represented Bytecode
-            %
-            % correctT : ∀ {σ z s'} → (e : Src σ z) 
-            %          → execT (compileT e) ≡ ⟦ e ⟧
-            % 
-            % The proof for `correctT` can be trivially lifted from `correct`,
-            % because Bytecode is structurally the same as HTree BytecodeF
+            \ExecuteMetaData[agda/tex/Bytecode.tex]{compileT}
+            `execT` executes `HTree` represented Bytecode
+            \begin{verbatim}
+correctT : ∀ {σ z s'} → (e : Src σ z) 
+         → execT (compileT e) ≡ ⟦ e ⟧
+            \end{verbatim}
+            The proof for `correctT` can be trivially lifted from `correct`,
+            because `Bytecode` is structurally the same as `HTree BytecodeF`
         \end{frame}
 
-        \begin{frame}
+        \begin{frame}[fragile]
             \frametitle{Graphs}
             %% Wout presents this? :)
             % Sample code from page 9, showing let/var
             %
-            % data HGraph .. : ... -> Set where ...
-            %
-            % Additional constructors to represent shared subtrees
-            %
-            % `Bytecode` is not exactly isomorphic to `HGraph BytecodeF`:
-            %   We have: fromGraph . toGraph == id
-            %   But:     toGraph . fromGraph /= id
+            \begin{verbatim}
+data HGraph .. : ... -> Set where ...
+            \end{verbatim}
             
-            % HGraph -> Bytecode -> HGraph loses sharing
+            `HGraph` is like `HTree`, but with additional constructors to represent shared subtrees
+            
+            `Bytecode` is not exactly isomorphic to `HGraph BytecodeF`:
+            We have: `fromGraph . toGraph == id`
+            But:     `toGraph . fromGraph /= id`
+            
+            HGraph -> Bytecode -> HGraph loses sharing
         \end{frame}
          
-         \begin{frame}
+         \begin{frame}[fragile]
             \frametitle{Bytecode Graph Representation}
             %% Wout presents this? :)
-            % compileG compiles to HGraph representation
-            % execG executes HGraph represented Bytecode
-            %
-            % correctG : ∀ {σ z s'} → (e : Src σ z) 
-            %          → execG (compileG e) ≡ ⟦ e ⟧
-            % 
-            % Using machinery, we get this proof automatically from `correctT`
+            \ExecuteMetaData[agda/tex/Bytecode.tex]{compileG}
+            `execG` executes `HGraph` represented Bytecode
+            \begin{verbatim}
+correctG : ∀ {σ z s'} → (e : Src σ z) 
+         → execG (compileG e) ≡ ⟦ e ⟧
+            \end{verbatim}
+            
+            Using machinery, we get this proof automatically from `correctT`
         \end{frame}
 
