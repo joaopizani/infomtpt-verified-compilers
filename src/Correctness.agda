@@ -14,9 +14,44 @@ open import BytecodeHGraph
 open import Util
 
 
+open import Data.Bool using (true; false)
 open import Data.List using ( replicate; _∷_ ) renaming (_++_ to _++ₗ_)
 open import Data.Nat using (ℕ; _+_; suc)
+open import Data.Vec using (Vec) renaming ([] to  ε; _∷_ to _◁_)
 open import Relation.Binary.PropositionalEquality using (_≡_; refl; sym; trans; subst; cong; cong₂)
+
+-- Finally, the statement of correctness for the compiler
+prepend : ∀ {t n σ} → (v : Vec ⁅ σ ⁆ n) → Stack t → Stack (rep n σ ++ₗ t)
+prepend ε        s = s
+prepend (x ◁ xs) s = x ▽ prepend xs s
+
+{-
+lemmaPrepend : ∀ {m n σ t} → (v₁ : Vec ⁅ σ ⁆ m) (v₂ : Vec ⁅ σ ⁆ n) (l : Stack t) → prepend (v₁ +++ v₂) l ≡ prepend v₁ (prepend v₂ l)
+lemmaPrepend v1 v2 l = {!!}
+-}
+
+correct : {σ : Tyₛ} {z : Sizeₛ} {s' : StackType} (e : Src σ z) (s : Stack s')
+          → prepend ⟦ e ⟧ s ≡ exec (compile e) s
+
+correct (vₛ v) s = refl
+
+correct (x +ₛ y) s
+   rewrite sym (correct y s)
+         | sym (correct x (prepend ⟦ y ⟧ s))
+   with ⟦ x ⟧ | ⟦ y ⟧
+... | x' ◁ ε | y' ◁ ε = refl
+
+correct (ifₛ c thenₛ t elseₛ e) s with (exec (compile c) s) | sym (correct c s)
+correct (ifₛ c thenₛ t elseₛ e) s | .(prepend ⟦ c ⟧ s) | refl with ⟦ c ⟧
+correct (ifₛ c thenₛ t elseₛ e) s | .(prepend ⟦ c ⟧ s) | refl | true  ◁ ε rewrite correct t s = refl
+correct (ifₛ c thenₛ t elseₛ e) s | .(prepend ⟦ c ⟧ s) | refl | false ◁ ε rewrite correct e s = refl
+
+correct {.σ} {.(suc n + suc m)} {s'} (_⟫ₛ_ {σ} {m} {n} e₁ e₂) s
+ rewrite lemmaStack
+         {c = (compile e₁ ⟫ compile e₂)}
+         (lemmaConsAppend n m σ s' ~ cong (λ l → σ ∷ l ++ₗ s') (lemmaPlusAppend n (suc m) σ)) s
+  | sym (correct e₁ s)
+  | sym (correct e₂ (prepend ⟦ e₁ ⟧ s)) = {!!}
 
 
 mutual
@@ -61,11 +96,13 @@ Lemma₂ {s} {s'} r graph = apply r (Theorem execAlg graph)
 --                  ≡ execT (compileT e) r
 
 correctT : ∀ {σ z s'} → (e : Src σ z) 
-         → ∀ (r : Stack s') → prepend ⟦ e ⟧ r ≡ execT (compileT e) r
-correctT e r = correct e r 
+         → ∀ (r : Stack s') → execT (compileT e) r ≡ prepend ⟦ e ⟧ r
+correctT e r = sym 
+             ( correct e r 
              ~ cong (λ t → exec t r) (sym (treeIsoTo (compile e))) 
              ~ sym (execTcorrect (toTree (compile e))) 
              ~ cong (λ t → execT t r) (compileTcorrect e)
+             )
 
 correctG : ∀ {σ z s}
          → (e : Src σ z) → ∀ (r : Stack s) → execG (compileG e) r ≡ prepend ⟦ e ⟧  r
@@ -78,4 +115,4 @@ correctG e r =
           (λ g → execT g r)  
           (unravel (compileG e)) (compileT e)
           (λ t → refl) (sym (Lemma₁ e))
-  in step1 ~ step2 ~ sym (correctT e r)
+  in step1 ~ step2 ~ (correctT e r)
