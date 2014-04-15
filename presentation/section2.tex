@@ -1,29 +1,95 @@
 \section{Implementation}
 
     \subsection{Source}
-        % Tys and Src datatype
-        % eval
+        % data Tyₛ : Set where
+        %   ℕₛ : Tyₛ
+        %   𝔹ₛ : Tyₛ
+        %
+        % data Src : (σ : Tyₛ) → (z : Sizeₛ) → Set where
+        %   vₛ    : ∀ {σ} → (v : ⁅ σ ⁆) → Src σ 1
+        %   _+ₛ_  : (e₁ e₂ : Src ℕₛ 1) → Src ℕₛ 1
+        %  ...    : Src ...
+        %
+        % ⟦_⟧ : {σ : Tyₛ} {z : Sizeₛ} → (e : Src σ z) → Vec ⁅ σ ⁆ z
+        % ⟦ vₛ v ⟧                     = v
+        % ⟦ e₁ +ₛ e₂ ⟧                 = ⟦ e₁ ⟧ + ⟦ e₂ ⟧
+        % ...                          = ...
+
 
     \subsection{Bytecode}
-        % StackType and Stack
-        % Bytecode
-        % exec
+        % StackType : Set
+        % StackType = List Tyₛ
+
+        % data Stack : StackType → Set where
+        %   ε    : Stack []
+        %  _▽_  : ∀ {σ s'} → ⁅ σ ⁆ → Stack s' → Stack (σ ∷ s')
+
+        % data Bytecode : StackType → StackType → Set where
+        %   PUSH : ∀ {σ s}  → (x : ⁅ σ ⁆) → Bytecode s (σ ∷ s)
+        %   ADD  : ∀ {s}    → Bytecode (ℕₛ ∷ ℕₛ ∷ s) (ℕₛ ∷ s)
+        %   ...  : ...
 
     \subsection{Compiler correctness}
-        % compile without the sequence clause (ellipsis)
-        % correct (type and plus)
+        % compile : ∀ {σ z s} → Src σ z → Bytecode s (replicate z σ ++ s)
+        % compile (vₛ x)                  = PUSH x
+        % compile (e₁ +ₛ e₂)              = compile e₂ ⟫ compile e₁ ⟫ ADD
+        % compile ...                     = ...
+        %
+        % correct : {σ : Tyₛ} {z : Sizeₛ} (e : Src σ z)
+        %         → exec (compile e) ≡ ⟦ e ⟧
 
 
-    \subsection{Tree/Graph fixpoints and equivalence}
-        % Bytecode / BytecodeF (compare PUSH/IF)
-        % HTree (Fix)
+    \subsection{Tree fixpoints}
+        % data Tree (r : Set -> Set) : Set where
+        %   In (r (Tree r))
 
-        % Bytecode ~ HTree BytecodeF
-        % from : Bytecode -> HTree BytecodeF
-        % to   : HTree BytecodeF -> Bytecode
-        % correct (on Bytecode) -> correctT (on HTree BytecodeF)
+        % data HTree (r : StackType -> StackType -> Set) : (ixp : StackType) -> (ixq : StackType) -> Set where
+        %   HTreeIn (r (HTree r)) ixp ixq : HTree r ixp ixq
 
-        % graph repr example (example from page 9 of Bahr's paper)
+    \subsection{Bytecode Tree Representation}
+        % data Bytecode : StackType → StackType → Set where
+        %   PUSH : ∀ {σ s}  → (x : ⁅ σ ⁆) → Bytecode s (σ ∷ s)
+        %   ADD  : ∀ {s}    → Bytecode (ℕₛ ∷ ℕₛ ∷ s) (ℕₛ ∷ s)
+        % 
+        % data BytecodeF (r : StackType -> StackType -> Set) : (StackType -> StackType -> Set
+        %   PUSH' : ∀ {α s}  → (x : ⁅ α ⁆) → BytecodeF r s (α ∷ s)
+        %   ADD'  : ∀ {s}    → BytecodeF r (ℕₛ ∷ ℕₛ ∷ s) (ℕₛ ∷ s)
+        %
+        % `Bytecode` is isomorphic to `HTree BytecodeF`:
+        %   We have: fromGraph . toGraph == id
+        %   But:     toGraph . fromGraph == id
+        
 
-        % Bytecode ~ HGraph BytecodeF
-        % execG . toGraph = exec
+    \subsection{Correctness on Trees}
+        % compileT compiles to HTree representation
+        % execT executes HTree represented Bytecode
+        %
+        % correctT : ∀ {σ z s'} → (e : Src σ z) 
+        %          → execT (compileT e) ≡ ⟦ e ⟧
+        % 
+        % The proof for `correctT` can be trivially lifted from `correct`, because Bytecode is structurally the same as HTree BytecodeF
+
+    \subsection{Graphs}
+
+        % Sample code from page 9, showing let/var
+        %
+        % data HGraph .. : ... -> Set where ...
+        %
+        % Additional constructors to represent shared subtrees
+        %
+        % `Bytecode` is not exactly isomorphic to `HGraph BytecodeF`:
+        %   We have: fromGraph . toGraph == id
+        %   But:     toGraph . fromGraph /= id
+        
+        % HGraph -> Bytecode -> HGraph loses sharing
+ 
+    \subsection{Bytecode Graph Representation}
+        % compileG compiles to HGraph representation
+        % execG executes HGraph represented Bytecode
+        %
+        % correctG : ∀ {σ z s'} → (e : Src σ z) 
+        %          → execG (compileG e) ≡ ⟦ e ⟧
+        % 
+        % Using machinery, we get this proof automatically from `correctT`
+        
+ 
