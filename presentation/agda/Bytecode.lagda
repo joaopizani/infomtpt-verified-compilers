@@ -248,3 +248,23 @@ compileG : {s : StackType} → ∀ {z σ} -> Src σ z → HGraph BytecodeF s (re
 \begin{code}
 compileG src = mkHGraph (compileG' src)
 \end{code}
+
+%<*execT>
+\begin{code}
+execT : ∀ {s s'} → HTree BytecodeF s s' -> Stack s -> Stack s'
+\end{code}
+%</execT>
+
+\begin{code}
+execT = {!!}
+\end{code}
+
+%<*execG>
+\begin{code}
+execG : ∀ {s s'} → HGraph BytecodeF s s' -> Stack s -> Stack s'
+\end{code}
+%</execG>
+
+\begin{code}
+execG = {!!}
+\end{code}

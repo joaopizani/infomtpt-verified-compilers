@@ -64,7 +64,7 @@ correct : {t : Tyₛ} {z : Sizeₛ} (e : Src t z)
             \frametitle{Correctness on Trees}
             %% Wout presents this? :)
             \ExecuteMetaData[agda/tex/Bytecode.tex]{compileT}
-            `execT` executes `HTree` represented Bytecode
+            \ExecuteMetaData[agda/tex/Bytecode.tex]{execT}
             \begin{verbatim}
 correctT : ∀ {t z s'} → (e : Src t z) 
          → execT (compileT e) ≡ ⟦ e ⟧
@@ -95,9 +95,9 @@ data HGraph .. : ... -> Set where ...
             \frametitle{Bytecode Graph Representation}
             %% Wout presents this? :)
             \ExecuteMetaData[agda/tex/Bytecode.tex]{compileG}
-            `execG` executes `HGraph` represented Bytecode
+            \ExecuteMetaData[agda/tex/Bytecode.tex]{execG}
             \begin{verbatim}
-correctG : ∀ {t z s'} → (e : Src t z) 
+correctG : ∀ {t z} → (e : Src t z) 
          → execG (compileG e) ≡ ⟦ e ⟧
             \end{verbatim}
             
