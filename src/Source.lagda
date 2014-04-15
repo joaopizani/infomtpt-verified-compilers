@@ -18,6 +18,7 @@ data Tyₛ : Set where
     𝔹ₛ : Tyₛ
 \end{code}
 %</tys>
+\begin{code}
 
 -- Together with defining the object language types,
 -- we define a mapping from object language types into Agda types.
