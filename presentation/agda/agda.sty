@@ -14,6 +14,10 @@
 
 % pdfLaTeX
 \else
+    \usepackage{textcomp}
+    \usepackage{stmaryrd}
+    \usepackage[safe]{tipa}
+
     % FIX: Complete the list and send it upstream to the ucs package devs.
     \DeclareUnicodeCharacter{9657}{$\triangleright$}
     \DeclareUnicodeCharacter{8759}{::}
@@ -26,7 +30,10 @@
     \DeclareUnicodeCharacter{9667}{$\triangleleft$}
     \DeclareUnicodeCharacter{10218}{$\langle\!\langle$}
     \DeclareUnicodeCharacter{10219}{$\rangle\!\rangle$}
+
     \DeclareUnicodeCharacter{8347}{$_{s}$}
+    \DeclareUnicodeCharacter{8261}{\textlquill}
+    \DeclareUnicodeCharacter{8262}{\textrquill}
 \fi
 
 % ----------------------------------------------------------------------

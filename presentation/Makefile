@@ -9,7 +9,5 @@ main.pdf: section1.tex section2.tex section3.tex
 clean:
 	latexmk -c main.tex
 	rm -f *.nav *.snm *.vrb *.pyg *.out.pyg *.ptb
-
-veryclean: clean
 	rm -f main.pdf
 	rm -f agda/*.agdai

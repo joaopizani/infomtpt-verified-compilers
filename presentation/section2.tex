@@ -4,23 +4,15 @@
 
         \begin{frame}
             \frametitle{Source}
-            %% João Pizani wants to present this :)
 
-            % data Tyₛ : Set where
-            %   ℕₛ : Tyₛ
-            %   Bₛ : Tyₛ
+            Source types:
+            \ExecuteMetaData[agda/tex/Source.tex]{tys}
 
-            %
-            % data Src : (σ : Tyₛ) → (z : Sizeₛ) → Set where
-            %   vₛ    : ∀ {σ} → (v : ⁅ σ ⁆) → Src σ 1
-            %   _+ₛ_  : (e₁ e₂ : Src ℕₛ 1) → Src ℕₛ 1
-            %  ...    : Src ...
+            Source terms (snippet):
+            \ExecuteMetaData[agda/tex/Source.tex]{src}
 
-            %
-            % ⟦_⟧ : {σ : Tyₛ} {z : Sizeₛ} → (e : Src σ z) → Vec ⁅ σ ⁆ z
-            % ⟦ vₛ v ⟧                     = v
-            % ⟦ e₁ +ₛ e₂ ⟧                 = ⟦ e₁ ⟧ + ⟦ e₂ ⟧
-            % ...                          = ...
+            Denotational semantics (snippet):
+            \ExecuteMetaData[agda/tex/Source.tex]{eval}
         \end{frame}
 
         \begin{frame}
