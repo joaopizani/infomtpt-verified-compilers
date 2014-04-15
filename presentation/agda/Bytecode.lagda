@@ -125,7 +125,7 @@ postulate foldGraph : {F : (StackType -> StackType -> Set) -> (StackType -> Stac
 
 data BytecodeF (r : StackType -> StackType -> Set) : (StackType -> StackType -> Set) where  
     SKIP' : ∀ {s}    → BytecodeF r s s
-    PUSH' : ∀ {α s}  → (x : ⁅ α ⁆) → BytecodeF r s (α ∷ s)
+    PUSH' : ∀ {a s}  → (x : ⁅ a ⁆) → BytecodeF r s (a ∷ s)
     ADD'  : ∀ {s}    → BytecodeF r (ℕₛ ∷ ℕₛ ∷ s) (ℕₛ ∷ s)
 \end{code}
 %</bytecodeF>
@@ -201,7 +201,7 @@ execAlg (c₁ ⟫' c₂)   s           = c₂ (c₁ s)
 %<*compile>
 \begin{code}
 
-compile : ∀ {σ z s} → Src σ z → Bytecode s (replicate z σ ++ s)
+compile : ∀ {t z s} → Src t z → Bytecode s (replicate z t ++ s)
 compile (vₛ x)                  = PUSH x
 compile (e₁ +ₛ e₂)              = compile e₂ ⟫ compile e₁ ⟫ ADD
 \end{code}
@@ -218,7 +218,7 @@ compile {.σ} {.(suc n + suc m)} {s} (_⟫ₛ_ {σ} {m} {n} e₁ e₂)
 
 %<*compileT>
 \begin{code}
-compileT : ∀ {σ z s} → Src σ z → HTree BytecodeF s (replicate z σ ++ s)
+compileT : ∀ {t z s} → Src t z → HTree BytecodeF s (replicate z t ++ s)
 \end{code}
 %</compileT>
 
@@ -251,7 +251,7 @@ compileG' {.σ} {.(suc n + suc m)} {s} (_⟫ₛ_ {σ} {m} {n} e₁ e₂) {v}
 
 %<*compileG>
 \begin{code}
-compileG : {s : StackType} → ∀ {z σ} -> Src σ z → HGraph BytecodeF s (replicate z σ ++ s)
+compileG : {s : StackType} → ∀ {z t} -> Src t z → HGraph BytecodeF s (replicate z t ++ s)
 \end{code}
 %</compileG>
 
