@@ -31,15 +31,9 @@ lemmaPlusAppend (suc m) n a = cong (_∷_ a) (lemmaPlusAppend m n a)
 coerce : {A : Set} → (F : A → Set) → {s₁ s₂ : A} → s₁ ≡ s₂ → F s₁ → F s₂
 coerce _ refl b = b
 
-coerceBytecode : {s s₁ s₂ : StackType} → s₁ ≡ s₂ → Bytecode s s₁ → Bytecode s s₂
-coerceBytecode {s} refl b = coerce (Bytecode s) refl b
-
-coerceStack : {s₁ s₂ : StackType} → s₁ ≡ s₂ → Stack s₁ → Stack s₂
-coerceStack refl s = coerce Stack refl s
-
 lemmaStack :
  {st st1 st2 : StackType} {c : Bytecode st st1} (eq : st1 ≡ st2) (s : Stack st)
- → exec (coerceBytecode eq c) s ≡ coerceStack eq (exec c s)
+ → exec (coerce (Bytecode st) eq c) s ≡ coerce Stack eq (exec c s)
 lemmaStack refl s = refl
 
 _~_ : {α : Set} {a b c : α} → a ≡ b → b ≡ c → a ≡ c
@@ -51,7 +45,7 @@ compile (vₛ x)                  = PUSH x
 compile (e₁ +ₛ e₂)              = compile e₂ ⟫ compile e₁ ⟫ ADD
 compile (ifₛ c thenₛ t elseₛ e) = compile c ⟫ IF (compile t) (compile e)
 compile {.σ} {.(suc n + suc m)} {s} (_⟫ₛ_ {σ} {m} {n} e₁ e₂)
-  = coerceBytecode
+  = coerce (Bytecode s)
       (lemmaConsAppend n m σ s
        ~ cong (λ l → σ ∷ l ++ s) (lemmaPlusAppend n (suc m) σ))
       (compile e₁ ⟫ compile e₂)
@@ -62,11 +56,14 @@ compile {.σ} {.(suc n + suc m)} {s} (_⟫ₛ_ {σ} {m} {n} e₁ e₂)
 prepend : ∀ {t n σ} → (v : Vec ⁅ σ ⁆ n) → Stack t → Stack (rep n σ ++ t)
 prepend ε        s = s
 prepend (x ◁ xs) s = x ▽ prepend xs s
-
+{-
 lemmaPrepend : ∀ {m n σ t} → (v₁ : Vec ⁅ σ ⁆ m) (v₂ : Vec ⁅ σ ⁆ n) (l : Stack t) → prepend (v₁ +++ v₂) l ≡ prepend v₁ (prepend v₂ l)
 lemmaPrepend v1 v2 l = {!!}
+-}
 
+postulate correct : {σ : Tyₛ} {z : Sizeₛ} {s' : StackType} (e : Src σ z) (s : Stack s') → prepend ⟦ e ⟧ s ≡ exec (compile e) s
 
+{-
 correct : {σ : Tyₛ} {z : Sizeₛ} {s' : StackType} (e : Src σ z) (s : Stack s')
           → prepend ⟦ e ⟧ s ≡ exec (compile e) s
 
@@ -89,3 +86,4 @@ correct {.σ} {.(suc n + suc m)} {s'} (_⟫ₛ_ {σ} {m} {n} e₁ e₂) s
          (lemmaConsAppend n m σ s' ~ cong (λ l → σ ∷ l ++ s') (lemmaPlusAppend n (suc m) σ)) s
   | sym (correct e₁ s)
   | sym (correct e₂ (prepend ⟦ e₁ ⟧ s)) = {!!}
+-}
