@@ -10,7 +10,7 @@ open import Relation.Binary.PropositionalEquality using (_≡_; refl; sym; trans
 
 open import Source using (𝔹ₛ; ℕₛ; ⁅_⁆; Src; vₛ; _+ₛ_; ifₛ_thenₛ_elseₛ_; _⟫ₛ_; ⟦_⟧)
 open import Bytecode using (_▽_; StackType; Stack; Bytecode; exec)
-open import Compiler using (correct; compile; lemmaPlusAppend; _~_; lemmaConsAppend; prepend; rep; coerce)
+open import Compiler using (correct; compile; lemmaPlusAppend; _~_; lemmaConsAppend; prepend; rep; coerce; coerceBytecode)
 
 apply : {X Y : Set} -> {f g : X -> Y} -> (x : X) -> f ≡ g -> f x ≡ g x
 apply x refl = refl
@@ -239,12 +239,26 @@ compileT {.σ} {.(suc n + suc m)} {s} (_⟫ₛ_ {σ} {m} {n} e₁ e₂)
        ~ cong (λ l → σ ∷ l ++ₗ s) (lemmaPlusAppend n (suc m) σ))
       (compileT e₁ ⟫T compileT e₂)
 
+cong2 : {P Q R : Set} {a b : P} {x y : Q} -> (f : P → Q → R) -> a ≡ b -> x ≡ y -> f a x ≡ f b y
+cong2 f refl refl = refl 
 
-compileTcorrect : ∀ {σ z s} → (e : Src σ z) -> toTree {s} (compile e) ≡ compileT e
-compileTcorrect (vₛ v) = refl
-compileTcorrect (src +ₛ src₁) = {!!}
-compileTcorrect (ifₛ src thenₛ src₁ elseₛ src₂) = {!!}
-compileTcorrect (src ⟫ₛ src₁) = {!!}
+cong3 : {P Q S R : Set} {a b : P} {x y : Q} {p q : S} -> (f : P → Q → S → R) -> a ≡ b -> x ≡ y -> p ≡ q -> f a x p ≡ f b y q
+cong3 f refl refl refl = refl 
+
+
+mutual 
+  coerceCommutes : ∀ {m n σ} -> (f : Src σ m) -> (g : Src σ n) -> {s : StackType} -> {b : StackType} -> (p : replicate n σ ++ₗ replicate m σ ++ₗ s ≡ b)
+                                   -> toTree {s} {b} (coerce (Bytecode s) p (compile f Bytecode.⟫ compile g)) 
+                                  ≡ coerce (HTree BytecodeF s) p (compileT f ⟫T compileT g)
+  coerceCommutes {m} {n} {σ} f g {s} .{replicate n σ ++ₗ replicate m σ ++ₗ s} refl = cong2 (λ x y → HTreeIn (x ⟫ y)) (compileTcorrect f) (compileTcorrect g)
+
+  compileTcorrect : ∀ {σ z s} → (e : Src σ z) -> toTree {s} (compile e) ≡ compileT e
+  compileTcorrect (vₛ v) = refl
+  compileTcorrect (p +ₛ q) = cong2 (λ a x → HTreeIn (HTreeIn (a ⟫ x) ⟫ HTreeIn ADD)) (compileTcorrect q) (compileTcorrect p)
+  compileTcorrect (ifₛ c thenₛ t elseₛ e) = cong3 (λ a x p → HTreeIn (a ⟫ HTreeIn (IF x p))) (compileTcorrect c) (compileTcorrect t) (compileTcorrect e)
+  compileTcorrect .{σ} .{suc n + suc m} {s} (_⟫ₛ_ {σ} {m} {n} f g) 
+    = coerceCommutes {suc m} {suc n} {σ} f g {s} {σ ∷ replicate (n + suc m) σ ++ₗ s} (lemmaConsAppend n m σ s ~ cong (λ l → σ ∷ l ++ₗ s) (lemmaPlusAppend n (suc m) σ))
+
 
 compileG' : ∀ {σ z s} → Src σ z → ∀ {v} → HGraph' BytecodeF v s (rep z σ ++ₗ s)
 compileG' (vₛ x)                  = PUSH_G x
