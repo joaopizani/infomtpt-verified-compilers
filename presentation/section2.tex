@@ -33,10 +33,10 @@
             %% João Pizani wants to present this :)
             \ExecuteMetaData[agda/tex/Bytecode.tex]{compile}
             \begin{verbatim}
-correct : {σ : Tyₛ} {z : Sizeₛ} (e : Src σ z)
+correct : {t : Tyₛ} {z : Sizeₛ} (e : Src t z)
         → exec (compile e) ≡ ⟦ e ⟧
             \end{verbatim}
-        \end{frame}
+\end{frame}
 
 
     \subsection{Lifting to sharing setting}
@@ -48,7 +48,7 @@ correct : {σ : Tyₛ} {z : Sizeₛ} (e : Src σ z)
             
             Fixed Point for indexed Functors
             \ExecuteMetaData[agda/tex/Bytecode.tex]{HTree}
-        \end{frame}
+\end{frame}
 
         \begin{frame}[fragile]
             \frametitle{Bytecode Tree Representation}
@@ -58,7 +58,7 @@ correct : {σ : Tyₛ} {z : Sizeₛ} (e : Src σ z)
             `Bytecode` is isomorphic to `HTree BytecodeF`:
             We have: `fromGraph . toGraph == id`
             And:     `toGraph . fromGraph == id`
-        \end{frame}
+\end{frame}
                 
         \begin{frame}[fragile]
             \frametitle{Correctness on Trees}
@@ -66,12 +66,12 @@ correct : {σ : Tyₛ} {z : Sizeₛ} (e : Src σ z)
             \ExecuteMetaData[agda/tex/Bytecode.tex]{compileT}
             `execT` executes `HTree` represented Bytecode
             \begin{verbatim}
-correctT : ∀ {σ z s'} → (e : Src σ z) 
+correctT : ∀ {t z s'} → (e : Src t z) 
          → execT (compileT e) ≡ ⟦ e ⟧
             \end{verbatim}
             The proof for `correctT` can be trivially lifted from `correct`,
             because `Bytecode` is structurally the same as `HTree BytecodeF`
-        \end{frame}
+\end{frame}
 
         \begin{frame}[fragile]
             \frametitle{Graphs}
@@ -89,7 +89,7 @@ data HGraph .. : ... -> Set where ...
             But:     `toGraph . fromGraph /= id`
             
             HGraph -> Bytecode -> HGraph loses sharing
-        \end{frame}
+\end{frame}
          
          \begin{frame}[fragile]
             \frametitle{Bytecode Graph Representation}
@@ -97,10 +97,10 @@ data HGraph .. : ... -> Set where ...
             \ExecuteMetaData[agda/tex/Bytecode.tex]{compileG}
             `execG` executes `HGraph` represented Bytecode
             \begin{verbatim}
-correctG : ∀ {σ z s'} → (e : Src σ z) 
+correctG : ∀ {t z s'} → (e : Src t z) 
          → execG (compileG e) ≡ ⟦ e ⟧
             \end{verbatim}
             
             Using machinery, we get this proof automatically from `correctT`
-        \end{frame}
+\end{frame}
 
