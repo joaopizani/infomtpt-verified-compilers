@@ -10,9 +10,14 @@ open import Data.Nat using (ℕ; _+_; suc)
 -- First of all, as our expression language is typed, we need a language of types
 -- We denote the types of the Src language with similar symbols of the
 -- corresponding types in Agda, subscripted with a lower-case "s"
+\end{code}
+%<*tys>
+\begin{code}
 data Tyₛ : Set where
     ℕₛ : Tyₛ
     𝔹ₛ : Tyₛ
+\end{code}
+%</tys>
 
 -- Together with defining the object language types,
 -- we define a mapping from object language types into Agda types.
