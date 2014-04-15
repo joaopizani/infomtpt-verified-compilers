@@ -16,7 +16,7 @@ PUSH 2 >> PUSH 3 >> ADD
 
 
     \subsection{Compiler correctness}
-        \begin{frame}
+        \begin{frame}[fragile]
             \frametitle{What does "correct" mean?}
 
             \begin{itemize}
@@ -26,9 +26,9 @@ PUSH 2 >> PUSH 3 >> ADD
 
             Correctness equation:
             \begin{verbatim}
-                eval e = exec (compile e)
+eval e = exec (compile e)
             \end{verbatim}
-        \end{frame}
+\end{frame}
 
         \begin{frame}
             \frametitle{Reference paper}
@@ -42,7 +42,7 @@ PUSH 2 >> PUSH 3 >> ADD
     
 
     \subsection{Sharing}
-        \begin{frame}
+        \begin{frame}[fragile]
             \frametitle{Extending the source language}
 
             \begin{itemize}
@@ -62,7 +62,7 @@ if c then t else e >> common-suffix
                         \item But proofs would be more complex
                     \end{itemize}
             \end{itemize}
-        \end{frame}
+\end{frame}
 
 
     \subsection{Goals}
