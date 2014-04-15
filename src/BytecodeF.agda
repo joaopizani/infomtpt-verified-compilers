@@ -247,17 +247,17 @@ cong3 f refl refl refl = refl
 
 
 mutual 
-  coerceCommutes : ∀ {m n σ} -> (f : Src σ m) -> (g : Src σ n) -> {s : StackType} -> {b : StackType} -> (p : replicate n σ ++ₗ replicate m σ ++ₗ s ≡ b)
+  coerceIdCompile : ∀ {m n σ} -> (f : Src σ m) -> (g : Src σ n) -> {s : StackType} -> {b : StackType} -> (p : replicate n σ ++ₗ replicate m σ ++ₗ s ≡ b)
                                    -> toTree {s} {b} (coerce (Bytecode s) p (compile f Bytecode.⟫ compile g)) 
                                   ≡ coerce (HTree BytecodeF s) p (compileT f ⟫T compileT g)
-  coerceCommutes {m} {n} {σ} f g {s} .{replicate n σ ++ₗ replicate m σ ++ₗ s} refl = cong2 (λ x y → HTreeIn (x ⟫ y)) (compileTcorrect f) (compileTcorrect g)
+  coerceIdCompile {m} {n} {σ} f g {s} .{replicate n σ ++ₗ replicate m σ ++ₗ s} refl = cong2 (λ x y → HTreeIn (x ⟫ y)) (compileTcorrect f) (compileTcorrect g)
 
   compileTcorrect : ∀ {σ z s} → (e : Src σ z) -> toTree {s} (compile e) ≡ compileT e
   compileTcorrect (vₛ v) = refl
   compileTcorrect (p +ₛ q) = cong2 (λ a x → HTreeIn (HTreeIn (a ⟫ x) ⟫ HTreeIn ADD)) (compileTcorrect q) (compileTcorrect p)
   compileTcorrect (ifₛ c thenₛ t elseₛ e) = cong3 (λ a x p → HTreeIn (a ⟫ HTreeIn (IF x p))) (compileTcorrect c) (compileTcorrect t) (compileTcorrect e)
   compileTcorrect .{σ} .{suc n + suc m} {s} (_⟫ₛ_ {σ} {m} {n} f g) 
-    = coerceCommutes {suc m} {suc n} {σ} f g {s} {σ ∷ replicate (n + suc m) σ ++ₗ s} (lemmaConsAppend n m σ s ~ cong (λ l → σ ∷ l ++ₗ s) (lemmaPlusAppend n (suc m) σ))
+    = coerceIdCompile {suc m} {suc n} {σ} f g {s} {σ ∷ replicate (n + suc m) σ ++ₗ s} (lemmaConsAppend n m σ s ~ cong (λ l → σ ∷ l ++ₗ s) (lemmaPlusAppend n (suc m) σ))
 
 
 compileG' : ∀ {σ z s} → Src σ z → ∀ {v} → HGraph' BytecodeF v s (rep z σ ++ₗ s)
@@ -273,16 +273,24 @@ compileG' {.σ} {.(suc n + suc m)} {s} (_⟫ₛ_ {σ} {m} {n} e₁ e₂) {v}
 compileG : {s : StackType} → ∀ {z σ} -> Src σ z → HGraph BytecodeF s (replicate z σ ++ₗ s)
 compileG src = mkHGraph (compileG' src)
 
-Lemma₁ : {s : StackType} 
+mutual
+  coerceIdLemma₁ : ∀ {m n σ} -> (f : Src σ m) -> (g : Src σ n) -> {s : StackType} -> {b : StackType} -> ( p : replicate n σ ++ₗ replicate m σ ++ₗ s ≡ b )
+                                   -> coerce (HTree BytecodeF s) p (compileT f ⟫T compileT g)
+                                  ≡ foldGraph' (λ v → v) (λ e f → f e) (λ {ixp} {ixq} → {!!}) (coerce (HGraph' BytecodeF (HTree BytecodeF) s) p (compileG' f ⟫G compileG' g))
+  coerceIdLemma₁ {m} {n} {σ} f g {s} .{replicate n σ ++ₗ replicate m σ ++ₗ s} refl = cong2 (λ x y → HTreeIn (x ⟫ y)) (Lemma₁ f) (Lemma₁ g)
+
+
+  Lemma₁ : {s : StackType} 
        → ∀ {σ z} 
        → ( src : Src σ z) → compileT {σ} {z} {s} src ≡ unravel (compileG {s} src)
-Lemma₁ (vₛ v) = refl
-Lemma₁ (a +ₛ b) = cong2 (λ x p → HTreeIn (HTreeIn (p ⟫ x) ⟫ HTreeIn ADD )) (Lemma₁ a) (Lemma₁ b)
-Lemma₁ (ifₛ c thenₛ t elseₛ e) = cong3 (λ x p a → HTreeIn (x ⟫ HTreeIn (IF p a))) (Lemma₁ c) (Lemma₁ t) (Lemma₁ e)
-Lemma₁ (f ⟫ₛ g) = {!!}
+  Lemma₁ (vₛ v) = refl
+  Lemma₁ (a +ₛ b) = cong2 (λ x p → HTreeIn (HTreeIn (p ⟫ x) ⟫ HTreeIn ADD )) (Lemma₁ a) (Lemma₁ b)
+  Lemma₁ (ifₛ c thenₛ t elseₛ e) = cong3 (λ x p a → HTreeIn (x ⟫ HTreeIn (IF p a))) (Lemma₁ c) (Lemma₁ t) (Lemma₁ e)
+  Lemma₁ {s} .{σ} .{suc (n + suc m)} (_⟫ₛ_ {σ} {m} {n} f g) 
+    = coerceIdLemma₁ {suc m} {suc n} {σ} f g (lemmaConsAppend n m σ s ~ cong (λ l → σ ∷ l ++ₗ s) (lemmaPlusAppend n (suc m) σ))
 
--- HTreeIn (compileT c ⟫ HTreeIn (IF (compileT t) (compileT e)))
 
+-- (trans (lemmaConsAppend n m σ s) (cong (λ l → σ ∷ l ++ₗ s) (lemmaPlusAppend n (suc m) σ))
 data Unit : Set where
   T : Unit
 
