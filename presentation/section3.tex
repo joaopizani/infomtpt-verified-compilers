@@ -1,33 +1,54 @@
 \section{Conclusions}
 
     \begin{frame}
+        %% João Pizani wants to present this :)
         \frametitle{Achieved}
 
         \begin{itemize}
-            \item Developed a framework for producing compiler correctness proofs
-                for \emph{typed} languages with sharing constructs, given proofs which don't involve sharing.
+            \item Agda ``framework'' for deriving compiler correctness proofs
+            \begin{itemize}
+                \item Compilers with \textbf{typed source} and \textbf{typed target}
+                \item Given correctness of a ``naïve'' compiler, derive correctness of ``optimized'' version
+            \end{itemize}
 
-           \item Gave a specific proof for a simple example language, as ``instance'' of this framework.
+           \item Correctness proof for an expression language (with sequencing)
+           \begin{itemize}
+               \item As ``instance'' of this framework
+           \end{itemize}
         \end{itemize}
     \end{frame}
 
     \begin{frame}
+        % Wout presents this, right? :)
         \frametitle{Agda limitations we faced}
 
         \begin{itemize}
-            \item Strict positivity requirement (when defining fixpoints)
-            \item Totality checker (when defining folds)
-            \item Type checking with positivity check disabled made debugging hard (stack overflow, memory consumption).
+            \item Strict positivity requirement
+            \begin{itemize}
+                \item When defining fixed point type operators
+            \end{itemize}
+
+            \item Totality checker
+            \begin{itemize}
+                \item When defining folds
+            \end{itemize}
+
+            \item Type checking with positivity check disabled made debugging hard
+            \begin{itemize}
+                \item Stack overflow, memory consumption
+            \end{itemize}
         \end{itemize}
     \end{frame}
              
     \begin{frame}
-        %% João Pizani wants to present this :)
         \frametitle{Yet to be done}
 
         \begin{itemize}
+            % João here :)
             \item Sequence clause of ``basic'' (non-lifted) correctness proof
-            \item Proof a final lemma to complete the lifting (fusion law)
+
+            % Wout here :)
+            \item Prove a final lemma to complete the lifting (fusion law)
         \end{itemize}
     \end{frame}
 
