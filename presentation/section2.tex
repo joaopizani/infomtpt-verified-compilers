@@ -2,7 +2,8 @@
 
     \subsection{Basic correctness}
 
-        \begin{frame}
+        \begin{frame}[fragile]
+            %% João Pizani wants to present this :)
             \frametitle{Source}
 
             Source types:
@@ -13,23 +14,19 @@
 
             Denotational semantics (snippet):
             \ExecuteMetaData[agda/tex/Source.tex]{eval}
-        \end{frame}
+\end{frame}
 
-        \begin{frame}
+        \begin{frame}[fragile]
             \frametitle{Bytecode}
             %% João Pizani wants to present this :)
-            % StackType : Set
-            % StackType = List Tyₛ
 
-            % data Stack : StackType → Set where
-            %   ε    : Stack []
-            %  _▽_  : ∀ {σ s'} → ⁅ σ ⁆ → Stack s' → Stack (σ ∷ s')
+            Typed stack:
+            \ExecuteMetaData[agda/tex/Bytecode.tex]{stacktype}
+            \ExecuteMetaData[agda/tex/Bytecode.tex]{stack}
 
-            % data Bytecode : StackType → StackType → Set where
-            %   PUSH : ∀ {σ s}  → (x : ⁅ σ ⁆) → Bytecode s (σ ∷ s)
-            %   ADD  : ∀ {s}    → Bytecode (ℕₛ ∷ ℕₛ ∷ s) (ℕₛ ∷ s)
-            %   ...  : ...
-        \end{frame}
+            Typed bytecode (snippet):
+            \ExecuteMetaData[agda/tex/Bytecode.tex]{bytecode}
+\end{frame}
 
         \begin{frame}
             \frametitle{Compiler correctness}
