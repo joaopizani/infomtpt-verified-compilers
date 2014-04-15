@@ -1,13 +1,10 @@
-.PHONY: clean view agda
+.PHONY: clean view
 
 view: main.pdf
 	xdg-open main.pdf 2> /dev/null 1> /dev/null
 
-main.pdf: section1.tex section2.tex section3.tex agda
-	latexmk -quiet -pdf -f main.tex
-
-agda:
-	cd agda; for f in *.lagda; do agda -i "${HOME}/build/agda/lib/current/src" -i "." --latex --latex-dir="tex" "$${f}"; done
+main.pdf: section1.tex section2.tex section3.tex
+	latexmk -pdf -f main.tex
 
 clean:
 	latexmk -c main.tex
