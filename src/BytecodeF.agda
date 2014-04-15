@@ -6,14 +6,25 @@ open import Data.Bool using (true; false; if_then_else_) renaming (Bool to 𝔹)
 open import Data.List using (List; []; _∷_; replicate; [_]) renaming (_++_ to _++ₗ_)
 open import Data.Vec using (Vec) renaming ([] to ε; _∷_ to _◁_)
 open import Data.Nat using (ℕ; _+_; suc)
-open import Relation.Binary.PropositionalEquality using (_≡_; refl; sym; trans; subst; cong)
+open import Relation.Binary.PropositionalEquality using (_≡_; refl; sym; trans; subst; cong; cong₂)
 
 open import Source using (𝔹ₛ; ℕₛ; ⁅_⁆; Src; vₛ; _+ₛ_; ifₛ_thenₛ_elseₛ_; _⟫ₛ_; ⟦_⟧)
 open import Bytecode using (_▽_; StackType; Stack; Bytecode; exec)
-open import Compiler using (correct; compile; lemmaPlusAppend; _~_; lemmaConsAppend; prepend; rep; coerce; coerceBytecode)
+open import Compiler using (correct; compile; lemmaPlusAppend; _~_; lemmaConsAppend; prepend; rep; coerce)
 
 apply : {X Y : Set} -> {f g : X -> Y} -> (x : X) -> f ≡ g -> f x ≡ g x
 apply x refl = refl
+
+cong₃ : {P Q S R : Set} {a b : P} {x y : Q} {p q : S} -> (f : P → Q → S → R) -> a ≡ b -> x ≡ y -> p ≡ q -> f a x p ≡ f b y q
+cong₃ f refl refl refl = refl 
+
+cong' : {e : Level} {X : Set e} {R : Set}
+     -> (P Q : X -> R)
+     -> (a b : X) 
+     -> ((x : X) -> P x ≡ Q x) -> a ≡ b 
+     -> P a ≡ Q b
+cong' P Q a .a f refl = f a 
+
 
 record HFunctor {Ip Iq : Set} (F : (Ip -> Iq -> Set) -> (Ip -> Iq -> Set)) : Set₁ where
   constructor isHFunctor
@@ -196,13 +207,6 @@ execAlg (c₁ ⟫ c₂)   s           = c₂ (c₁ s)
 execT : ∀ {s s'} → HTree BytecodeF s s' -> Stack s -> Stack s'
 execT = foldTree execAlg
 
-broken_cong : {e : Level} {X : Set e} {R : Set}
-     -> (P Q : X -> R)
-     -> (a b : X) 
-     -> ((x : X) -> P x ≡ Q x) -> a ≡ b 
-     -> P a ≡ Q b
-broken_cong P Q a .a f refl = f a 
-
 
 execTcorrect : ∀ {s s'} → (tree : HTree BytecodeF s s') -> {t : Stack s} -> execT tree t ≡ exec (fromTree tree) t
 execTcorrect (HTreeIn SKIP) {t} = apply t (foldSKIP execAlg)
@@ -214,10 +218,10 @@ execTcorrect (HTreeIn (IF t e)) {true ▽ w}  | p = p ~ execTcorrect t
 execTcorrect (HTreeIn (IF t e)) {false ▽ w} | p = p ~ execTcorrect e
 execTcorrect (HTreeIn (f ⟫ g)) {w} with apply w (fold⟫ execAlg f g)
 execTcorrect (HTreeIn (f ⟫ g)) {w} | p 
-  = p ~ broken_cong (foldTree execAlg g)   (exec (fromTree g)) 
-                    (foldTree execAlg f w) (exec (fromTree f) w) 
-                    (λ m → execTcorrect g {m}) 
-                    (execTcorrect f {w})
+  = p ~ cong' (foldTree execAlg g)   (exec (fromTree g)) 
+              (foldTree execAlg f w) (exec (fromTree f) w) 
+              (λ m → execTcorrect g {m}) 
+              (execTcorrect f {w})
 
 execG : ∀ {s s'} → HGraph BytecodeF s s' -> Stack s -> Stack s'
 execG = foldGraph  execAlg
@@ -239,23 +243,16 @@ compileT {.σ} {.(suc n + suc m)} {s} (_⟫ₛ_ {σ} {m} {n} e₁ e₂)
        ~ cong (λ l → σ ∷ l ++ₗ s) (lemmaPlusAppend n (suc m) σ))
       (compileT e₁ ⟫T compileT e₂)
 
-cong2 : {P Q R : Set} {a b : P} {x y : Q} -> (f : P → Q → R) -> a ≡ b -> x ≡ y -> f a x ≡ f b y
-cong2 f refl refl = refl 
-
-cong3 : {P Q S R : Set} {a b : P} {x y : Q} {p q : S} -> (f : P → Q → S → R) -> a ≡ b -> x ≡ y -> p ≡ q -> f a x p ≡ f b y q
-cong3 f refl refl refl = refl 
-
-
 mutual 
   coerceIdCompile : ∀ {m n σ} -> (f : Src σ m) -> (g : Src σ n) -> {s : StackType} -> {b : StackType} -> (p : replicate n σ ++ₗ replicate m σ ++ₗ s ≡ b)
                                    -> toTree {s} {b} (coerce (Bytecode s) p (compile f Bytecode.⟫ compile g)) 
                                   ≡ coerce (HTree BytecodeF s) p (compileT f ⟫T compileT g)
-  coerceIdCompile {m} {n} {σ} f g {s} .{replicate n σ ++ₗ replicate m σ ++ₗ s} refl = cong2 (λ x y → HTreeIn (x ⟫ y)) (compileTcorrect f) (compileTcorrect g)
+  coerceIdCompile {m} {n} {σ} f g {s} .{replicate n σ ++ₗ replicate m σ ++ₗ s} refl = cong₂ (λ x y → HTreeIn (x ⟫ y)) (compileTcorrect f) (compileTcorrect g)
 
   compileTcorrect : ∀ {σ z s} → (e : Src σ z) -> toTree {s} (compile e) ≡ compileT e
   compileTcorrect (vₛ v) = refl
-  compileTcorrect (p +ₛ q) = cong2 (λ a x → HTreeIn (HTreeIn (a ⟫ x) ⟫ HTreeIn ADD)) (compileTcorrect q) (compileTcorrect p)
-  compileTcorrect (ifₛ c thenₛ t elseₛ e) = cong3 (λ a x p → HTreeIn (a ⟫ HTreeIn (IF x p))) (compileTcorrect c) (compileTcorrect t) (compileTcorrect e)
+  compileTcorrect (p +ₛ q) = cong₂ (λ a x → HTreeIn (HTreeIn (a ⟫ x) ⟫ HTreeIn ADD)) (compileTcorrect q) (compileTcorrect p)
+  compileTcorrect (ifₛ c thenₛ t elseₛ e) = cong₃ (λ a x p → HTreeIn (a ⟫ HTreeIn (IF x p))) (compileTcorrect c) (compileTcorrect t) (compileTcorrect e)
   compileTcorrect .{σ} .{suc n + suc m} {s} (_⟫ₛ_ {σ} {m} {n} f g) 
     = coerceIdCompile {suc m} {suc n} {σ} f g {s} {σ ∷ replicate (n + suc m) σ ++ₗ s} (lemmaConsAppend n m σ s ~ cong (λ l → σ ∷ l ++ₗ s) (lemmaPlusAppend n (suc m) σ))
 
@@ -277,20 +274,18 @@ mutual
   coerceIdLemma₁ : ∀ {m n σ} -> (f : Src σ m) -> (g : Src σ n) -> {s : StackType} -> {b : StackType} -> ( p : replicate n σ ++ₗ replicate m σ ++ₗ s ≡ b )
                                    -> coerce (HTree BytecodeF s) p (compileT f ⟫T compileT g)
                                   ≡ foldGraph' (λ v → v) (λ e f → f e) (λ {ixp} {ixq} → {!!}) (coerce (HGraph' BytecodeF (HTree BytecodeF) s) p (compileG' f ⟫G compileG' g))
-  coerceIdLemma₁ {m} {n} {σ} f g {s} .{replicate n σ ++ₗ replicate m σ ++ₗ s} refl = cong2 (λ x y → HTreeIn (x ⟫ y)) (Lemma₁ f) (Lemma₁ g)
+  coerceIdLemma₁ {m} {n} {σ} f g {s} .{replicate n σ ++ₗ replicate m σ ++ₗ s} refl = cong₂ (λ x y → HTreeIn (x ⟫ y)) (Lemma₁ f) (Lemma₁ g)
 
 
   Lemma₁ : {s : StackType} 
        → ∀ {σ z} 
        → ( src : Src σ z) → compileT {σ} {z} {s} src ≡ unravel (compileG {s} src)
   Lemma₁ (vₛ v) = refl
-  Lemma₁ (a +ₛ b) = cong2 (λ x p → HTreeIn (HTreeIn (p ⟫ x) ⟫ HTreeIn ADD )) (Lemma₁ a) (Lemma₁ b)
-  Lemma₁ (ifₛ c thenₛ t elseₛ e) = cong3 (λ x p a → HTreeIn (x ⟫ HTreeIn (IF p a))) (Lemma₁ c) (Lemma₁ t) (Lemma₁ e)
+  Lemma₁ (a +ₛ b) = cong₂ (λ x p → HTreeIn (HTreeIn (p ⟫ x) ⟫ HTreeIn ADD )) (Lemma₁ a) (Lemma₁ b)
+  Lemma₁ (ifₛ c thenₛ t elseₛ e) = cong₃ (λ x p a → HTreeIn (x ⟫ HTreeIn (IF p a))) (Lemma₁ c) (Lemma₁ t) (Lemma₁ e)
   Lemma₁ {s} .{σ} .{suc (n + suc m)} (_⟫ₛ_ {σ} {m} {n} f g) 
     = coerceIdLemma₁ {suc m} {suc n} {σ} f g (lemmaConsAppend n m σ s ~ cong (λ l → σ ∷ l ++ₗ s) (lemmaPlusAppend n (suc m) σ))
 
-
--- (trans (lemmaConsAppend n m σ s) (cong (λ l → σ ∷ l ++ₗ s) (lemmaPlusAppend n (suc m) σ))
 data Unit : Set where
   T : Unit
 
@@ -335,11 +330,11 @@ correctT e r = correct e r
 correctG : ∀ {σ z s}
          → (e : Src σ z) → ∀ (r : Stack s) → execG (compileG e) r ≡ prepend ⟦ e ⟧  r
 correctG e r = 
-  let step1 = broken_cong (λ g → execG g r) 
+  let step1 = cong' (λ g → execG g r) 
          (λ g → execT (unravel g) r) 
          (compileG e) (compileG e) 
          (Lemma₂ r) refl
-      step2 = broken_cong (λ g → execT g r) 
+      step2 = cong' (λ g → execT g r) 
           (λ g → execT g r)  
           (unravel (compileG e)) (compileT e)
           (λ t → refl) (sym (Lemma₁ e))
