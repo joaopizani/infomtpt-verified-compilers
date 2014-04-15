@@ -6,32 +6,37 @@
             %% João Pizani wants to present this :)
             \frametitle{Source}
 
-            Source types:
-            \ExecuteMetaData[agda/tex/Source.tex]{tys}
+            \begin{itemize}
+                \item Source types:
+                    \ExecuteMetaData[agda/tex/Source.tex]{tys}
 
-            Source terms (snippet):
-            \ExecuteMetaData[agda/tex/Source.tex]{src}
+                \item Source terms (snippet):
+                    \ExecuteMetaData[agda/tex/Source.tex]{src}
 
-            Denotational semantics (snippet):
-            \ExecuteMetaData[agda/tex/Source.tex]{eval}
+                \item Denotational semantics (snippet):
+                    \ExecuteMetaData[agda/tex/Source.tex]{eval}
+            \end{itemize}
 \end{frame}
 
         \begin{frame}[fragile]
             \frametitle{Bytecode}
             %% João Pizani wants to present this :)
 
-            Typed stack:
-            \ExecuteMetaData[agda/tex/Bytecode.tex]{stacktype}
-            \ExecuteMetaData[agda/tex/Bytecode.tex]{stack}
+            \begin{itemize}
+                \item Typed stack:
+                \ExecuteMetaData[agda/tex/Bytecode.tex]{stacktype}
+                \ExecuteMetaData[agda/tex/Bytecode.tex]{stack}
 
-            Typed bytecode (snippet):
-            \ExecuteMetaData[agda/tex/Bytecode.tex]{bytecode}
+                \item Typed bytecode (snippet):
+                \ExecuteMetaData[agda/tex/Bytecode.tex]{bytecode}
+            \end{itemize}
 \end{frame}
 
         \begin{frame}[fragile]
             \frametitle{Compiler correctness}
             %% João Pizani wants to present this :)
             \ExecuteMetaData[agda/tex/Bytecode.tex]{compile}
+
             \begin{verbatim}
 correct : {t : Tyₛ} {z : Sizeₛ} (e : Src t z)
         → exec (compile e) ≡ ⟦ e ⟧
@@ -40,67 +45,92 @@ correct : {t : Tyₛ} {z : Sizeₛ} (e : Src t z)
 
 
     \subsection{Lifting to sharing setting}
+
         \begin{frame}[fragile]
-            \frametitle{Tree fixpoints}
             %% Wout presents this? :)
-            Fixed Point for standard Functors
-            \ExecuteMetaData[agda/tex/Bytecode.tex]{Tree}
+            \frametitle{Tree fixpoints}
+
+            \begin{itemize}
+                \item Fixed Point for standard Functors
+                    \ExecuteMetaData[agda/tex/Bytecode.tex]{Tree}
             
-            Fixed Point for indexed Functors
-            \ExecuteMetaData[agda/tex/Bytecode.tex]{HTree}
+                \item Fixed Point for indexed Functors
+                    \ExecuteMetaData[agda/tex/Bytecode.tex]{HTree}
+            \end{itemize}
 \end{frame}
 
         \begin{frame}[fragile]
-            \frametitle{Bytecode Tree Representation}
             %% Wout presents this? :)
+            \frametitle{Bytecode Tree Representation}
+
             \ExecuteMetaData[agda/tex/Bytecode.tex]{bytecode}
             \ExecuteMetaData[agda/tex/Bytecode.tex]{bytecodeF}
-            `Bytecode` is isomorphic to `HTree BytecodeF`:
-            We have: `fromGraph . toGraph == id`
-            And:     `toGraph . fromGraph == id`
+
+            \begin{itemize} 
+                \item \texttt{Bytecode} is isomorphic to \texttt{HTree BytecodeF}
+                    \begin{itemize}
+                        \item \texttt{fromTree ∘ toTree ≡ id}
+                        \item \texttt{toTree ∘ fromTree ≡ id}
+                    \end{itemize}
+            \end{itemize}
 \end{frame}
                 
         \begin{frame}[fragile]
-            \frametitle{Correctness on Trees}
             %% Wout presents this? :)
+            \frametitle{Correctness on Trees}
+
             \ExecuteMetaData[agda/tex/Bytecode.tex]{compileT}
             \ExecuteMetaData[agda/tex/Bytecode.tex]{execT}
+
             \begin{verbatim}
 correctT : ∀ {t z s'} → (e : Src t z) 
          → execT (compileT e) ≡ ⟦ e ⟧
             \end{verbatim}
-            The proof for `correctT` can be trivially lifted from `correct`,
-            because `Bytecode` is structurally the same as `HTree BytecodeF`
+
+            \begin{itemize}
+                \item Proof of \texttt{correctT} can be derived from \texttt{correct}
+                    \begin{itemize}
+                        \item Because `Bytecode` is structurally the same as `HTree BytecodeF`
+                    \end{itemize}
+            \end{itemize}
 \end{frame}
 
         \begin{frame}[fragile]
             \frametitle{Graphs}
             %% Wout presents this? :)
             % Sample code from page 9, showing let/var
-            %
+
             \begin{verbatim}
 data HGraph .. : ... -> Set where ...
             \end{verbatim}
             
-            `HGraph` is like `HTree`, but with additional constructors to represent shared subtrees
+            \begin{itemize}
+                \item \texttt{HGraph} is similar (``includes'') \texttt{HTree}
+                \begin{itemize}
+                    \item But with extra constructors to represent \emph{shared subgraphs}
+                \end{itemize}
             
-            `Bytecode` is not exactly isomorphic to `HGraph BytecodeF`:
-            We have: `fromGraph . toGraph == id`
-            But:     `toGraph . fromGraph /= id`
-            
-            HGraph -> Bytecode -> HGraph loses sharing
+                \item \texttt{Bytecode} is not \emph{exactly} isomorphic to \texttt{HGraph BytecodeF}:
+                \begin{itemize}
+                    \item We have: \texttt{fromGraph ∘ toGraph ≡ id}
+                    \item But: \texttt{toGraph ∘ fromGraph ≠ id}
+                    \item \texttt{HGraph → Bytecode → HGraph} loses sharing
+                \end{itemize}
+            \end{itemize}
 \end{frame}
          
          \begin{frame}[fragile]
-            \frametitle{Bytecode Graph Representation}
             %% Wout presents this? :)
+            \frametitle{Bytecode Graph Representation}
+
             \ExecuteMetaData[agda/tex/Bytecode.tex]{compileG}
             \ExecuteMetaData[agda/tex/Bytecode.tex]{execG}
+
             \begin{verbatim}
 correctG : ∀ {t z} → (e : Src t z) 
          → execG (compileG e) ≡ ⟦ e ⟧
             \end{verbatim}
             
-            Using machinery, we get this proof automatically from `correctT`
+            Using machinery, we get this proof derived from `correctT`
 \end{frame}
 
