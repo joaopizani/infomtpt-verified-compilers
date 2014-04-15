@@ -12,5 +12,4 @@ clean:
 
 veryclean: clean
 	rm -f main.pdf
-	rm -f agda/tex/*.tex
 	rm -f agda/*.agdai
