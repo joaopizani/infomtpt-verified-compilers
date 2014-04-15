@@ -94,6 +94,11 @@ data HTree (f : (StackType -> StackType -> Set)
 \end{code}
 %</HTree>
 
+\begin{code}
+postulate foldTree : {F : (StackType -> StackType -> Set) -> (StackType -> StackType -> Set)} -> {{ functor : HFunctor F }} -> {r : StackType -> StackType -> Set} -> ( {ixp : StackType} {ixq : StackType} -> F r ixp ixq -> r ixp ixq) -> ( {ixp : StackType} {ixq : StackType} -> HTree F   ixp ixq -> r ixp ixq)
+\end{code}
+
+
 %<*HGraph>
 \begin{code}
 data HGraph' {Ip Iq : Set} (F : (Ip -> Iq -> Set) -> (Ip -> Iq -> Set) ) (v : Ip -> Iq -> Set) (ixp : Ip) (ixq : Iq) : Set where
@@ -106,9 +111,14 @@ data HGraph' {Ip Iq : Set} (F : (Ip -> Iq -> Set) -> (Ip -> Iq -> Set) ) (v : Ip
 \begin{code}
 data HGraph {Ip Iq : Set} (F : (Ip -> Iq -> Set) -> (Ip -> Iq -> Set) ) (ixp : Ip) (ixq : Iq) : Set₁ where
   mkHGraph : ( {v : Ip -> Iq -> Set} -> (HGraph' F v ixp ixq) ) -> HGraph F ixp ixq
+\end{code}
 
+\begin{code}
+
+postulate foldGraph : {F : (StackType -> StackType -> Set) -> (StackType -> StackType -> Set)} -> {{ functor : HFunctor F }} -> {r : StackType -> StackType -> Set} -> ( {ixp : StackType} {ixq : StackType} -> F r ixp ixq -> r ixp ixq)-> ( {ixp : StackType} {ixq : StackType} -> HGraph F   ixp ixq -> r ixp ixq)
 
 \end{code}
+
 
 %<*bytecodeF>
 \begin{code}
@@ -256,7 +266,7 @@ execT : ∀ {s s'} → HTree BytecodeF s s' -> Stack s -> Stack s'
 %</execT>
 
 \begin{code}
-execT = {!!}
+execT = foldTree execAlg
 \end{code}
 
 %<*execG>
@@ -266,5 +276,5 @@ execG : ∀ {s s'} → HGraph BytecodeF s s' -> Stack s -> Stack s'
 %</execG>
 
 \begin{code}
-execG = {!!}
+execG = foldGraph execAlg
 \end{code}
