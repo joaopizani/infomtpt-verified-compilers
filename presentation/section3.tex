@@ -1,15 +1,32 @@
-\section{Conclusion}
+\section{Conclusions}
 
-    \item Developed a framework for producing compiler correctness proofs
-      for languages with sharing constructs, given proofs which don't involve sharing.
-           \item Gave a specific proof for an example language, as ``instance'' of this framework.
+    \begin{frame}
+        \frametitle{Achieved}
 
-    \item Limitations encountered:
-       \item Strictly positive types required
-       \item Totality checker (when defining folds)
-       \item Type checking with positivity check disabled made debugging hard (stack overflow, memory consumption).
-         
+        \begin{itemize}
+            \item Developed a framework for producing compiler correctness proofs
+                for \emph{typed} languages with sharing constructs, given proofs which don't involve sharing.
 
-    \subsection{Yet to be done}
-        \item Sequence clause of ``basic'' (non-lifted) correctness proof
-        \item Proof a final lemma to complete the lifting (fusion law)
+           \item Gave a specific proof for a simple example language, as ``instance'' of this framework.
+        \end{itemize}
+    \end{frame}
+
+    \begin{frame}
+        \frametitle{Agda limitations we faced}
+
+        \begin{itemize}
+            \item Strict positivity requirement (when defining fixpoints)
+            \item Totality checker (when defining folds)
+            \item Type checking with positivity check disabled made debugging hard (stack overflow, memory consumption).
+        \end{itemize}
+    \end{frame}
+             
+    \begin{frame}
+        \frametitle{Yet to be done}
+
+        \begin{itemize}
+            \item Sequence clause of ``basic'' (non-lifted) correctness proof
+            \item Proof a final lemma to complete the lifting (fusion law)
+        \end{itemize}
+    \end{frame}
+

@@ -1,3 +1,4 @@
+\begin{code}
 module Bytecode where
 
 open import Data.Bool using (true; false)
@@ -71,3 +72,4 @@ execAlg ADD'         (n ▽ m ▽ s) = (n + m) ▽ s
 execAlg (IF' t e)    (true  ▽ s) = t s
 execAlg (IF' t e)    (false ▽ s) = e s
 execAlg (c₁ ⟫' c₂)   s           = c₂ (c₁ s)
+\end{code}

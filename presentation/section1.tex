@@ -1,56 +1,59 @@
-\section{Problem description}
+\section{Introduction}
 
     \subsection{Context}
 
 \begin{frame}[fragile]
             \frametitle{Source code, Bytecode, eval, compile, exec}
 
-            Source
-                (Add (Val 2) (Val 3))
+            Source:
+            \ExecuteMetaData[agda/tex/Source.tex]{tys}
 
             Bytecode (stack code, for example):
-                PUSH 2 >> PUSH 3 >> ADD
+            \begin{verbatim}
+PUSH 2 >> PUSH 3 >> ADD
+            \end{verbatim}
 \end{frame}
+
 
     \subsection{Compiler correctness}
         \begin{frame}
             \frametitle{What does "correct" mean?}
 
-            ``eval'' defines the semantics of the source language
-            compiler correctness means that the compilers respects this semantics
-
             \begin{itemize}
-                eval e = exec (compile e)
+                \item Given a semantics for the source language (``eval'')
+                \item This semantics is \emph{respected} by the compiler.
             \end{itemize}
+
+            Correctness equation:
+            \begin{verbatim}
+                eval e = exec (compile e)
+            \end{verbatim}
         \end{frame}
 
-
         \begin{frame}
-            \frametitle{References}
+            \frametitle{Reference paper}
             \begin{itemize}
-                \item Stack-safe, type-correct expression compiler
+                \item "A type-correct, stack-safe, provably correct expression compiler in Epigram"
+                    \begin{itemize}
+                        \item James McKinna, Joel Wright
+                    \end{itemize}
             \end{itemize}
         \end{frame}
     
 
     \subsection{Sharing}
         \begin{frame}
-            \frametitle{Extension}
-
-            "Normal" languages have some sharing constructs
-
-            We wanted to introduce the "simplest possible" extension to the source that
-            generates sharing
-
-            if c then t else e >> suffix
+            \frametitle{Extending the source language}
 
             \begin{itemize}
-                \item Why this extension (exceptions -- original idea in the reference paper -- were negative)
-                \item Sequencing expressions
-                \item Enables "branching", but with shared suffix
+                \item "Bigger" languages usually have sharing constructs
+                \item We wanted the "simplest possible" extension with sharing behaviour.
+                \item \textbf{Chosen extension: if\_then\_else $+$ sequencing}
+                    \begin{verbatim}
+if c then t else e >> common-suffix
+                    \end{verbatim}
             \end{itemize}
-        \end{frame}
-        
+
             \begin{itemize}
                 \item The "normal" compile function will duplicate the common suffix
                 \item Having Bytecode defined as graph (structured graph) instead of tree
@@ -62,29 +65,36 @@
         \end{frame}
 
 
-    \subsection{Graph and tree representations}
+    \subsection{Goals}
         \begin{frame}
-            \frametitle{What to do}
-
-            \item Have a graph-based compiler, generating code which uses sharing
-            \item Write the correctness proof only for the tree representation,
-              have correctness \textbf{derived} for graphs.
+            \frametitle{What we ideally want}
+            \begin{itemize}
+                \item Have a "smart" graph-based compiler, generating code which uses sharing
+                \item Write the correctness proof only for the "dumb" compiler,
+                    have correctness \textbf{derived} for the smart version.
+              \end{itemize}
         \end{frame}
 
         \begin{frame}
-            \frametitle{Reference}
-            THese guys do it! YAY! :)
+            \frametitle{Reference paper}
+
+            \begin{itemize}
+                \item "Proving Correctness of Compilers using Structured Graphs"
+                    \begin{itemize}
+                        \item Patrick Bahr
+                    \end{itemize}
+            \end{itemize}
         \end{frame}
 
         \begin{frame}
-            \frametitle{Project's goals}
+            \frametitle{Our project's goals}
 
-            Integrating the approaches of the two ``reference'' papers.
+            \centering{Integrating the approaches of the two ``reference'' papers.}
 
             Our contributions:
             \begin{itemize}
                 \item (Simplest possible) language extension showing sharing behaviour.
-                \item Proof of correctness for \textbf{stack-safe} a ``simple'' compiler that just duplicates code.
+                \item Proof of correctness for the \textbf{stack-safe} ``simple'' compiler that just duplicates code.
                 \item A way to to lift this \textbf{stack-safe} correctness proof to one for a more \textbf{efficient} compiler.
             \end{itemize}
         \end{frame}

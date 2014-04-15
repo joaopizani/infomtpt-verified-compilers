@@ -1,4 +1,4 @@
-
+\begin{code}
 module BytecodeF where
 
 open import Level renaming ( suc to zuc )
@@ -12,26 +12,4 @@ open import Source using (𝔹ₛ; ℕₛ; ⁅_⁆; Src; vₛ; _+ₛ_; ifₛ_the
 open import Bytecode using (_▽_; StackType; Stack; Bytecode; exec)
 open import Compiler using (correct; compile; prepend)
 
-
-
-
-
-
-
-
-
-
-
-
-
-
- 
-
-
-
-
-
-
-
-
-
+\end{code}
