@@ -1,0 +1,81 @@
+module Correctness where
+
+open import Source
+open import Bytecode
+open import Compiler
+
+open import HTree
+open import HGraph
+open import HFunctor
+
+open import BytecodeHTree
+open import BytecodeHGraph
+
+open import Util
+
+
+open import Data.List using ( replicate; _∷_ ) renaming (_++_ to _++ₗ_)
+open import Data.Nat using (ℕ; _+_; suc)
+open import Relation.Binary.PropositionalEquality using (_≡_; refl; sym; trans; subst; cong; cong₂)
+
+
+mutual
+  coerceIdLemma₁ : ∀ {m n σ} -> (f : Src σ m) -> (g : Src σ n) -> {s : StackType} -> {b : StackType} -> ( p : replicate n σ ++ₗ replicate m σ ++ₗ s ≡ b )
+                                   -> coerce (HTree BytecodeF s) p (compileT f ⟫T compileT g)
+                                  ≡ foldGraph' (λ v → v) (λ e f → f e) (λ {ixp} {ixq} → {!!}) (coerce (HGraph' BytecodeF (HTree BytecodeF) s) p (compileG' f ⟫G compileG' g))
+  coerceIdLemma₁ {m} {n} {σ} f g {s} .{replicate n σ ++ₗ replicate m σ ++ₗ s} refl 
+    = cong₂ (λ x y → HTreeIn (x ⟫' y)) (Lemma₁ f) (Lemma₁ g)
+
+
+  Lemma₁ : {s : StackType} 
+       → ∀ {σ z} 
+       → ( src : Src σ z) → compileT {σ} {z} {s} src ≡ unravel (compileG {s} src)
+  Lemma₁ (vₛ v) = refl
+  Lemma₁ (a +ₛ b) = cong₂ (λ x p → HTreeIn (HTreeIn (p ⟫' x) ⟫' HTreeIn ADD' )) (Lemma₁ a) (Lemma₁ b)
+  Lemma₁ (ifₛ c thenₛ t elseₛ e) = cong₃ (λ x p a → HTreeIn (x ⟫' HTreeIn (IF' p a))) (Lemma₁ c) (Lemma₁ t) (Lemma₁ e)
+  Lemma₁ {s} .{σ} .{suc (n + suc m)} (_⟫ₛ_ {σ} {m} {n} f g) 
+    = coerceIdLemma₁ {suc m} {suc n} {σ} f g ( lemmaConsAppend n m σ s 
+                                             ~ cong (λ l → σ ∷ l ++ₗ s) (lemmaPlusAppend n (suc m) σ)
+                                             )
+
+
+Theorem :
+    ∀ {Ip Iq} → ∀ {F} → 
+    {{ functor : HFunctor F }} → 
+    ∀ {r}
+  → (alg : {ixp : Ip} → {ixq : Iq} → F r ixp ixq → r ixp ixq)
+  → {ixp : Ip} {ixq : Iq} 
+  → ∀ graph → foldGraph alg {ixp} {ixq} graph ≡ foldTree alg {ixp} {ixq} (unravel graph)
+Theorem alg {ipx} {ipy} graph = fusion (λ a → foldGraph a graph) alg
+
+
+
+Lemma₂ : {s s' : StackType} → (r : Stack s) 
+       → (graph : HGraph BytecodeF s s')
+       →  execG graph r ≡ execT (unravel graph) r
+Lemma₂ {s} {s'} r graph = apply r (Theorem execAlg graph)
+
+-- prepend ⟦ e ⟧  r ≡ exec (compile e) r 
+--                  ≡ exec (fromTree . toTree . compile e) r 
+--                  ≡ execT (toTree . compile e) r 
+--                  ≡ execT (compileT e) r
+
+correctT : ∀ {σ z s'} → (e : Src σ z) 
+         → ∀ (r : Stack s') → prepend ⟦ e ⟧ r ≡ execT (compileT e) r
+correctT e r = correct e r 
+             ~ cong (λ t → exec t r) (sym (treeIsoTo (compile e))) 
+             ~ sym (execTcorrect (toTree (compile e))) 
+             ~ cong (λ t → execT t r) (compileTcorrect e)
+
+correctG : ∀ {σ z s}
+         → (e : Src σ z) → ∀ (r : Stack s) → execG (compileG e) r ≡ prepend ⟦ e ⟧  r
+correctG e r = 
+  let step1 = cong' (λ g → execG g r) 
+         (λ g → execT (unravel g) r) 
+         (compileG e) (compileG e) 
+         (Lemma₂ r) refl
+      step2 = cong' (λ g → execT g r) 
+          (λ g → execT g r)  
+          (unravel (compileG e)) (compileT e)
+          (λ t → refl) (sym (Lemma₁ e))
+  in step1 ~ step2 ~ sym (correctT e r)
