@@ -13,38 +13,13 @@ open import Relation.Binary.PropositionalEquality using (_≡_; refl; sym; trans
 open import Source
 open import Bytecode
 
+open import Util
 
--- Now, having our source and "target" languages,
--- we are ready to define the compiler from one to the other:
-rep : {A : Set} → (n : ℕ) → A → List A
-rep = replicate  -- just a shorter name, used a lot
-
-lemmaConsAppend : {A : Set} (m n : ℕ) (a : A) (s : List A)
-    → a ∷ rep m a ++ a ∷ rep n a ++ s ≡ a ∷ (rep m a ++ a ∷ rep n a) ++ s
-lemmaConsAppend zero    n a s = refl
-lemmaConsAppend (suc m) n a s = cong (_∷_ a) (lemmaConsAppend m n a s)
-
-lemmaPlusAppend : {A : Set} (m n : ℕ) (a : A) → rep m a ++ rep n a ≡ rep (m + n) a
-lemmaPlusAppend zero    n a = refl
-lemmaPlusAppend (suc m) n a = cong (_∷_ a) (lemmaPlusAppend m n a)
-
-coerce : {A : Set} → (F : A → Set) → {s₁ s₂ : A} → s₁ ≡ s₂ → F s₁ → F s₂
-coerce _ refl b = b
-{-
-coerceBytecode : {s s₁ s₂ : StackType} → s₁ ≡ s₂ → Bytecode s s₁ → Bytecode s s₂
-coerceBytecode {s} refl b = coerce (Bytecode s) refl b
-
-coerceStack : {s₁ s₂ : StackType} → s₁ ≡ s₂ → Stack s₁ → Stack s₂
-coerceStack refl s = coerce Stack refl s
--}
 lemmaStack :
  {st st1 st2 : StackType} {c : Bytecode st st1} (eq : st1 ≡ st2) (s : Stack st)
  → exec (coerce (Bytecode st) eq c) s ≡ coerce Stack eq (exec c s)
 lemmaStack refl s = refl
 
-_~_ : {α : Set} {a b c : α} → a ≡ b → b ≡ c → a ≡ c
-_~_ = trans  -- just an easier-to-use notation for transitivity
-infixr 5 _~_
 
 compile : ∀ {σ z s} → Src σ z → Bytecode s (rep z σ ++ s)
 compile (vₛ x)                  = PUSH x
