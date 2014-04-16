@@ -117,10 +117,15 @@ correctG e r =
           (λ t → refl) (sym (Lemma₁ e))
   in step1 ~ step2 ~ (correctT e r)
 
+postulate funext : {X Y : Set} {f g : X → Y} → ( (x : X) → f x ≡ g x ) → f ≡ g
+
 correctness : ∀ {s σ z}
             → (e : Src σ z) → ∀ (r : Stack s) → execG (compileG e) r ≡ prepend ⟦ e ⟧  r
-correctness = graphCorrectness 
-  where open import Lifting List _++ₗ_ replicate execAlg compileG Lemma₁ prepend correctT
+correctness e r = apply r (graphCorrectness e)
+  where open import Lifting List (λ σ n s → replicate n σ ++ₗ s) 
+                            (λ s s' → Stack s -> Stack s')
+                            execAlg compileG 
+                            Lemma₁ prepend (λ e → funext (correctT e))
 
 
 

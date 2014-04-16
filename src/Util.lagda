@@ -10,6 +10,8 @@ open import Relation.Binary.PropositionalEquality using (_≡_; refl; sym; trans
 apply : {X Y : Set} -> {f g : X -> Y} -> (x : X) -> f ≡ g -> f x ≡ g x
 apply x refl = refl
 
+postulate funext : {X Y : Set} {f g : X → Y} → ( (x : X) → f x ≡ g x ) → f ≡ g
+
 cong₃ : {P Q S R : Set} {a b : P} {x y : Q} {p q : S} -> (f : P → Q → S → R) -> a ≡ b -> x ≡ y -> p ≡ q -> f a x p ≡ f b y q
 cong₃ f refl refl refl = refl 
 
