@@ -28,8 +28,8 @@ module Lifting
   )
   ( execAlg : ∀ {s s′} → F (λ t t' → target t t') s s′ → target s s′
   ) 
-  { compileT : ∀ {s σ z} → Src σ z → HTree  F s (post σ z s)
-  } 
+  ( compileT : ∀ {s σ z} → Src σ z → HTree  F s (post σ z s)
+  ) 
   ( compileG : ∀ {s σ z} → Src σ z → HGraph F s (post σ z s)
   ) 
   ( unravelLemma : ∀ {s σ z} 

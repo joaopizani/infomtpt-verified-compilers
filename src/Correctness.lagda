@@ -88,8 +88,9 @@ correctG : ∀ {s σ z}
 correctG = graphCorrectness
   where open import Lifting List (λ σ n s → replicate n σ ++ₗ s) 
                             (λ s s' → Stack s -> Stack s')
-                            execAlg compileG 
-                            Lemma₁ prepend correctT
+                            execAlg 
+                            compileT compileG  Lemma₁ 
+                            prepend  correctT
 
 
 
