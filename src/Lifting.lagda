@@ -27,8 +27,8 @@ module Lifting
   ) ( unravelLemma : ∀ {s σ z} 
                    → (src : Src σ z) → compileT {s} src ≡ unravel (compileG {s} src)
   ) ( prepend : ∀ {t n σ} → (v : Vec ⁅ σ ⁆ n) → target t (post σ n t)
-  ) ( correctT : ∀ {s σ z} → (e : Src σ z) 
-             → foldTree execAlg {s} {post σ z s} (compileT e) ≡ prepend ⟦ e ⟧
+  ) ( correctT : ∀ {s σ z} 
+               → (e : Src σ z) → foldTree execAlg {s} {post σ z s} (compileT e) ≡ prepend ⟦ e ⟧
   )
  where
 
@@ -40,22 +40,20 @@ execG = foldGraph execAlg
 
 
 Theorem :
-    ∀ {Ip Iq} → ∀ {F} → 
-    {{ functor : HFunctor F }} → 
-    ∀ {r}
+    ∀ {Ip Iq} → ∀ {r}
+  → ∀ {F} → {{ functor : HFunctor F }}
   → (alg : {ixp : Ip} → {ixq : Iq} → F r ixp ixq → r ixp ixq)
   → {ixp : Ip} {ixq : Iq} 
   → ∀ graph → foldGraph alg {ixp} {ixq} graph ≡ foldTree alg {ixp} {ixq} (unravel graph)
-Theorem alg {ipx} {ipy} graph = fusion (λ a → foldGraph a graph) alg
+Theorem alg graph = fusion (λ a → foldGraph a graph) alg
 
 
 Lemma : {s s' : IndexType Tyₛ}
-       → (graph : HGraph F s s')
-       → execG graph ≡ execT (unravel graph)
-Lemma {s} {s'} graph = Theorem execAlg graph
+      → (graph : HGraph F s s') → execG graph ≡ execT (unravel graph)
+Lemma graph = Theorem execAlg graph
 
 graphCorrectness : ∀ {s σ z}
-         → (e : Src σ z) → execG {s} (compileG e) ≡ prepend ⟦ e ⟧ 
+                 → (e : Src σ z) → execG {s} (compileG e) ≡ prepend ⟦ e ⟧ 
 graphCorrectness e = 
   let step1 = cong' (λ g → execG g) 
          (λ g → execT (unravel g)) 
