@@ -51,6 +51,30 @@
 
     \section{Introduction}
     \label{sec:intro}
+        In this report we describe our work for the final project of the master course
+        "Theory of Programming and Types" at Utrecht University. Our research involves
+        the question of compiler correctness, i.e, giving a \emph{specification} for
+        a language (a semantics), and proving that a compiler for that language respects
+        the given semantics.
+
+        Concretely, our notion of correctness depends on two semantics, respectively for the source
+        and object languages of the compiler. We define a denotational semantics (eval) for the source
+        language, as well as an operational semantics (exec) for the target machine. Correctness
+        states that evaluation is equal to compilation composed with execution.
+
+        More specifically, we were interested in having \emph{machine-checked} proofs of correctness,
+        i.e, proofs written in the language of an interactive proof assistant. Some initiatives in
+        this direction are already being taken, most famously CompCert, a formally verified compiler
+        for the C language, which had its proof written in the \emph{Coq} proof assistant.
+
+        Our approach, besides using the \emph{Agda} programming language instead of emph{Coq},
+        also differs from CompCert in that it uses dependent types as a way to make the
+        source and object languages (as well as the compiler) have some meta-theoretical properties
+        \emoh{by construction}, instead of proving them separately.
+
+        Dependent types allow us to embed, as indices to the language definitions and in the type
+        of the ``compile'' function, constraints which make these definitions correct. %%%
+
         % General motivations, etc.
         % Formalize correctness in terms of semantics
         % How dependent types help.
