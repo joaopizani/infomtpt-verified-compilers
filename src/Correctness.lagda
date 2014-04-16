@@ -73,28 +73,6 @@ mutual
                                              ~ cong (λ l → σ ∷ l ++ₗ s) (lemmaPlusAppend n (suc m) σ)
                                              )
 
-
-Theorem :
-    ∀ {Ip Iq} → ∀ {F} → 
-    {{ functor : HFunctor F }} → 
-    ∀ {r}
-  → (alg : {ixp : Ip} → {ixq : Iq} → F r ixp ixq → r ixp ixq)
-  → {ixp : Ip} {ixq : Iq} 
-  → ∀ graph → foldGraph alg {ixp} {ixq} graph ≡ foldTree alg {ixp} {ixq} (unravel graph)
-Theorem alg {ipx} {ipy} graph = fusion (λ a → foldGraph a graph) alg
-
-
-
-Lemma₂ : {s s' : StackType} → (r : Stack s) 
-       → (graph : HGraph BytecodeF s s')
-       →  execG graph r ≡ execT (unravel graph) r
-Lemma₂ {s} {s'} r graph = apply r (Theorem execAlg graph)
-
--- prepend ⟦ e ⟧  r ≡ exec (compile e) r 
---                  ≡ exec (fromTree . toTree . compile e) r 
---                  ≡ execT (toTree . compile e) r 
---                  ≡ execT (compileT e) r
-
 correctT : ∀ {s σ z} → (e : Src σ z) → execT {s} (compileT e) ≡ prepend ⟦ e ⟧
 correctT e = funext (λ r → sym 
                ( correct e r 
