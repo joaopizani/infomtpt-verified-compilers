@@ -63,9 +63,8 @@ mutual
     = cong₂ (λ x y → HTreeIn (x ⟫' y)) (Lemma₁ f) (Lemma₁ g)
 
 
-  Lemma₁ : {s : StackType} 
-       → ∀ {σ z} 
-       → ( src : Src σ z) → compileT {σ} {z} {s} src ≡ unravel (compileG {s} src)
+  Lemma₁ : ∀ {s σ z} 
+       → ( src : Src σ z) → compileT {s} src ≡ unravel (compileG {s} src)
   Lemma₁ (vₛ v) = refl
   Lemma₁ (a +ₛ b) = cong₂ (λ x p → HTreeIn (HTreeIn (p ⟫' x) ⟫' HTreeIn ADD' )) (Lemma₁ a) (Lemma₁ b)
   Lemma₁ (ifₛ c thenₛ t elseₛ e) = cong₃ (λ x p a → HTreeIn (x ⟫' HTreeIn (IF' p a))) (Lemma₁ c) (Lemma₁ t) (Lemma₁ e)
@@ -96,8 +95,8 @@ Lemma₂ {s} {s'} r graph = apply r (Theorem execAlg graph)
 --                  ≡ execT (toTree . compile e) r 
 --                  ≡ execT (compileT e) r
 
-correctT : ∀ {σ z s'} → (e : Src σ z) 
-         → ∀ (r : Stack s') → execT (compileT e) r ≡ prepend ⟦ e ⟧ r
+correctT : ∀ {s σ z} → (e : Src σ z) 
+         → ∀ (r : Stack s) → execT (compileT e) r ≡ prepend ⟦ e ⟧ r
 correctT e r = sym 
              ( correct e r 
              ~ cong (λ t → exec t r) (sym (treeIsoTo (compile e))) 
@@ -117,4 +116,13 @@ correctG e r =
           (unravel (compileG e)) (compileT e)
           (λ t → refl) (sym (Lemma₁ e))
   in step1 ~ step2 ~ (correctT e r)
+
+correctness : ∀ {σ z s}
+            → (e : Src σ z) → ∀ (r : Stack s) → execG (compileG e) r ≡ prepend ⟦ e ⟧  r
+correctness = graphCorrectness 
+  where open import Lifting _++ₗ_ replicate execAlg compileG Lemma₁ prepend correctT
+
+
+
+
 \end{code}
