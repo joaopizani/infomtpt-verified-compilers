@@ -67,13 +67,14 @@
         this direction are already being taken, most famously CompCert, a formally verified compiler
         for the C language, which had its proof written in the \emph{Coq} proof assistant.
 
-        Our approach, besides using the \emph{Agda} programming language instead of emph{Coq},
-        also differs from CompCert in that it uses dependent types as a way to make the
-        source and object languages (as well as the compiler) have some meta-theoretical properties
-        \emph{by construction}, instead of proving them separately.
+        Our work (definitions and proofs) is, on the other hand, written in the
+        \emph{Agda} programming language instead of emph{Coq} It also also differs from CompCert
+        in that we use dependent types to make source and object languages (as well as the compiler)
+        have some meta-theoretical properties (for example, type preservation) \emph{by construction},
+        instead of proving them separately.
 
         Dependent types allow us to embed, as indices to the language definitions and in the type
-        of the ``compile'' function, constraints which make these definitions correct. %%%
+        of the ``compile'' function, constraints which make these definitions correct.
 
         The rest of the report is organized as follows: on section \ref{sec:goals} we present the
         related papers which served as the basis for our research, and state precisely which were
@@ -101,7 +102,7 @@
         implementation language.
 
         So our work started with trying to extend the source language from \cite{typed-stack-safe-compiler},
-        and add constructs to it that made it more powerful. Then we came accross the paper
+        and add constructs to it that made it more powerful. Then we came across the paper
         ``Proving Correctness of Compilers using Structured Graphs''\cite{compiler-correctness-structured-graphs}.
         In this paper, the author discusses the issue of \emph{sharing} of bytecode, that is, that
         some high-level language constructs (typically control flow related constructs,
@@ -114,12 +115,51 @@
         A simpler way to handle these situations is to just \emph{replicate} the shared code when
         compiling constructs which generate different execution paths.
 
-        %% This is easier, but bla bla
+        A compiler which works by using a jump-and-label-free bytecode and replicates shared code
+        is easier to analyze, but the practically desirable behaviour is, off course, to represent
+        the sharing. The main contribution of \cite{compiler-correctness-structured-graphs} is a
+        systematic way in which a proof of correctness for a ``naïve'' (code-duplicating) compiler can
+        be used to construct the correctness proof for a ``sharing optimized'' version of that compiler;
+        a rather elegant approach.
 
         % Our wish to join the contributions of both papers
+        The overall goal of our project was, therefore, to integrate the solutions given both in
+        \cite{typed-stack-safe-compiler} and \cite{compiler-correctness-structured-graphs}.
+        To acheive this goal we needed to make some adjustments to the definitions and proofs of
+        the reference papers. These adjustments are what we perceive as our main contributions
+        with this project:
+
         % What adaptations we did to each approach to help them work together:
-            % Extension in the Src to reveal "sharing opportunities"
+        \begin{itemize}
+            \item The solution in \cite{compiler-correctness-structured-graphs}
+                used Haskell as implementation language (along with some proofs given in Coq).
+                \begin{itemize}
+                    \item We needed, therefore, to adapt definitions such as fixed point operators and generic
+                        maps/folds to the \emph{total} setting of Agda.
+                \end{itemize}
+
             % Make functors and proofs of the lifting approach indexed
+            \item The example bytecode language used in \cite{compiler-correctness-structured-graphs}
+                to illustrate the method is \emph{untyped}.
+                \begin{itemize}
+                    \item To make the proof derivation scheme work for \emph{typed} bytecode,
+                        we needed to also adapt most of the generic data structures presented to become \emph{indexed}.
+                \end{itemize}
+
+            % Extension in the Src to reveal "sharing opportunities"
+            \item The example control flow construct used in \cite{compiler-correctness-structured-graphs}
+                to introduce sharing (exceptions) was also not immediately applicable to being
+                modeled in a total setting.
+                \begin{itemize}
+                    \item Specially the way in which it was implemented (by using Higher-Order Abstract Syntax)
+                        clashed with Agda's requirement of \emph{strict positivity} for datatype definitions.
+                    \item We chose a simpler sharing-inducing extension to the language of
+                        \cite{typed-stack-safe-compiler} (sequencing and conditional branching).
+                        This extension is explained in more detail in section \ref{sec:basic}
+                \end{itemize}
+        \end{itemize}
+        
+
 
     \section{Basic correctness}
     \label{sec:basic}
@@ -154,7 +194,7 @@
 
 
 
-    %% \bibliographystyle{plain}
-    %% \bibliography{../references.bib}
+    \bibliographystyle{plain}
+    \bibliography{../references}
 
 \end{document}
