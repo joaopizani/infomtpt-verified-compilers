@@ -79,18 +79,18 @@ infixl 4 _⟫_
 
 %<*Tree>
 \begin{code}
-data Tree (f : Set -> Set) : Set where
-  In : f (Tree f) -> Tree f
+data Tree (f : Set → Set) : Set where
+    In : f (Tree f) → Tree f
 \end{code}
 %</Tree>
 
-%<*Tree>
+%<*HTree>
 \begin{code}
-data HTree (f : (StackType -> StackType -> Set) 
-              → (StackType -> StackType -> Set) ) 
-     (ixp : StackType) (ixq : StackType) : Set where
-  HTreeIn : f (HTree f) ixp ixq -> HTree f ixp ixq
-
+data HTree
+      (f : (StackType → StackType → Set) 
+         → (StackType → StackType → Set) ) 
+      (ixp : StackType) (ixq : StackType) : Set where
+    HTreeIn : f (HTree f) ixp ixq → HTree f ixp ixq
 \end{code}
 %</HTree>
 
@@ -101,10 +101,10 @@ postulate foldTree : {F : (StackType -> StackType -> Set) -> (StackType -> Stack
 
 %<*HGraph>
 \begin{code}
-data HGraph' {Ip Iq : Set} (F : (Ip -> Iq -> Set) -> (Ip -> Iq -> Set) ) (v : Ip -> Iq -> Set) (ixp : Ip) (ixq : Iq) : Set where
-  HGraphIn  : F (HGraph' F v) ixp ixq -> HGraph' F v ixp ixq
-  HGraphLet : (HGraph' F v ixp ixq) -> (v ixp ixq -> HGraph' F v ixp ixq) -> HGraph' F v ixp ixq  
-  HGraphVar : v ixp ixq -> HGraph' F v ixp ixq
+data HGraph' {Ip Iq : Set} (F : (Ip → Iq → Set) → (Ip → Iq → Set) ) (v : Ip → Iq → Set) (ixp : Ip) (ixq : Iq) : Set where
+    HGraphIn  : F (HGraph' F v) ixp ixq → HGraph' F v ixp ixq
+    HGraphLet : (HGraph' F v ixp ixq) → (v ixp ixq → HGraph' F v ixp ixq) → HGraph' F v ixp ixq
+    HGraphVar : v ixp ixq → HGraph' F v ixp ixq
 \end{code}
 %</HGraph>
 
@@ -122,8 +122,8 @@ postulate foldGraph : {F : (StackType -> StackType -> Set) -> (StackType -> Stac
 
 %<*bytecodeF>
 \begin{code}
-
-data BytecodeF (r : StackType -> StackType -> Set) : (StackType -> StackType -> Set) where  
+data BytecodeF (r : StackType → StackType → Set) :
+                   (StackType → StackType → Set) where
     SKIP' : ∀ {s}    → BytecodeF r s s
     PUSH' : ∀ {a s}  → (x : ⁅ a ⁆) → BytecodeF r s (a ∷ s)
     ADD'  : ∀ {s}    → BytecodeF r (ℕₛ ∷ ℕₛ ∷ s) (ℕₛ ∷ s)
@@ -200,7 +200,6 @@ execAlg (c₁ ⟫' c₂)   s           = c₂ (c₁ s)
 
 %<*compile>
 \begin{code}
-
 compile : ∀ {t z s} → Src t z → Bytecode s (replicate z t ++ s)
 compile (vₛ x)                  = PUSH x
 compile (e₁ +ₛ e₂)              = compile e₂ ⟫ compile e₁ ⟫ ADD
@@ -218,7 +217,8 @@ compile {.σ} {.(suc n + suc m)} {s} (_⟫ₛ_ {σ} {m} {n} e₁ e₂)
 
 %<*compileT>
 \begin{code}
-compileT : ∀ {t z s} → Src t z → HTree BytecodeF s (replicate z t ++ s)
+compileT : ∀ {t z s} → Src t z
+           → HTree BytecodeF s (replicate z t ++ s)
 \end{code}
 %</compileT>
 
@@ -251,7 +251,8 @@ compileG' {.σ} {.(suc n + suc m)} {s} (_⟫ₛ_ {σ} {m} {n} e₁ e₂) {v}
 
 %<*compileG>
 \begin{code}
-compileG : {s : StackType} → ∀ {z t} -> Src t z → HGraph BytecodeF s (replicate z t ++ s)
+compileG : {s : StackType} → ∀ {z t} → Src t z
+           → HGraph BytecodeF s (replicate z t ++ s)
 \end{code}
 %</compileG>
 
@@ -261,7 +262,8 @@ compileG src = mkHGraph (compileG' src)
 
 %<*execT>
 \begin{code}
-execT : ∀ {s s'} → HTree BytecodeF s s' -> Stack s -> Stack s'
+execT : ∀ {s s'} → HTree BytecodeF s s'
+        → Stack s → Stack s'
 \end{code}
 %</execT>
 
@@ -271,7 +273,8 @@ execT = foldTree execAlg
 
 %<*execG>
 \begin{code}
-execG : ∀ {s s'} → HGraph BytecodeF s s' -> Stack s -> Stack s'
+execG : ∀ {s s'} → HGraph BytecodeF s s'
+        → Stack s → Stack s'
 \end{code}
 %</execG>
 
