@@ -157,6 +157,8 @@
                         \cite{typed-stack-safe-compiler} (sequencing and conditional branching).
                         This extension is explained in more detail in section \ref{sec:basic}
                 \end{itemize}
+
+            %% Making the "method" given in paper [2] an ACTUAL function
         \end{itemize}
         
 
@@ -164,7 +166,46 @@
     \section{Basic correctness}
     \label{sec:basic}
         % Introduce compiler correctness in general (no models mentioned)
+
         % Talk about our model with sequencing and the "vector values"
+        Our source language (\texttt{Src}) is based upon, and therefore very similar, to the one
+        defined in \cite{typed-stack-safe-compiler}. It is a typed expression language, in which
+        the types are naturals and booleans. There are no binding or application constructs
+        in this language, therefore no arrow type constructor. First, we show the type language for
+        Src:
+
+        %% CODE: Ty_s
+
+        When naming constructs of the languages which are our "object of study", we give
+        subscripts to distinguish them from similarly named definitions in Agda (the \emph{metalanguage}).
+        In the case of the source language, the names are subscripted by a small-case ``s''.
+
+        %% CODE: Src
+
+        The definition of \texttt{Src} makes clear what is the main difference between our source language
+        and the used defined in \cite{typed-stack-safe-compiler}: we have an additional \textbf{sequencing}
+        construct. Even though the datatype definition is increased by only one constructor,
+        this change has several subtleties:
+
+        \begin{itemize}  % TODO
+            \item Uniformly-typed sequences
+            \item No ``sequential'' values, no arithmetic over sequences
+            \item This is enforced by making expressions have a \emph{size}
+        \end{itemize}
+
+        As important as defining the constraints on well-formed expressions is also defining
+        a \emph{semantics} for \texttt{Src}. We follow the same idea as in \cite{typed-stack-safe-compiler}
+        and provide a denotational semantics for \texttt{Src}, written as a function \texttt{eval}
+        which maps terms of \texttt{Src} to values.
+
+        %% CODE: eval
+
+        Because of the sequencing construct, we chose our values to be \emph{vectors} of naturals or
+        booleans. The usage of vectors as values matches the requirement we imposed that sequences
+        of expressions have to be uniformly-typed. Also, %% size constraints.
+
+        %% The type of EVAL states type preservation (citation of paper [1])
+
         % Code for Src and Bytecode, and correctness proof
 
     \section{Lifiting to shared setting}
