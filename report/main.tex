@@ -75,13 +75,47 @@
         Dependent types allow us to embed, as indices to the language definitions and in the type
         of the ``compile'' function, constraints which make these definitions correct. %%%
 
-        % General motivations, etc.
-        % Formalize correctness in terms of semantics
-        % How dependent types help.
+        The rest of the report is organized as follows: on section \ref{sec:goals} we present the
+        related papers which served as the basis for our research, and state precisely which were
+        our contributions. On section \ref{sec:basic} we define the notion of correctness that we
+        use, and present the definitions for our \emph{source} and \emph{object} languages,
+        the compiler itself and the proof of correctness for that compiler. Section \emph{sec:lifiting}
+        introduces a smarter version of the object language, in which sharing is captured, and a
+        compiler which produces shared code. We then proceed to describe how,
+        given a correctness proof for a ``naïve'' compiler, we can derive the correctness proof of 
+        the smarter version.
 
-    \section{Goals/Contributions}
+    \section{Related work/Goals}
     \label{sec:goals}
         % Mention two papers we based our work on
+        On researching the topic of compiler correctness in the context of dependent types, we first encountered
+        the paper ``A type-correct, stack-safe, provably correct expression compiler in Epigram'' \cite{typed-stack-safe-compiler}.
+        In this paper, a \emph{very simple} (but \emph{typed}) expression language is presented,
+        along with a \emph{typed bytecode} definition. The correctness of this compiler is then formulated and proven.
+        
+        Both language definitions, the semantics for each of them, the compiler and its correctness proof
+        were all written in Epigram, a dependently-typed programming language. Therefore,
+        even though the authors admit that the paper carries no real novelty value related to compiler
+        construction, we still felt this paper could serve well as the ``basis'' for our project, as they
+        treat compilation of \emph{typed source} to \emph{typed bytecode}, and also use a dependently-typed
+        implementation language.
+
+        So our work started with trying to extend the source language from \cite{typed-stack-safe-compiler},
+        and add constructs to it that made it more powerful. Then we came accross the paper
+        ``Proving Correctness of Compilers using Structured Graphs''\cite{compiler-correctness-structured-graphs}.
+        In this paper, the author discusses the issue of \emph{sharing} of bytecode, that is, that
+        some high-level language constructs (typically control flow related constructs,
+        such as exception handling of conditional branching) map into low-level code which has
+        \emph{shared blocks of code among different execution paths}.
+
+        One way to compile these control flow constructs would be to extend the bytecode language with
+        explicit jumps and labels, a solution which is often taken in ``real-world'' compilers,
+        but which makes analyzing bytecode and proving compiler correctness much more complex.
+        A simpler way to handle these situations is to just \emph{replicate} the shared code when
+        compiling constructs which generate different execution paths.
+
+        %% This is easier, but bla bla
+
         % Our wish to join the contributions of both papers
         % What adaptations we did to each approach to help them work together:
             % Extension in the Src to reveal "sharing opportunities"
