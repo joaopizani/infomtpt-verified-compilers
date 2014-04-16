@@ -10,8 +10,6 @@ open import Source
 open import Data.Bool using (true; false)
 open import Data.Nat using (ℕ; _+_; suc)
 open import Data.Vec using (Vec) renaming ([] to  ε; _∷_ to _◁_)
-open import Relation.Binary.PropositionalEquality using (_≡_; refl; sym; trans; subst; cong; cong₂)
-
 open import Data.List using (List; replicate; _∷_ ) renaming (_++_ to _++ₗ_)
 open import Relation.Binary.PropositionalEquality using (_≡_; refl; sym; trans; subst; cong; cong₂)
 
@@ -21,7 +19,7 @@ module Lifting
   ) { F : (IndexType Tyₛ -> IndexType Tyₛ -> Set) -> IndexType Tyₛ -> IndexType Tyₛ -> Set
   }{{ functor : HFunctor F
   }}( target : IndexType Tyₛ → IndexType Tyₛ → Set
-  ) ( execAlg : ∀ {s s′} → F (λ t t' → target t t') s s′ → target s s′
+  ) ( execAlg : ∀ {s s′} → F target s s′ → target s s′
   ) ( compileT : ∀ {s σ z} → Src σ z → HTree  F s (post σ z s)
   ) ( compileG : ∀ {s σ z} → Src σ z → HGraph F s (post σ z s)
   ) ( unravelLemma : ∀ {s σ z} 
@@ -40,11 +38,11 @@ execG = foldGraph execAlg
 
 
 Theorem :
-    ∀ {Ip Iq} → ∀ {r}
+    ∀ {r}
   → ∀ {F} → {{ functor : HFunctor F }}
-  → (alg : {ixp : Ip} → {ixq : Iq} → F r ixp ixq → r ixp ixq)
-  → {ixp : Ip} {ixq : Iq} 
-  → ∀ graph → foldGraph alg {ixp} {ixq} graph ≡ foldTree alg {ixp} {ixq} (unravel graph)
+  → (alg : {s s' : IndexType Tyₛ} → F r s s' → r s s')
+  → {s s' : IndexType Tyₛ}
+  → (graph : HGraph F s s') → foldGraph alg graph ≡ foldTree alg (unravel graph)
 Theorem alg graph = fusion (λ a → foldGraph a graph) alg
 
 
