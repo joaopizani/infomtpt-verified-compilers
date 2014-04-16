@@ -1,0 +1,95 @@
+\documentclass[a4paper]{article}
+
+%% Standard packages
+\usepackage{times}
+\usepackage{a4}
+\usepackage{graphicx}
+\usepackage{mathtools}
+\usepackage{amsfonts}
+\usepackage{amssymb}
+\usepackage{hyperref}
+\usepackage{color}
+
+%% Unicode support
+\usepackage[utf8x]{inputenc}
+\usepackage{ucs}
+\usepackage{autofe}
+
+
+%% Agda
+\usepackage{agda/agda}
+\usepackage{catchfilebetweentags}
+
+
+%% PDF metainformation
+\usepackage{datetime}
+\usepackage{ifpdf}
+\ifpdf
+\pdfinfo{
+    /Author (Joao Paulo Pizani Flor, Wout Elsinghorst)
+    /Title (Proving Compiler Correctness with Dependent Types)
+    /Keywords (Agda, Dependently-typed programming, Compiler correctness, typed bytecode)
+    /CreationDate (D:\pdfdate)
+}
+\fi
+
+
+%% LaTeX meta-information
+\title{Proving Compiler Correctness with Dependent Types}
+
+\date{\today}
+\author {
+    João Paulo Pizani Flor \texttt{<j.p.pizaniflor@students.uu.nl>} \\
+    \and Wout Elsinghorst \texttt{<w.l.elsinghorst@students.uu.nl>} \\
+}
+
+
+
+%% The document itself
+\begin{document}
+    \maketitle
+
+    \section{Introduction}
+    \label{sec:intro}
+        % General motivations, etc.
+        % Formalize correctness in terms of semantics
+        % How dependent types help.
+
+    \section{Goals/Contributions}
+    \label{sec:goals}
+        % Mention two papers we based our work on
+        % Our wish to join the contributions of both papers
+        % What adaptations we did to each approach to help them work together:
+            % Extension in the Src to reveal "sharing opportunities"
+            % Make functors and proofs of the lifting approach indexed
+
+    \section{Basic correctness}
+    \label{sec:basic}
+        % Introduce compiler correctness in general (no models mentioned)
+        % Talk about our model with sequencing and the "vector values"
+        % Code for Src and Bytecode, and correctness proof
+
+    \section{Lifiting to shared setting}
+    \label{sec:lifiting}
+        % What is the sharing opportunity (diagram, just Src code example)
+        % A different representation of Bytecode (graph) that could capture sharing
+            % Give example of a "BytecodeG" term...
+        % If we make Bytecode into functor, we cant have different 
+
+    \section{Conclusions}
+    \label{sec:conclusions}
+        % Summarize contributions (again?)
+        % Points where we got stuck (holes, postulates)
+            % Some possibilities of attempts, if we had more time
+
+        % Difficulties encountered along the way
+            % Ideas of why they happened
+                % Tool-related (Agda)
+                % Domain-related (problem inherently hard)
+
+
+
+    %% \bibliographystyle{plain}
+    %% \bibliography{../references.bib}
+
+\end{document}
