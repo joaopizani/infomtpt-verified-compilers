@@ -16,28 +16,18 @@ open import Data.List using (List; replicate; _∷_ ) renaming (_++_ to _++ₗ_)
 open import Relation.Binary.PropositionalEquality using (_≡_; refl; sym; trans; subst; cong; cong₂)
 
 module Lifting
-  ( IndexType : Set -> Set 
-  )
-  ( post : (σ : Tyₛ) → (z : ℕ) → IndexType Tyₛ → IndexType Tyₛ
-  )
-  { F : (IndexType Tyₛ -> IndexType Tyₛ -> Set) -> IndexType Tyₛ -> IndexType Tyₛ -> Set
-  } 
-  {{ functor : HFunctor F
-  }}
-  ( target : IndexType Tyₛ → IndexType Tyₛ → Set
-  )
-  ( execAlg : ∀ {s s′} → F (λ t t' → target t t') s s′ → target s s′
-  ) 
-  ( compileT : ∀ {s σ z} → Src σ z → HTree  F s (post σ z s)
-  ) 
-  ( compileG : ∀ {s σ z} → Src σ z → HGraph F s (post σ z s)
-  ) 
-  ( unravelLemma : ∀ {s σ z} 
-                 → (src : Src σ z) → compileT {s} src ≡ unravel (compileG {s} src)
-  )
-  ( prepend : ∀ {t n σ} → (v : Vec ⁅ σ ⁆ n) → target t (post σ n t)
-  )
-  ( correctT : ∀ {s σ z} → (e : Src σ z) 
+    ( IndexType : Set -> Set 
+  ) ( post : (σ : Tyₛ) → (z : ℕ) → IndexType Tyₛ → IndexType Tyₛ
+  ) { F : (IndexType Tyₛ -> IndexType Tyₛ -> Set) -> IndexType Tyₛ -> IndexType Tyₛ -> Set
+  }{{ functor : HFunctor F
+  }}( target : IndexType Tyₛ → IndexType Tyₛ → Set
+  ) ( execAlg : ∀ {s s′} → F (λ t t' → target t t') s s′ → target s s′
+  ) ( compileT : ∀ {s σ z} → Src σ z → HTree  F s (post σ z s)
+  ) ( compileG : ∀ {s σ z} → Src σ z → HGraph F s (post σ z s)
+  ) ( unravelLemma : ∀ {s σ z} 
+                   → (src : Src σ z) → compileT {s} src ≡ unravel (compileG {s} src)
+  ) ( prepend : ∀ {t n σ} → (v : Vec ⁅ σ ⁆ n) → target t (post σ n t)
+  ) ( correctT : ∀ {s σ z} → (e : Src σ z) 
              → foldTree execAlg {s} {post σ z s} (compileT e) ≡ prepend ⟦ e ⟧
   )
  where
