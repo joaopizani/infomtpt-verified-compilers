@@ -95,37 +95,23 @@ Lemma₂ {s} {s'} r graph = apply r (Theorem execAlg graph)
 --                  ≡ execT (toTree . compile e) r 
 --                  ≡ execT (compileT e) r
 
-correctT : ∀ {s σ z} → (e : Src σ z) 
-         → ∀ (r : Stack s) → execT (compileT e) r ≡ prepend ⟦ e ⟧ r
-correctT e r = sym 
-             ( correct e r 
-             ~ cong (λ t → exec t r) (sym (treeIsoTo (compile e))) 
-             ~ sym (execTcorrect (toTree (compile e))) 
-             ~ cong (λ t → execT t r) (compileTcorrect e)
+correctT : ∀ {s σ z} → (e : Src σ z) → execT {s} (compileT e) ≡ prepend ⟦ e ⟧
+correctT e = funext (λ r → sym 
+               ( correct e r 
+               ~ cong (λ t → exec t r) (sym (treeIsoTo (compile e))) 
+               ~ sym (execTcorrect (toTree (compile e))) 
+               ~ cong (λ t → execT t r) (compileTcorrect e)
+               ) 
              )
 
-correctG : ∀ {σ z s}
-         → (e : Src σ z) → ∀ (r : Stack s) → execG (compileG e) r ≡ prepend ⟦ e ⟧  r
-correctG e r = 
-  let step1 = cong' (λ g → execG g r) 
-         (λ g → execT (unravel g) r) 
-         (compileG e) (compileG e) 
-         (Lemma₂ r) refl
-      step2 = cong' (λ g → execT g r) 
-          (λ g → execT g r)  
-          (unravel (compileG e)) (compileT e)
-          (λ t → refl) (sym (Lemma₁ e))
-  in step1 ~ step2 ~ (correctT e r)
 
-postulate funext : {X Y : Set} {f g : X → Y} → ( (x : X) → f x ≡ g x ) → f ≡ g
-
-correctness : ∀ {s σ z}
-            → (e : Src σ z) → ∀ (r : Stack s) → execG (compileG e) r ≡ prepend ⟦ e ⟧  r
-correctness e r = apply r (graphCorrectness e)
+correctG : ∀ {s σ z}
+            → (e : Src σ z) → execG {s} (compileG e) ≡ prepend ⟦ e ⟧
+correctG = graphCorrectness
   where open import Lifting List (λ σ n s → replicate n σ ++ₗ s) 
                             (λ s s' → Stack s -> Stack s')
                             execAlg compileG 
-                            Lemma₁ prepend (λ e → funext (correctT e))
+                            Lemma₁ prepend correctT
 
 
 

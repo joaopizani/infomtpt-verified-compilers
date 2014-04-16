@@ -37,7 +37,7 @@ module Lifting
   )
   ( prepend : ∀ {t n σ} → (v : Vec ⁅ σ ⁆ n) → target t (post σ n t)
   )
-  ( correctT : ∀ {σ z s} → (e : Src σ z) 
+  ( correctT : ∀ {s σ z} → (e : Src σ z) 
              → foldTree execAlg {s} {post σ z s} (compileT e) ≡ prepend ⟦ e ⟧
   )
  where
