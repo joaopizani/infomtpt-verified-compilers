@@ -16,15 +16,16 @@ open import Data.List using (List; replicate; _∷_ ) renaming (_++_ to _++ₗ_)
 open import Relation.Binary.PropositionalEquality using (_≡_; refl; sym; trans; subst; cong; cong₂)
 
 module Lifting
-  { F : (List Tyₛ -> List Tyₛ -> Set) -> List Tyₛ -> List Tyₛ -> Set
+  ( StackType : Set -> Set )
+  { F : (StackType Tyₛ -> StackType Tyₛ -> Set) -> StackType Tyₛ -> StackType Tyₛ -> Set
   } 
   {{ functor : HFunctor F
   }}
-  ( _++ₗ_ : List Tyₛ -> List Tyₛ -> List Tyₛ
+  ( _++ₗ_ : StackType Tyₛ -> StackType Tyₛ -> StackType Tyₛ
   )
-  ( replicate : (n : ℕ) -> Tyₛ -> (List Tyₛ)
+  ( replicate : (n : ℕ) -> Tyₛ -> (StackType Tyₛ)
   )
-  { Stack : List Tyₛ -> Set
+  { Stack : StackType Tyₛ -> Set
   }
   ( execAlg : ∀ {s s′} → F (λ t t' → Stack t → Stack t') s s′ → Stack s → Stack s′
   ) 
@@ -59,13 +60,13 @@ Theorem :
 Theorem alg {ipx} {ipy} graph = fusion (λ a → foldGraph a graph) alg
 
 
-Lemma : {s s' : List Tyₛ} → (r : Stack s) 
+Lemma : {s s' : StackType Tyₛ} → (r : Stack s) 
        → (graph : HGraph F s s')
        →  execG graph r ≡ execT (unravel graph) r
 Lemma {s} {s'} r graph = apply r (Theorem execAlg graph)
 
 
-graphCorrectness : ∀ {σ z s}
+graphCorrectness : ∀ {s σ z}
          → (e : Src σ z) → ∀ (r : Stack s) → execG (compileG e) r ≡ prepend ⟦ e ⟧  r
 graphCorrectness e r = 
   let step1 = cong' (λ g → execG g r) 

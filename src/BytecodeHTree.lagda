@@ -95,11 +95,11 @@ execTcorrect (HTreeIn (f ⟫' g)) {w} | p
               (λ m → execTcorrect g {m}) 
               (execTcorrect f {w})
 
-compileT : ∀ {σ z s} → Src σ z → HTree BytecodeF s (replicate z σ ++ₗ s)
+compileT : ∀ {s σ z} → Src σ z → HTree BytecodeF s (replicate z σ ++ₗ s)
 compileT (vₛ x)                  = PUSH_T x
 compileT (e₁ +ₛ e₂)              = (compileT e₂ ⟫T compileT e₁) ⟫T ADD_T
 compileT (ifₛ c thenₛ t elseₛ e) = compileT c ⟫T IF_T (compileT t) (compileT e)
-compileT {.σ} {.(suc n + suc m)} {s} (_⟫ₛ_ {σ} {m} {n} e₁ e₂) 
+compileT {s} {.σ} {.(suc n + suc m)} (_⟫ₛ_ {σ} {m} {n} e₁ e₂) 
     = coerce (HTree BytecodeF s)
       (lemmaConsAppend n m σ s
        ~ cong (λ l → σ ∷ l ++ₗ s) (lemmaPlusAppend n (suc m) σ))

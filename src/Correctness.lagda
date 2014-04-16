@@ -16,7 +16,7 @@ open import Util
 
 
 open import Data.Bool using (true; false)
-open import Data.List using ( replicate; _∷_ ) renaming (_++_ to _++ₗ_)
+open import Data.List using (List; replicate; _∷_ ) renaming (_++_ to _++ₗ_)
 open import Data.Nat using (ℕ; _+_; suc)
 open import Data.Vec using (Vec) renaming ([] to  ε; _∷_ to _◁_)
 open import Relation.Binary.PropositionalEquality using (_≡_; refl; sym; trans; subst; cong; cong₂)
@@ -117,10 +117,10 @@ correctG e r =
           (λ t → refl) (sym (Lemma₁ e))
   in step1 ~ step2 ~ (correctT e r)
 
-correctness : ∀ {σ z s}
+correctness : ∀ {s σ z}
             → (e : Src σ z) → ∀ (r : Stack s) → execG (compileG e) r ≡ prepend ⟦ e ⟧  r
 correctness = graphCorrectness 
-  where open import Lifting _++ₗ_ replicate execAlg compileG Lemma₁ prepend correctT
+  where open import Lifting List _++ₗ_ replicate execAlg compileG Lemma₁ prepend correctT
 
 
 
