@@ -16,36 +16,36 @@ open import Data.List using (List; replicate; _∷_ ) renaming (_++_ to _++ₗ_)
 open import Relation.Binary.PropositionalEquality using (_≡_; refl; sym; trans; subst; cong; cong₂)
 
 module Lifting
-  { F : (List Tyₛ -> List Tyₛ -> Set) -> List Tyₛ -> List Tyₛ -> Set
+  ( IndexType : Set -> Set 
+  )
+  ( post : (σ : Tyₛ) → (z : ℕ) → IndexType Tyₛ → IndexType Tyₛ
+  )
+  { F : (IndexType Tyₛ -> IndexType Tyₛ -> Set) -> IndexType Tyₛ -> IndexType Tyₛ -> Set
   } 
   {{ functor : HFunctor F
   }}
-  ( _++ₗ_ : List Tyₛ -> List Tyₛ -> List Tyₛ
+  ( target : IndexType Tyₛ → IndexType Tyₛ → Set
   )
-  ( replicate : (n : ℕ) -> Tyₛ -> (List Tyₛ)
-  )
-  { Stack : List Tyₛ -> Set
-  }
-  ( execAlg : ∀ {s s′} → F (λ t t' → Stack t → Stack t') s s′ → Stack s → Stack s′
+  ( execAlg : ∀ {s s′} → F (λ t t' → target t t') s s′ → target s s′
   ) 
-  { compileT : ∀ {s σ z} → Src σ z → HTree  F s (replicate z σ ++ₗ s)
+  { compileT : ∀ {s σ z} → Src σ z → HTree  F s (post σ z s)
   } 
-  ( compileG : ∀ {s σ z} → Src σ z → HGraph F s (replicate z σ ++ₗ s)
+  ( compileG : ∀ {s σ z} → Src σ z → HGraph F s (post σ z s)
   ) 
   ( unravelLemma : ∀ {s σ z} 
                  → (src : Src σ z) → compileT {s} src ≡ unravel (compileG {s} src)
   )
-  ( prepend : ∀ {t n σ} → (v : Vec ⁅ σ ⁆ n) → Stack t → Stack (replicate n σ ++ₗ t)
+  ( prepend : ∀ {t n σ} → (v : Vec ⁅ σ ⁆ n) → target t (post σ n t)
   )
   ( correctT : ∀ {s σ z} → (e : Src σ z) 
-             → ∀ (r : Stack s) → foldTree execAlg (compileT e) r ≡ prepend ⟦ e ⟧ r
+             → foldTree execAlg {s} {post σ z s} (compileT e) ≡ prepend ⟦ e ⟧
   )
  where
 
-execT :  ∀ {s s'} → HTree F s s' -> Stack s -> Stack s'
+execT :  ∀ {s s'} → HTree F s s' -> target s s'
 execT = foldTree execAlg
 
-execG :  ∀ {s s'} → HGraph F s s' -> Stack s -> Stack s'
+execG :  ∀ {s s'} → HGraph F s s' -> target s s'
 execG = foldGraph execAlg
 
 
@@ -59,22 +59,21 @@ Theorem :
 Theorem alg {ipx} {ipy} graph = fusion (λ a → foldGraph a graph) alg
 
 
-Lemma : {s s' : List Tyₛ} → (r : Stack s) 
+Lemma : {s s' : IndexType Tyₛ}
        → (graph : HGraph F s s')
-       →  execG graph r ≡ execT (unravel graph) r
-Lemma {s} {s'} r graph = apply r (Theorem execAlg graph)
+       → execG graph ≡ execT (unravel graph)
+Lemma {s} {s'} graph = Theorem execAlg graph
 
-
-graphCorrectness : ∀ {σ z s}
-         → (e : Src σ z) → ∀ (r : Stack s) → execG (compileG e) r ≡ prepend ⟦ e ⟧  r
-graphCorrectness e r = 
-  let step1 = cong' (λ g → execG g r) 
-         (λ g → execT (unravel g) r) 
+graphCorrectness : ∀ {s σ z}
+         → (e : Src σ z) → execG {s} (compileG e) ≡ prepend ⟦ e ⟧ 
+graphCorrectness e = 
+  let step1 = cong' (λ g → execG g) 
+         (λ g → execT (unravel g)) 
          (compileG e) (compileG e) 
-         (Lemma r) refl
-      step2 = cong' (λ g → execT g r) 
-          (λ g → execT g r)  
+         (Lemma) refl
+      step2 = cong' (λ g → execT g) 
+          (λ g → execT g)  
           (unravel (compileG e)) (compileT e)
           (λ t → refl) (sym (unravelLemma e))
-  in step1 ~ step2 ~ (correctT e r)
+  in step1 ~ step2 ~ (correctT e)
 \end{code}

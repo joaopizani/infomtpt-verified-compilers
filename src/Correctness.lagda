@@ -16,7 +16,7 @@ open import Util
 
 
 open import Data.Bool using (true; false)
-open import Data.List using ( replicate; _∷_ ) renaming (_++_ to _++ₗ_)
+open import Data.List using (List; replicate; _∷_ ) renaming (_++_ to _++ₗ_)
 open import Data.Nat using (ℕ; _+_; suc)
 open import Data.Vec using (Vec) renaming ([] to  ε; _∷_ to _◁_)
 open import Relation.Binary.PropositionalEquality using (_≡_; refl; sym; trans; subst; cong; cong₂)
@@ -73,54 +73,23 @@ mutual
                                              ~ cong (λ l → σ ∷ l ++ₗ s) (lemmaPlusAppend n (suc m) σ)
                                              )
 
-
-Theorem :
-    ∀ {Ip Iq} → ∀ {F} → 
-    {{ functor : HFunctor F }} → 
-    ∀ {r}
-  → (alg : {ixp : Ip} → {ixq : Iq} → F r ixp ixq → r ixp ixq)
-  → {ixp : Ip} {ixq : Iq} 
-  → ∀ graph → foldGraph alg {ixp} {ixq} graph ≡ foldTree alg {ixp} {ixq} (unravel graph)
-Theorem alg {ipx} {ipy} graph = fusion (λ a → foldGraph a graph) alg
-
-
-
-Lemma₂ : {s s' : StackType} → (r : Stack s) 
-       → (graph : HGraph BytecodeF s s')
-       →  execG graph r ≡ execT (unravel graph) r
-Lemma₂ {s} {s'} r graph = apply r (Theorem execAlg graph)
-
--- prepend ⟦ e ⟧  r ≡ exec (compile e) r 
---                  ≡ exec (fromTree . toTree . compile e) r 
---                  ≡ execT (toTree . compile e) r 
---                  ≡ execT (compileT e) r
-
-correctT : ∀ {s σ z} → (e : Src σ z) 
-         → ∀ (r : Stack s) → execT (compileT e) r ≡ prepend ⟦ e ⟧ r
-correctT e r = sym 
-             ( correct e r 
-             ~ cong (λ t → exec t r) (sym (treeIsoTo (compile e))) 
-             ~ sym (execTcorrect (toTree (compile e))) 
-             ~ cong (λ t → execT t r) (compileTcorrect e)
+correctT : ∀ {s σ z} → (e : Src σ z) → execT {s} (compileT e) ≡ prepend ⟦ e ⟧
+correctT e = funext (λ r → sym 
+               ( correct e r 
+               ~ cong (λ t → exec t r) (sym (treeIsoTo (compile e))) 
+               ~ sym (execTcorrect (toTree (compile e))) 
+               ~ cong (λ t → execT t r) (compileTcorrect e)
+               ) 
              )
 
-correctG : ∀ {σ z s}
-         → (e : Src σ z) → ∀ (r : Stack s) → execG (compileG e) r ≡ prepend ⟦ e ⟧  r
-correctG e r = 
-  let step1 = cong' (λ g → execG g r) 
-         (λ g → execT (unravel g) r) 
-         (compileG e) (compileG e) 
-         (Lemma₂ r) refl
-      step2 = cong' (λ g → execT g r) 
-          (λ g → execT g r)  
-          (unravel (compileG e)) (compileT e)
-          (λ t → refl) (sym (Lemma₁ e))
-  in step1 ~ step2 ~ (correctT e r)
 
-correctness : ∀ {σ z s}
-            → (e : Src σ z) → ∀ (r : Stack s) → execG (compileG e) r ≡ prepend ⟦ e ⟧  r
-correctness = graphCorrectness 
-  where open import Lifting _++ₗ_ replicate execAlg compileG Lemma₁ prepend correctT
+correctG : ∀ {s σ z}
+            → (e : Src σ z) → execG {s} (compileG e) ≡ prepend ⟦ e ⟧
+correctG = graphCorrectness
+  where open import Lifting List (λ σ n s → replicate n σ ++ₗ s) 
+                            (λ s s' → Stack s -> Stack s')
+                            execAlg compileG 
+                            Lemma₁ prepend correctT
 
 
 

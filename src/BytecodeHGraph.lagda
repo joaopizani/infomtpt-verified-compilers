@@ -32,11 +32,11 @@ execG = foldGraph execAlg
 
 
 
-compileG' : ∀ {σ z s} → Src σ z → ∀ {v} → HGraph' BytecodeF v s (replicate z σ ++ₗ s)
+compileG' : ∀ {s σ z} → Src σ z → ∀ {v} → HGraph' BytecodeF v s (replicate z σ ++ₗ s)
 compileG' (vₛ x)                  = PUSH_G x
 compileG' (e₁ +ₛ e₂)              = (compileG' e₂ ⟫G compileG' e₁) ⟫G ADD_G
 compileG' (ifₛ c thenₛ t elseₛ e) = compileG' c ⟫G IF_G (compileG' t) (compileG' e)
-compileG' {.σ} {.(suc n + suc m)} {s} (_⟫ₛ_ {σ} {m} {n} e₁ e₂) {v}
+compileG' {s} {.σ} {.(suc n + suc m)} (_⟫ₛ_ {σ} {m} {n} e₁ e₂) {v}
     = coerce (HGraph' BytecodeF v s)
       (lemmaConsAppend n m σ s
        ~ cong (λ l → σ ∷ l ++ₗ s) (lemmaPlusAppend n (suc m) σ))
