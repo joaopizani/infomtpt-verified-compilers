@@ -312,21 +312,21 @@ record HTree {Ip Iq : Set} (F : (Ip -> Iq -> Set) -> (Ip -> Iq -> Set) ) (ixp : 
 \end{code}
 %<*foldTree>
 \begin{code}
-{-# NO_TERMINATION_CHECK #-}
-foldTree : 
-        {Ip Iq : Set} 
-     -> {F : (Ip -> Iq -> Set) -> (Ip -> Iq -> Set)} -> 
-        {{ functor : HFunctor F }} 
-     -> {r : Ip -> Iq -> Set} 
-     -> ( {ixp : Ip} {ixq : Iq} -> F r ixp ixq -> r ixp ixq) 
-     -> ( {ixp : Ip} {ixq : Iq} -> HTree F   ixp ixq -> r ixp ixq)
-foldTree {{functor}} alg (HTreeIn r) = alg (hmap (foldTree alg) r) 
-  where open HFunctor functor
+postulate foldTree : {Ip Iq : Set} -> {F : (Ip -> Iq -> Set) -> (Ip -> Iq -> Set)} -> {{ functor : HFunctor F }} -> {r : Ip -> Iq -> Set} -> ( {ixp : Ip} {ixq : Iq} -> F r ixp ixq -> r ixp ixq) -> ( {ixp : Ip} {ixq : Iq} -> HTree F   ixp ixq -> r ixp ixq)
 \end{code}
 %</foldTree>
+
+-- foldTree : 
+--         {Ip Iq : Set} 
+--      -> {F : (Ip -> Iq -> Set) -> (Ip -> Iq -> Set)} -> 
+--         {{ functor : HFunctor F }} 
+--      -> {r : Ip -> Iq -> Set} 
+--      -> ( {ixp : Ip} {ixq : Iq} -> F r ixp ixq -> r ixp ixq) 
+--      -> ( {ixp : Ip} {ixq : Iq} -> HTree F   ixp ixq -> r ixp ixq)
+-- foldTree {{functor}} alg (HTreeIn r) = alg (hmap (foldTree alg) r) 
+--   where open HFunctor functor
+
 \begin{code}
-
-
 --postulate foldTree : {Ip Iq : Set} -> {F : (Ip -> Iq -> Set) -> (Ip -> Iq -> Set)} -> {{ functor : HFunctor F }} -> {r : Ip -> Iq -> Set} -> ( {ixp : Ip} {ixq : Iq} -> F r ixp ixq -> r ixp ixq) -> ( {ixp : Ip} {ixq : Iq} -> HTree F   ixp ixq -> r ixp ixq)
 
 {-
