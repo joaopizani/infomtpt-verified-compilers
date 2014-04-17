@@ -337,17 +337,22 @@
             \item The \emph{fusion law} for folds over \emph{indexed functors} is a statement also left
                 to be proven.
                 % What uses it, why is it used/where?
+                % TODO: Wout, plz use your knowledge and expand this a bit :)
         \end{enumerate}
 
+        Finally, we would like to comment on some of the main difficulties we ran into during the
+        development of this project. First of all, as already mentioned, we had to model in Agda concepts which
+        do not fit easily the total setting, such as type-level fixpoint operators (violate the
+        \emph{strict positivity} requirement of Agda) and generic folds over functors (which do not pass
+        the totality checker). To be able to use these definitions we had to enable compilation flags and pragmas
+        which made programming in Agda less ``secure''. For example, when trying to ask for the context of
+        a hole involving folds sometimes we got stack overflow errors.
 
-        % Difficulties encountered along the way
-            % Ideas of why they happened
-                % Tool-related (Agda)
-                    % Infinite types
-                    % Stack overflow
+        %% TODO Wout plz complete here :)
+        Also. infinite types.
 
-                % Domain-related (problem inherently hard)
-                    % We are not sure that the fusion lemma involving XXX hold for when using indexed functors
+        % Domain-related (problem inherently hard)
+            % We are not sure that the fusion lemma involving XXX hold for when using indexed functors
 
 
     \bibliographystyle{plain}
