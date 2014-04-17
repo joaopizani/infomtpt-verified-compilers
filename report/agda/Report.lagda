@@ -674,12 +674,10 @@ prepend (x ◁ xs) s = x ▽ prepend xs s
 \begin{code}
 
 
-{-
-lemmaPrepend : ∀ {m n σ t} → (v₁ : Vec ⁅ σ ⁆ m) (v₂ : Vec ⁅ σ ⁆ n) (l : Stack t) → prepend (v₁ +++ v₂) l ≡ prepend v₁ (prepend v₂ l)
-lemmaPrepend v1 v2 l = {!!}
--}
+postulate closeHole0 : ∀ n m σ s s' → ∀ e₁ e₂ → prepend (⟦ e₂ ⟧ +++ ⟦ e₁ ⟧) s ≡ coerce Stack (trans (lemmaConsAppend n m σ s') (cong (λ l → σ ∷ l ++ₗ s') (lemmaPlusAppend n (suc m) σ))) (prepend ⟦ e₂ ⟧ (prepend ⟦ e₁ ⟧ s))
 
 \end{code}
+
 %<*correct>
 \begin{code}
 correct : {σ : Tyₛ} {z : Sizeₛ} {s' : StackType} (e : Src σ z) (s : Stack s')
@@ -705,28 +703,10 @@ correct {.σ} {.(suc n + suc m)} {s'} (_⟫ₛ_ {σ} {m} {n} e₁ e₂) s
          {c = (compile e₁ ⟫ compile e₂)}
          (lemmaConsAppend n m σ s' ~ cong (λ l → σ ∷ l ++ₗ s') (lemmaPlusAppend n (suc m) σ)) s
   | sym (correct e₁ s)
-  | sym (correct e₂ (prepend ⟦ e₁ ⟧ s)) = {!!}
+  | sym (correct e₂ (prepend ⟦ e₁ ⟧ s)) = closeHole0 n m σ s s' e₁ e₂
 
 
-mutual
-  coerceIdLemma₁ : ∀ {m n σ} -> (f : Src σ m) -> (g : Src σ n) -> {s : StackType} -> {b : StackType} -> ( p : replicate n σ ++ₗ replicate m σ ++ₗ s ≡ b )
-                                   -> coerce (HTree BytecodeF s) p (compileT f ⟫T compileT g)
-                                  ≡ foldGraph' (λ v → v) (λ e f → f e) (λ {ixp} {ixq} → {!!}) (coerce (HGraph' BytecodeF (HTree BytecodeF) s) p (compileG' f ⟫G compileG' g))
-  coerceIdLemma₁ {m} {n} {σ} f g {s} .{replicate n σ ++ₗ replicate m σ ++ₗ s} refl 
-    = cong₂ (λ x y → HTreeIn (x ⟫' y)) (Lemma₁ f) (Lemma₁ g)
-
-
-  Lemma₁ : {s : StackType} 
-       → ∀ {σ z} 
-       → ( src : Src σ z) → compileT {σ} {z} {s} src ≡ unravel (compileG {s} src)
-  Lemma₁ (vₛ v) = refl
-  Lemma₁ (a +ₛ b) = cong₂ (λ x p → HTreeIn (HTreeIn (p ⟫' x) ⟫' HTreeIn ADD' )) (Lemma₁ a) (Lemma₁ b)
-  Lemma₁ (ifₛ c thenₛ t elseₛ e) = cong₃ (λ x p a → HTreeIn (x ⟫' HTreeIn (IF' p a))) (Lemma₁ c) (Lemma₁ t) (Lemma₁ e)
-  Lemma₁ {s} .{σ} .{suc (n + suc m)} (_⟫ₛ_ {σ} {m} {n} f g) 
-    = coerceIdLemma₁ {suc m} {suc n} {σ} f g ( lemmaConsAppend n m σ s 
-                                             ~ cong (λ l → σ ∷ l ++ₗ s) (lemmaPlusAppend n (suc m) σ)
-                                             )
-
+postulate Lemma₁ : {s : StackType} → ∀ {σ z} → ( src : Src σ z) → compileT {σ} {z} {s} src ≡ unravel (compileG {s} src)
 \end{code}
 
 \begin{code}
