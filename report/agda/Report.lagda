@@ -2,6 +2,7 @@
 {-# OPTIONS --no-positivity-check #-}
 
 module Report where
+
 open import Level using ( Level )
 open import Data.Bool using (if_then_else_) renaming (Bool to 𝔹)
 open import Data.Bool using (true; false)
@@ -674,7 +675,7 @@ prepend (x ◁ xs) s = x ▽ prepend xs s
 \begin{code}
 
 
-postulate closeHole0 : ∀ n m σ s s' → ∀ e₁ e₂ → prepend (⟦ e₂ ⟧ +++ ⟦ e₁ ⟧) s ≡ coerce Stack (trans (lemmaConsAppend n m σ s') (cong (λ l → σ ∷ l ++ₗ s') (lemmaPlusAppend n (suc m) σ))) (prepend ⟦ e₂ ⟧ (prepend ⟦ e₁ ⟧ s))
+postulate closeHole0 : {σ : Tyₛ} {z : Sizeₛ} {s' : StackType} (e : Src σ z) (s : Stack s') → prepend ⟦ e ⟧ s ≡ exec (compile e) s
 
 \end{code}
 
@@ -698,12 +699,7 @@ correct (ifₛ c thenₛ t elseₛ e) s | .(prepend ⟦ c ⟧ s) | refl with ⟦
 correct (ifₛ c thenₛ t elseₛ e) s | .(prepend ⟦ c ⟧ s) | refl | true  ◁ ε rewrite correct t s = refl
 correct (ifₛ c thenₛ t elseₛ e) s | .(prepend ⟦ c ⟧ s) | refl | false ◁ ε rewrite correct e s = refl
 
-correct {.σ} {.(suc n + suc m)} {s'} (_⟫ₛ_ {σ} {m} {n} e₁ e₂) s
- rewrite lemmaStack
-         {c = (compile e₁ ⟫ compile e₂)}
-         (lemmaConsAppend n m σ s' ~ cong (λ l → σ ∷ l ++ₗ s') (lemmaPlusAppend n (suc m) σ)) s
-  | sym (correct e₁ s)
-  | sym (correct e₂ (prepend ⟦ e₁ ⟧ s)) = closeHole0 n m σ s s' e₁ e₂
+correct src s = closeHole0 src s
 
 
 postulate Lemma₁ : {s : StackType} → ∀ {σ z} → ( src : Src σ z) → compileT {σ} {z} {s} src ≡ unravel (compileG {s} src)
