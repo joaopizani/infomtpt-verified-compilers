@@ -21,10 +21,17 @@ apply : {X Y : Set} -> {f g : X -> Y} -> (x : X) -> f ≡ g -> f x ≡ g x
 \end{code}
 %</apply>
 \begin{code}
-
 apply x refl = refl
-
 \end{code}
+
+%<*funext>
+\begin{code}
+postulate funext : {X Y : Set} {f g : X → Y} → ( (x : X) → f x ≡ g x ) → f ≡ g
+\end{code}
+%</funext>
+
+
+
 %<*cong3>
 \begin{code}
 cong₃ : {P Q S R : Set} {a b : P} {x y : Q} {p q : S} -> (f : P → Q → S → R) -> a ≡ b -> x ≡ y -> p ≡ q -> f a x p ≡ f b y q
@@ -721,29 +728,7 @@ mutual
                                              )
 
 \end{code}
-%<*Theorem>
-\begin{code}
-Theorem :
-    ∀ {Ip Iq} → ∀ {F} → 
-    {{ functor : HFunctor F }} → 
-    ∀ {r}
-  → (alg : {ixp : Ip} → {ixq : Iq} → F r ixp ixq → r ixp ixq)
-  → {ixp : Ip} {ixq : Iq} 
-  → ∀ graph → foldGraph alg {ixp} {ixq} graph ≡ foldTree alg {ixp} {ixq} (unravel graph)
-Theorem alg {ipx} {ipy} graph = fusion (λ a → foldGraph a graph) alg
-\end{code}
-%</Theorem>
 
-
-
-%<*Lemma2>
-\begin{code}
-Lemma₂ : {s s' : StackType} → (r : Stack s) 
-       → (graph : HGraph BytecodeF s s')
-       →  execG graph r ≡ execT (unravel graph) r
-Lemma₂ {s} {s'} r graph = apply r (Theorem execAlg graph)
-\end{code}
-%</Lemma2>
 \begin{code}
 
 -- prepend ⟦ e ⟧  r ≡ exec (compile e) r 
@@ -751,39 +736,88 @@ Lemma₂ {s} {s'} r graph = apply r (Theorem execAlg graph)
 --                  ≡ execT (toTree . compile e) r 
 --                  ≡ execT (compileT e) r
 
-
 \end{code}
 %<*correctT>
 \begin{code}
-correctT : ∀ {σ z s'} → (e : Src σ z) 
-         → ∀ (r : Stack s') → execT (compileT e) r ≡ prepend ⟦ e ⟧ r
+correctT : ∀ {s σ z} → (e : Src σ z) → execT {s} (compileT e) ≡ prepend ⟦ e ⟧
 \end{code}
 %</correctT>
 \begin{code}
-correctT e r = sym 
-             ( correct e r 
-             ~ cong (λ t → exec t r) (sym (treeIsoTo (compile e))) 
-             ~ sym (execTcorrect (toTree (compile e))) 
-             ~ cong (λ t → execT t r) (compileTcorrect e)
+correctT e = funext (λ r → sym 
+               ( correct e r 
+               ~ cong (λ t → exec t r) (sym (treeIsoTo (compile e))) 
+               ~ sym (execTcorrect (toTree (compile e))) 
+               ~ cong (λ t → execT t r) (compileTcorrect e)
+               ) 
              )
 \end{code}
 
+\begin{code}
+
+module Lifting ( IndexType : Set -> Set 
+    ) ( post : (σ : Tyₛ) → (z : ℕ) → IndexType Tyₛ → IndexType Tyₛ
+  ) { F : (IndexType Tyₛ -> IndexType Tyₛ -> Set) -> IndexType Tyₛ -> IndexType Tyₛ -> Set
+  }{{ functor : HFunctor F
+  }}( target : IndexType Tyₛ → IndexType Tyₛ → Set
+  ) ( execAlg : ∀ {s s′} → F target s s′ → target s s′
+  ) ( compileT : ∀ {s σ z} → Src σ z → HTree  F s (post σ z s)
+  ) ( compileG : ∀ {s σ z} → Src σ z → HGraph F s (post σ z s)
+  ) ( unravelLemma : ∀ {s σ z} 
+                   → (src : Src σ z) → compileT {s} src ≡ unravel (compileG {s} src)
+  ) ( prepend : ∀ {t n σ} → (v : Vec ⁅ σ ⁆ n) → target t (post σ n t)
+  ) ( correctT : ∀ {s σ z} 
+               → (e : Src σ z) → foldTree execAlg {s} {post σ z s} (compileT e) ≡ prepend ⟦ e ⟧
+  )
+ where
+
+  execT' :  ∀ {s s'} → HTree F s s' -> target s s'
+  execT' = foldTree execAlg
+
+  execG' :  ∀ {s s'} → HGraph F s s' -> target s s'
+  execG' = foldGraph execAlg
+
+
+  Theorem :
+      ∀ {r}
+    → ∀ {F} → {{ functor : HFunctor F }}
+    → (alg : {s s' : IndexType Tyₛ} → F r s s' → r s s')
+    → {s s' : IndexType Tyₛ}
+    → (graph : HGraph F s s') → foldGraph alg graph ≡ foldTree alg (unravel graph)
+  Theorem alg graph = fusion (λ a → foldGraph a graph) alg
+
+
+  Lemma : {s s' : IndexType Tyₛ}
+        → (graph : HGraph F s s') → execG' graph ≡ execT' (unravel graph)
+  Lemma graph = Theorem execAlg graph
+
+  graphCorrectness : ∀ {s σ z}
+                   → (e : Src σ z) → execG' {s} (compileG e) ≡ prepend ⟦ e ⟧ 
+  graphCorrectness e = 
+    let step1 = cong' (λ g → execG' g) 
+             (λ g → execT' (unravel g)) 
+           (compileG e) (compileG e) 
+           (Lemma) refl
+        step2 = cong' (λ g → execT' g) 
+            (λ g → execT' g)  
+            (unravel (compileG e)) (compileT e)
+            (λ t → refl) (sym (unravelLemma e))
+    in step1 ~ step2 ~ (correctT e)
+\end{code}
+
+
 %<*correctG>
 \begin{code}
-correctG : ∀ {σ z s}
-         → (e : Src σ z) → ∀ (r : Stack s) → execG (compileG e) r ≡ prepend ⟦ e ⟧  r
+correctG : ∀ {s σ z}
+         → (e : Src σ z) → execG {s} (compileG e) ≡ prepend ⟦ e ⟧
 \end{code}
 %</correctG>
-
 \begin{code}
-correctG e r =
-  let step1 = cong' (λ g → execG g r) 
-         (λ g → execT (unravel g) r) 
-         (compileG e) (compileG e) 
-         (Lemma₂ r) refl
-      step2 = cong' (λ g → execT g r) 
-          (λ g → execT g r)  
-          (unravel (compileG e)) (compileT e)
-          (λ t → refl) (sym (Lemma₁ e))
-  in step1 ~ step2 ~ (correctT e r)
+correctG =  graphCorrectness 
+  where open Lifting List (λ σ n s → replicate n σ ++ₗ s) 
+                          (λ s s' → Stack s -> Stack s')
+                          execAlg 
+                          compileT compileG  Lemma₁ 
+                          prepend  correctT
+
+
 \end{code}
