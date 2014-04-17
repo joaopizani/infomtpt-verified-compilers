@@ -173,7 +173,7 @@
         in this language, therefore no arrow type constructor. First, we show the type language for
         Src:
 
-        \begin{figure}
+        \begin{figure}[h!]
             \ExecuteMetaData[agda/tex/Report.tex]{Tys}
             \caption{Types for our source language
                 \label{lst:tys}
@@ -184,7 +184,7 @@
         subscripts to distinguish them from similarly named definitions in Agda (the \emph{metalanguage}).
         In the case of the source language, the names are subscripted by a small-case ``s''.
 
-        \begin{figure}
+        \begin{figure}[h!]
             \ExecuteMetaData[agda/tex/Report.tex]{Src}
             \caption{
                 The \texttt{Src} datatype definition
@@ -210,8 +210,8 @@
         and provide a denotational semantics for \texttt{Src}, written as a function \texttt{eval}
         which maps terms of \texttt{Src} to values.
 
-        \begin{figure}
-            \ExecuteMetaData[agda/tex/Report.lagda]{eval}
+        \begin{figure}[h!]
+            \ExecuteMetaData[agda/tex/Report.tex]{eval}
             \caption{Semantics for the \texttt{Src} language
                 \label{lst:eval}
             }
@@ -232,14 +232,14 @@
         we now move on to defining the target language (\texttt{Bytecode}) and its corresponding semantics (\texttt{exec}).
         This target language is a \emph{typed} stack bytecode, and therefore it operates on \emph{typed stacks}:
 
-        \begin{figure}
+        \begin{figure}[h!]
             \ExecuteMetaData[agda/tex/Report.tex]{StackType}
             \caption{The type of a \texttt{Stack}
                 \label{lst:stacktype}
             }
         \end{figure}
 
-        \begin{figure}
+        \begin{figure}[h!]
             \ExecuteMetaData[agda/tex/Report.tex]{Stack}
             \caption{Definition of a \emph{typed} stack
                 \label{lst:stack}
@@ -253,7 +253,7 @@
         where \texttt{s₁} is the \emph{input StackType} and \texttt{s₂} is the \emph{output StackType}.
 
         %% Bytecode
-        \begin{figure}
+        \begin{figure}[h!]
             \ExecuteMetaData[agda/tex/Report.tex]{Bytecode}
             \caption{Typed bytecode instructions
                 \label{lst:bytecode}
