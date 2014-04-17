@@ -175,7 +175,7 @@
 
         \begin{figure}[h!]
             \ExecuteMetaData[agda/tex/Report.tex]{Tys}
-            \caption{Types for our source language
+            \caption{Types for our source language.
                 \label{lst:tys}
             }
         \end{figure}
@@ -187,7 +187,7 @@
         \begin{figure}[h!]
             \ExecuteMetaData[agda/tex/Report.tex]{Src}
             \caption{
-                The \texttt{Src} datatype definition
+                The \texttt{Src} datatype definition.
                 \label{lst:src}
             }
         \end{figure}
@@ -212,7 +212,7 @@
 
         \begin{figure}[h!]
             \ExecuteMetaData[agda/tex/Report.tex]{eval}
-            \caption{Semantics for the \texttt{Src} language
+            \caption{Semantics for the \texttt{Src} language.
                 \label{lst:eval}
             }
         \end{figure}
@@ -234,14 +234,14 @@
 
         \begin{figure}[h!]
             \ExecuteMetaData[agda/tex/Report.tex]{StackType}
-            \caption{The type of a \texttt{Stack}
+            \caption{The type of a \texttt{Stack}.
                 \label{lst:stacktype}
             }
         \end{figure}
 
         \begin{figure}[h!]
             \ExecuteMetaData[agda/tex/Report.tex]{Stack}
-            \caption{Definition of a \emph{typed} stack
+            \caption{Definition of a \emph{typed} stack.
                 \label{lst:stack}
             }
         \end{figure}
@@ -255,16 +255,32 @@
         %% Bytecode
         \begin{figure}[h!]
             \ExecuteMetaData[agda/tex/Report.tex]{Bytecode}
-            \caption{Typed bytecode instructions
+            \caption{Typed bytecode instructions.
                 \label{lst:bytecode}
             }
         \end{figure}
 
-        The semantics of the bytecode is defined by a function (\texttt{exec})
-        whose type can be read (because of \emph{currying}) as mapping a value of \texttt{Bytecode}
+        The semantics of the bytecode are defined by a function (\texttt{exec})
+        whose type can be read (due to \emph{currying}) as mapping a value of \texttt{Bytecode}
         into a function from \texttt{Stack} to \texttt{Stack}.
 
         %% exec
+        \begin{figure}[h!]
+            \ExecuteMetaData[agda/tex/Report.tex]{exec}
+            \caption{Semantics for \texttt{Bytecode}.
+                \label{lst:exec}
+            }
+        \end{figure}
+
+        Now, with both source and target languages of our compiler defined, we present the compiler itself:
+
+        %% compiler
+        \begin{figure}[h!]
+            \ExecuteMetaData[agda/tex/Report.tex]{compile}
+            \caption{The ``naïve'' compiler, generating tree-like bytecode.
+                \label{lst:compile}
+            }
+        \end{figure}
 
         %% Correctness proof
 
@@ -295,14 +311,33 @@
     \section{Conclusions}
     \label{sec:conclusions}
         % Summarize contributions
+        In this project, we developed a provably correct expression compiler using dependent types in the Agda programming language.
+        Also, we implemented a \emph{systematic transformation} that, given the correctness proof for
+        a ``basic'' compiler, can produce the correctness proof for a compiler based on the first but
+        generating ``optimized'' (sharing-preserving) target code.
+
+        We believe that, even with such small languages as the ones we chose as examples,
+        this methodology of systematically ``extending'' correctness proofs when adding compiler optimizations
+        is an important area of research, and that using proof assistants based on dependent types is a
+        promising approach.
 
         % Points where we got stuck (holes, postulates)
-            % Basic correctness (BytecodeT), sequencing clause (proven assuming the lemma)
-                 % Proving a lemma needed, lemma is being used OK
+        To conclude the report, we would like to explain what are the points in which we do not consider our work
+        to be finished. These are lemmas which we believe are true, but due to some technicality or sheer
+        time limitations we were not able to prove completely:
 
-            % Fusion lemma for indexed folds, Theorem in the lifting module
+        \begin{enumerate}
+            \item The sequence clause (\texttt{\_⟫\_} constructor) of the basic (non-optimized) compiler
+                is depending on a lemma that was left still to be proven.
+                \begin{itemize}
+                    \item This lemma (\texttt{lemmaPrepend}) involves vector concatenation and a ``prepending'' operation,
+                        but can only be stated (apparently) using heterogeneous equality, which hindered our attempts.
+                \end{itemize}
 
-            % What uses the coerceIdLemma1:
+            \item The \emph{fusion law} for folds over \emph{indexed functors} is a statement also left
+                to be proven.
+                % What uses it, why is it used/where?
+        \end{enumerate}
 
 
         % Difficulties encountered along the way
