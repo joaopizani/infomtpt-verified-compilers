@@ -202,11 +202,22 @@
 
         Because of the sequencing construct, we chose our values to be \emph{vectors} of naturals or
         booleans. The usage of vectors as values matches the requirement we imposed that sequences
-        of expressions have to be uniformly-typed. Also, %% size constraints.
+        of expressions have to be uniformly-typed. Also, the size of the vector resulting from
+        evaluation matches the size of the \texttt{Src} expression.
 
         %% The type of EVAL states type preservation (citation of paper [1])
 
-        % Code for Src and Bytecode, and correctness proof
+        A last interesting remark about \texttt{eval} is that the \emph{type signature of eval
+            expresses type preservation}. This phenomenon, of having proven a meta-theoretical
+        property ``for free'', is allowed by the use of dependent types on the definitions of the
+        language and the evaluator. On a non-dependent setting, such a property would have to be
+        proven separately, in an ``offline'' proof.
+
+        %% Bytecode
+        %% exec
+
+        %% Correctness proof
+
 
     \section{Lifiting to shared setting}
     \label{sec:lifiting}
