@@ -13,7 +13,6 @@
 %% Unicode support
 \usepackage[utf8x]{inputenc}
 \usepackage{ucs}
-\usepackage{autofe}
 
 
 %% Agda
@@ -153,12 +152,12 @@
                 \begin{itemize}
                     \item Specially the way in which it was implemented (by using Higher-Order Abstract Syntax)
                         clashed with Agda's requirement of \emph{strict positivity} for datatype definitions.
+                        %% Occurrences of this form... (Wout)
+                        %% StackItem including exception handlers (Wout)
                     \item We chose a simpler sharing-inducing extension to the language of
                         \cite{typed-stack-safe-compiler} (sequencing and conditional branching).
                         This extension is explained in more detail in section \ref{sec:basic}
                 \end{itemize}
-
-            %% Making the "method" given in paper [2] an ACTUAL function
         \end{itemize}
         
 
@@ -174,23 +173,36 @@
         in this language, therefore no arrow type constructor. First, we show the type language for
         Src:
 
-        %% CODE: Ty_s
+        \begin{figure}
+            \ExecuteMetaData[agda/tex/Report.tex]{Tys}
+            \caption{Types for our source language
+                \label{lst:tys}
+            }
+        \end{figure}
 
         When naming constructs of the languages which are our "object of study", we give
         subscripts to distinguish them from similarly named definitions in Agda (the \emph{metalanguage}).
         In the case of the source language, the names are subscripted by a small-case ``s''.
 
-        %% CODE: Src
+        \begin{figure}
+            \ExecuteMetaData[agda/tex/Report.tex]{Src}
+            \caption{
+                The \texttt{Src} datatype definition
+                \label{lst:src}
+            }
+        \end{figure}
 
         The definition of \texttt{Src} makes clear what is the main difference between our source language
         and the used defined in \cite{typed-stack-safe-compiler}: we have an additional \textbf{sequencing}
         construct. Even though the datatype definition is increased by only one constructor,
         this change has several subtleties:
 
-        \begin{itemize}  % TODO
-            \item Uniformly-typed sequences
-            \item No ``sequential'' values, no arithmetic over sequences
-            \item This is enforced by making expressions have a \emph{size}
+        \begin{itemize}
+            \item All subexpressions in a sequence are required to be of the same base type
+            \item No arithmetic or boolean operators over sequences
+                \begin{itemize}
+                    \item This is enforced by making expressions have a \emph{size}
+                \end{itemize}
         \end{itemize}
 
         As important as defining the constraints on well-formed expressions is also defining
@@ -198,14 +210,17 @@
         and provide a denotational semantics for \texttt{Src}, written as a function \texttt{eval}
         which maps terms of \texttt{Src} to values.
 
-        %% CODE: eval
+        \begin{figure}
+            \ExecuteMetaData[agda/tex/Report.lagda]{eval}
+            \caption{Semantics for the \texttt{Src} language
+                \label{lst:eval}
+            }
+        \end{figure}
 
         Because of the sequencing construct, we chose our values to be \emph{vectors} of naturals or
         booleans. The usage of vectors as values matches the requirement we imposed that sequences
         of expressions have to be uniformly-typed. Also, the size of the vector resulting from
         evaluation matches the size of the \texttt{Src} expression.
-
-        %% The type of EVAL states type preservation (citation of paper [1])
 
         A last interesting remark about \texttt{eval} is that the \emph{type signature of eval
             expresses type preservation}. This phenomenon, of having proven a meta-theoretical
@@ -213,37 +228,91 @@
         language and the evaluator. On a non-dependent setting, such a property would have to be
         proven separately, in an ``offline'' proof.
 
+        Having defined \texttt{Src} and its semantics (\texttt{eval}),
+        we now move on to defining the target language (\texttt{Bytecode}) and its corresponding semantics (\texttt{exec}).
+        This target language is a \emph{typed} stack bytecode, and therefore it operates on \emph{typed stacks}:
+
+        \begin{figure}
+            \ExecuteMetaData[agda/tex/Report.tex]{StackType}
+            \caption{The type of a \texttt{Stack}
+                \label{lst:stacktype}
+            }
+        \end{figure}
+
+        \begin{figure}
+            \ExecuteMetaData[agda/tex/Report.tex]{Stack}
+            \caption{Definition of a \emph{typed} stack
+                \label{lst:stack}
+            }
+        \end{figure}
+
+        The \texttt{Stack} type is \emph{indexed} by \texttt{StackType}.
+        The same \texttt{StackType} indices come into play in the definition of the \texttt{Bytecode} datatype:
+        Each bytecode instruction performs a certain stack manipulation,
+        and therefore each instruction is a value of type \texttt{Bytecode s₁ s₂},
+        where \texttt{s₁} is the \emph{input StackType} and \texttt{s₂} is the \emph{output StackType}.
+
         %% Bytecode
+        \begin{figure}
+            \ExecuteMetaData[agda/tex/Report.tex]{Bytecode}
+            \caption{Typed bytecode instructions
+                \label{lst:bytecode}
+            }
+        \end{figure}
+
+        The semantics of the bytecode is defined by a function (\texttt{exec})
+        whose type can be read (because of \emph{currying}) as mapping a value of \texttt{Bytecode}
+        into a function from \texttt{Stack} to \texttt{Stack}.
+
         %% exec
 
         %% Correctness proof
 
 
-    \section{Lifiting to shared setting}
-    \label{sec:lifiting}
-        % What is the sharing opportunity (diagram, just Src code example)
-        % A different representation of Bytecode (graph) that could capture sharing
-            % Give example of a "BytecodeG" term...
+    \section{Lifting to shared setting}
+    \label{sec:lifting}
+        % What is the sharing opportunity (diamond diagram or just Src code example)
+           % single Src term
+           % smart and dumb bytecode generated
+
+        % There is this different representation of Bytecode (graph) that could capture sharing...
+            % Let and Var make the sharing happen...
+            % Give "BytecodeG-like'' definition (two extra constructs)
+
         % If we make Bytecode into functor, we can have different representations by
         % applying fixed-point-like operators
-          % Htree, HGraph (iso, not iso really)
+          % Htree (Hfix, indexed fixed-point), HGraph (not iso really)
+          
+          % commutative diagram (with execT, unravel, execG)
+          % preserves execution semantics, but loses sharing
 
-        % State the "lifting" theorems
-            % Grand finale: correctG
-           
+        % State the "lifting" theorems (top-down):
+            % Grand finale: correctG (begin with ``lifting'' module), explain parts needed
+                %% Lemmas, lemma
+                     %% Fusion (mention paper with simple (non-indexed) proof).
+
 
     \section{Conclusions}
     \label{sec:conclusions}
-        % Summarize contributions (again?)
+        % Summarize contributions
 
         % Points where we got stuck (holes, postulates)
-            % Some possibilities of attempts, if we had more time
+            % Basic correctness (BytecodeT), sequencing clause (proven assuming the lemma)
+                 % Proving a lemma needed, lemma is being used OK
+
+            % Fusion lemma for indexed folds, Theorem in the lifting module
+
+            % What uses the coerceIdLemma1:
+
 
         % Difficulties encountered along the way
             % Ideas of why they happened
                 % Tool-related (Agda)
-                % Domain-related (problem inherently hard)
+                    % Infinite types
+                    % Stack overflow
 
+                % Domain-related (problem inherently hard)
+                    % We are not sure that the fusion lemma involving XXX hold for when using indexed functors
 
 
     \bibliographystyle{plain}

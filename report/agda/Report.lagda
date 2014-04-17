@@ -18,7 +18,7 @@ open import Relation.Binary.PropositionalEquality using (_≡_; refl; sym; trans
 \end{code}
 %<*apply>
 \begin{code}
-apply : {X Y : Set} -> {f g : X -> Y} -> (x : X) -> f ≡ g -> f x ≡ g x
+apply : {X Y : Set} → {f g : X → Y} → (x : X) → f ≡ g → f x ≡ g x
 \end{code}
 %</apply>
 \begin{code}
@@ -35,7 +35,7 @@ postulate funext : {X Y : Set} {f g : X → Y} → ( (x : X) → f x ≡ g x ) �
 
 %<*cong3>
 \begin{code}
-cong₃ : {P Q S R : Set} {a b : P} {x y : Q} {p q : S} -> (f : P → Q → S → R) -> a ≡ b -> x ≡ y -> p ≡ q -> f a x p ≡ f b y q
+cong₃ : {P Q S R : Set} {a b : P} {x y : Q} {p q : S} → (f : P → Q → S → R) → a ≡ b → x ≡ y → p ≡ q → f a x p ≡ f b y q
 \end{code}
 %</cong3>
 \begin{code}
@@ -45,10 +45,10 @@ cong₃ f refl refl refl = refl
 %<*cong'>
 \begin{code}
 cong' : {e : Level} {X : Set e} {R : Set}
-     -> (P Q : X -> R)
-     -> (a b : X) 
-     -> ((x : X) -> P x ≡ Q x) -> a ≡ b 
-     -> P a ≡ Q b
+     → (P Q : X → R)
+     → (a b : X) 
+     → ((x : X) → P x ≡ Q x) → a ≡ b 
+     → P a ≡ Q b
 cong' P Q a .a f refl = f a 
 \end{code}
 %</cong'>
@@ -95,12 +95,12 @@ coerce _ refl b = b
 
 %<*HFunctor>
 \begin{code}
-record HFunctor {Ip Iq : Set} (F : (Ip -> Iq -> Set) -> (Ip -> Iq -> Set)) : Set₁ where
+record HFunctor {Ip Iq : Set} (F : (Ip → Iq → Set) → (Ip → Iq → Set)) : Set₁ where
   constructor isHFunctor
   field
-    hmap : {a : Ip -> Iq -> Set} -> {b : Ip -> Iq -> Set} 
-         -> ( {ixp : Ip} -> {ixq : Iq} ->   a ixp ixq ->   b ixp ixq )
-         -> ( {ixp : Ip} -> {ixq : Iq} -> F a ixp ixq -> F b ixp ixq )  
+    hmap : {a : Ip → Iq → Set} → {b : Ip → Iq → Set} 
+         → ( {ixp : Ip} → {ixq : Iq} →   a ixp ixq →   b ixp ixq )
+         → ( {ixp : Ip} → {ixq : Iq} → F a ixp ixq → F b ixp ixq )  
 \end{code}
 %</HFunctor>
 
@@ -119,9 +119,9 @@ data Tyₛ : Set where
 \end{code}
 %<*TyInterpretation>
 \begin{code}
-⁅_⁆ : (α : Tyₛ) → Set
-⁅ ℕₛ ⁆ = ℕ
-⁅ 𝔹ₛ ⁆ = 𝔹
+[[_]] : (α : Tyₛ) → Set
+[[ ℕₛ ]] = ℕ
+[[ 𝔹ₛ ]] = 𝔹
 \end{code}
 %</TyInterpretation>
 \begin{code}
@@ -142,12 +142,12 @@ Sizeₛ = ℕ
 \end{code}
 %<*Src>
 \begin{code}
-data Src : (σ : Tyₛ) → (z : Sizeₛ) → Set where
-    vₛ    : ∀ {σ} → (v : ⁅ σ ⁆) → Src σ 1
+data Src : (t : Tyₛ) → (z : Sizeₛ) → Set where
+    vₛ    : ∀ {t} → (v : [[ t ]]) → Src t 1
     _+ₛ_  : (e₁ e₂ : Src ℕₛ 1) → Src ℕₛ 1
-    ifₛ_thenₛ_elseₛ_ : ∀ {σ n} → (c : Src 𝔹ₛ 1)
-                        → (eₜ eₑ : Src σ (suc n)) → Src σ (suc n)
-    _⟫ₛ_  : ∀ {σ m n} → Src σ (suc m) → Src σ (suc n) → Src σ (suc n + suc m)
+    ifₛ_thenₛ_elseₛ_ : ∀ {t n} → (c : Src 𝔹ₛ 1)
+                        → (eₜ eₑ : Src t (suc n)) → Src t (suc n)
+    _⟫ₛ_  : ∀ {t m n} → Src t (suc m) → Src t (suc n) → Src t (suc n + suc m)
 \end{code}
 %</Src>
 \begin{code}
@@ -163,13 +163,13 @@ mutual
 \end{code}
 %<*eval>
 \begin{code}
-    ⟦_⟧ : {σ : Tyₛ} {z : Sizeₛ} → (e : Src σ z) → Vec ⁅ σ ⁆ z
+    ⟦_⟧ : {t : Tyₛ} {z : Sizeₛ} → (e : Src t z) → Vec [[ t ]] z
     ⟦ vₛ v ⟧                     = [ v ]
     ⟦ e₁ +ₛ e₂ ⟧                 = [ ⟦ e₁ ⟧' + ⟦ e₂ ⟧' ] 
     ⟦ ifₛ_thenₛ_elseₛ_ c e₁ e₂ ⟧ = if ⟦ c ⟧' then ⟦ e₁ ⟧ else ⟦ e₂ ⟧
     ⟦ e₁ ⟫ₛ e₂ ⟧                 = ⟦ e₂ ⟧ +++ ⟦ e₁ ⟧
 
-    ⟦_⟧' : {σ : Tyₛ} {z' : Sizeₛ} → (e : Src σ (suc z')) → ⁅ σ ⁆
+    ⟦_⟧' : {t : Tyₛ} {z' : Sizeₛ} → (e : Src t (suc z')) → [[ t ]]
     ⟦ e ⟧' = head ⟦ e ⟧
 \end{code}
 %</eval>
@@ -191,7 +191,7 @@ StackType = List Tyₛ
 \begin{code}
 data Stack : StackType → Set where
     ε    : Stack []
-    _▽_  : ∀ {σ s'} → ⁅ σ ⁆ → Stack s' → Stack (σ ∷ s')
+    _▽_  : ∀ {t s'} → [[ t ]] → Stack s' → Stack (t ∷ s')
 \end{code}
 %</Stack>
 \begin{code}
@@ -206,7 +206,7 @@ infixr 7 _▽_
 \begin{code}
 data Bytecode : StackType → StackType → Set where
     SKIP : ∀ {s}    → Bytecode s s
-    PUSH : ∀ {σ s}  → (x : ⁅ σ ⁆) → Bytecode s (σ ∷ s)
+    PUSH : ∀ {t s}  → (x : [[ t ]]) → Bytecode s (t ∷ s)
     ADD  : ∀ {s}    → Bytecode (ℕₛ ∷ ℕₛ ∷ s) (ℕₛ ∷ s)
     IF   : ∀ {s s′} → (t : Bytecode s s′) → (e : Bytecode s s′) → Bytecode (𝔹ₛ ∷ s) s′
     _⟫_  : ∀ {s₀ s₁ s₂} → (c₁ : Bytecode s₀ s₁) → (c₂ : Bytecode s₁ s₂) → Bytecode s₀ s₂
@@ -220,9 +220,9 @@ infixl 4 _⟫_
 \end{code}
 %<*BytecodeF>
 \begin{code}
-data BytecodeF (r : StackType -> StackType -> Set) : (StackType -> StackType -> Set) where  
+data BytecodeF (r : StackType → StackType → Set) : (StackType → StackType → Set) where  
     SKIP' : ∀ {s}    → BytecodeF r s s
-    PUSH' : ∀ {α s}  → (x : ⁅ α ⁆) → BytecodeF r s (α ∷ s)
+    PUSH' : ∀ {α s}  → (x : [[ α ]]) → BytecodeF r s (α ∷ s)
     ADD'  : ∀ {s}    → BytecodeF r (ℕₛ ∷ ℕₛ ∷ s) (ℕₛ ∷ s)
     IF'   : ∀ {s s′} → (t : r s s′) → (e : r s s′) → BytecodeF r (𝔹ₛ ∷ s) s′
     _⟫'_  : ∀ {s₀ s₁ s₂} → (c₁ : r s₀ s₁) → (c₂ : r s₁ s₂) → BytecodeF r s₀ s₂
@@ -230,8 +230,8 @@ data BytecodeF (r : StackType -> StackType -> Set) : (StackType -> StackType -> 
 %</BytecodeF>
 \begin{code}
 
-mapBytecodeF : {a b : StackType -> StackType -> Set} -> ( {ixp ixq : StackType} ->           a ixp ixq ->           b ixp ixq) 
-                                                     -> ( {ixp ixq : StackType} -> BytecodeF a ixp ixq -> BytecodeF b ixp ixq)
+mapBytecodeF : {a b : StackType → StackType → Set} → ( {ixp ixq : StackType} →           a ixp ixq →           b ixp ixq) 
+                                                     → ( {ixp ixq : StackType} → BytecodeF a ixp ixq → BytecodeF b ixp ixq)
 mapBytecodeF f SKIP' = SKIP'
 mapBytecodeF f (PUSH' x) = PUSH' x
 mapBytecodeF f ADD' = ADD'
@@ -293,23 +293,23 @@ lemmaStack refl s = refl
 \end{code}
 %<*compile>
 \begin{code}
-compile : ∀ {σ z s} → Src σ z → Bytecode s (replicate z σ ++ₗ s)
+compile : ∀ {t z s} → Src t z → Bytecode s (replicate z t ++ₗ s)
 \end{code}
 %</compile>
 \begin{code}
 compile (vₛ x)                  = PUSH x
 compile (e₁ +ₛ e₂)              = compile e₂ ⟫ compile e₁ ⟫ ADD
 compile (ifₛ c thenₛ t elseₛ e) = compile c ⟫ IF (compile t) (compile e)
-compile {.σ} {.(suc n + suc m)} {s} (_⟫ₛ_ {σ} {m} {n} e₁ e₂)
+compile {.t} {.(suc n + suc m)} {s} (_⟫ₛ_ {t} {m} {n} e₁ e₂)
   = coerce (Bytecode s)
-      (lemmaConsAppend n m σ s
-       ~ cong (λ l → σ ∷ l ++ₗ s) (lemmaPlusAppend n (suc m) σ))
+      (lemmaConsAppend n m t s
+       ~ cong (λ l → t ∷ l ++ₗ s) (lemmaPlusAppend n (suc m) t))
       (compile e₁ ⟫ compile e₂)
 
 \end{code}
 %<*HTree>
 \begin{code}
-record HTree {Ip Iq : Set} (F : (Ip -> Iq -> Set) -> (Ip -> Iq -> Set) ) (ixp : Ip) (ixq : Iq) : Set where
+record HTree {Ip Iq : Set} (F : (Ip → Iq → Set) → (Ip → Iq → Set) ) (ixp : Ip) (ixq : Iq) : Set where
   constructor HTreeIn
   field
     treeOut : F (HTree F) ixp ixq
@@ -320,31 +320,31 @@ record HTree {Ip Iq : Set} (F : (Ip -> Iq -> Set) -> (Ip -> Iq -> Set) ) (ixp : 
 \end{code}
 %<*foldTree>
 \begin{code}
-postulate foldTree : {Ip Iq : Set} -> {F : (Ip -> Iq -> Set) -> (Ip -> Iq -> Set)} -> {{ functor : HFunctor F }} -> {r : Ip -> Iq -> Set} -> ( {ixp : Ip} {ixq : Iq} -> F r ixp ixq -> r ixp ixq) -> ( {ixp : Ip} {ixq : Iq} -> HTree F   ixp ixq -> r ixp ixq)
+postulate foldTree : {Ip Iq : Set} → {F : (Ip → Iq → Set) → (Ip → Iq → Set)} → {{ functor : HFunctor F }} → {r : Ip → Iq → Set} → ( {ixp : Ip} {ixq : Iq} → F r ixp ixq → r ixp ixq) → ( {ixp : Ip} {ixq : Iq} → HTree F   ixp ixq → r ixp ixq)
 \end{code}
 %</foldTree>
 
 -- foldTree : 
 --         {Ip Iq : Set} 
---      -> {F : (Ip -> Iq -> Set) -> (Ip -> Iq -> Set)} -> 
+--      → {F : (Ip → Iq → Set) → (Ip → Iq → Set)} → 
 --         {{ functor : HFunctor F }} 
---      -> {r : Ip -> Iq -> Set} 
---      -> ( {ixp : Ip} {ixq : Iq} -> F r ixp ixq -> r ixp ixq) 
---      -> ( {ixp : Ip} {ixq : Iq} -> HTree F   ixp ixq -> r ixp ixq)
+--      → {r : Ip → Iq → Set} 
+--      → ( {ixp : Ip} {ixq : Iq} → F r ixp ixq → r ixp ixq) 
+--      → ( {ixp : Ip} {ixq : Iq} → HTree F   ixp ixq → r ixp ixq)
 -- foldTree {{functor}} alg (HTreeIn r) = alg (hmap (foldTree alg) r) 
 --   where open HFunctor functor
 
 \begin{code}
---postulate foldTree : {Ip Iq : Set} -> {F : (Ip -> Iq -> Set) -> (Ip -> Iq -> Set)} -> {{ functor : HFunctor F }} -> {r : Ip -> Iq -> Set} -> ( {ixp : Ip} {ixq : Iq} -> F r ixp ixq -> r ixp ixq) -> ( {ixp : Ip} {ixq : Iq} -> HTree F   ixp ixq -> r ixp ixq)
+--postulate foldTree : {Ip Iq : Set} → {F : (Ip → Iq → Set) → (Ip → Iq → Set)} → {{ functor : HFunctor F }} → {r : Ip → Iq → Set} → ( {ixp : Ip} {ixq : Iq} → F r ixp ixq → r ixp ixq) → ( {ixp : Ip} {ixq : Iq} → HTree F   ixp ixq → r ixp ixq)
 
 {-
 fusion : 
      ∀ {Ip Iq r} 
-  -> ∀ {F} -> {{ functor : HFunctor F }}
-  -> {ixp : Ip} {ixq : Iq}
-  -> (b : ∀ {c} -> ( {ixP : Ip} -> {ixQ : Iq} -> F c ixP ixQ -> c ixP ixQ) -> c ixp ixq)       
-  -> (alg : ∀ {ixp ixq} → F r ixp ixq → r ixp ixq)
-  -> b alg ≡ foldTree alg {ixp} {ixq} (b HTreeIn)
+  → ∀ {F} → {{ functor : HFunctor F }}
+  → {ixp : Ip} {ixq : Iq}
+  → (b : ∀ {c} → ( {ixP : Ip} → {ixQ : Iq} → F c ixP ixQ → c ixP ixQ) → c ixp ixq)       
+  → (alg : ∀ {ixp ixq} → F r ixp ixq → r ixp ixq)
+  → b alg ≡ foldTree alg {ixp} {ixq} (b HTreeIn)
 fusion {_} {_} {_} {{_}} {ixp} {ixq} b alg with alg {ixp} {ixq}
 ... | alg' = {!!}
 -}
@@ -352,7 +352,7 @@ fusion {_} {_} {_} {{_}} {ixp} {ixq} b alg with alg {ixp} {ixq}
 \end{code}
 %<*fusion>
 \begin{code}
-postulate fusion : ∀ {Ip Iq r} -> ∀ {F} -> {{ functor : HFunctor F }} -> {ixp : Ip} {ixq : Iq}-> (b : ∀ {c} -> ( {ixP : Ip} -> {ixQ : Iq} -> F c ixP ixQ -> c ixP ixQ) -> c ixp ixq) -> (alg : ∀ {ixp ixq} → F r ixp ixq → r ixp ixq) -> b alg ≡ foldTree alg {ixp} {ixq} (b HTreeIn)
+postulate fusion : ∀ {Ip Iq r} → ∀ {F} → {{ functor : HFunctor F }} → {ixp : Ip} {ixq : Iq}→ (b : ∀ {c} → ( {ixP : Ip} → {ixQ : Iq} → F c ixP ixQ → c ixP ixQ) → c ixp ixq) → (alg : ∀ {ixp ixq} → F r ixp ixq → r ixp ixq) → b alg ≡ foldTree alg {ixp} {ixq} (b HTreeIn)
 \end{code}
 %</fusion>
 \begin{code}
@@ -364,10 +364,10 @@ postulate fusion : ∀ {Ip Iq r} -> ∀ {F} -> {{ functor : HFunctor F }} -> {ix
 \end{code}
 %<*HGraph'>
 \begin{code}
-data HGraph' {Ip Iq : Set} (F : (Ip -> Iq -> Set) -> (Ip -> Iq -> Set) ) (v : Ip -> Iq -> Set) (ixp : Ip) (ixq : Iq) : Set where
-  HGraphIn  : F (HGraph' F v) ixp ixq -> HGraph' F v ixp ixq
-  HGraphLet : (HGraph' F v ixp ixq) -> (v ixp ixq -> HGraph' F v ixp ixq) -> HGraph' F v ixp ixq  
-  HGraphVar : v ixp ixq -> HGraph' F v ixp ixq
+data HGraph' {Ip Iq : Set} (F : (Ip → Iq → Set) → (Ip → Iq → Set) ) (v : Ip → Iq → Set) (ixp : Ip) (ixq : Iq) : Set where
+  HGraphIn  : F (HGraph' F v) ixp ixq → HGraph' F v ixp ixq
+  HGraphLet : (HGraph' F v ixp ixq) → (v ixp ixq → HGraph' F v ixp ixq) → HGraph' F v ixp ixq  
+  HGraphVar : v ixp ixq → HGraph' F v ixp ixq
 \end{code}
 %</HGraph'>
 \begin{code}
@@ -378,14 +378,14 @@ data HGraph' {Ip Iq : Set} (F : (Ip -> Iq -> Set) -> (Ip -> Iq -> Set) ) (v : Ip
 {-# NO_TERMINATION_CHECK #-}
 foldGraph' :
        {Ip Iq : Set} 
-    -> {F : (Ip -> Iq -> Set) -> (Ip -> Iq -> Set)} ->
+    → {F : (Ip → Iq → Set) → (Ip → Iq → Set)} →
        {{ functor : HFunctor F }}
-    -> {V : Ip -> Iq -> Set}      
-    -> {r : Ip -> Iq -> Set}
-    -> ( {ixp : Ip} {ixq : Iq} -> V ixp ixq -> r ixp ixq )
-    -> ( {ixp : Ip} {ixq : Iq} -> r ixp ixq -> (V ixp ixq -> r ixp ixq) -> r ixp ixq)
-    -> ( {ixp : Ip} {ixq : Iq} ->         F r ixp ixq -> r ixp ixq) 
-    -> ( {ixp : Ip} {ixq : Iq} -> HGraph' F V ixp ixq -> r ixp ixq)
+    → {V : Ip → Iq → Set}      
+    → {r : Ip → Iq → Set}
+    → ( {ixp : Ip} {ixq : Iq} → V ixp ixq → r ixp ixq )
+    → ( {ixp : Ip} {ixq : Iq} → r ixp ixq → (V ixp ixq → r ixp ixq) → r ixp ixq)
+    → ( {ixp : Ip} {ixq : Iq} →         F r ixp ixq → r ixp ixq) 
+    → ( {ixp : Ip} {ixq : Iq} → HGraph' F V ixp ixq → r ixp ixq)
 foldGraph' {{functor}} v l alg (HGraphIn r) = alg (hmap (foldGraph' v l alg) r)
   where open HFunctor functor 
 \end{code}
@@ -404,8 +404,8 @@ foldGraph' v l alg (HGraphVar x) = v x
 \end{code}
 %<*HGraph>
 \begin{code}
-data HGraph {Ip Iq : Set} (F : (Ip -> Iq -> Set) -> (Ip -> Iq -> Set) ) (ixp : Ip) (ixq : Iq) : Set₁ where
-  mkHGraph : ( {v : Ip -> Iq -> Set} -> (HGraph' F v ixp ixq) ) -> HGraph F ixp ixq
+data HGraph {Ip Iq : Set} (F : (Ip → Iq → Set) → (Ip → Iq → Set) ) (ixp : Ip) (ixq : Iq) : Set₁ where
+  mkHGraph : ( {v : Ip → Iq → Set} → (HGraph' F v ixp ixq) ) → HGraph F ixp ixq
 \end{code}
 %</HGraph>
 \begin{code}
@@ -415,13 +415,13 @@ data HGraph {Ip Iq : Set} (F : (Ip -> Iq -> Set) -> (Ip -> Iq -> Set) ) (ixp : I
 \begin{code}
 foldGraphFull :
        {Ip Iq : Set} 
-    -> ∀ {F} → {{ functor : HFunctor F }} -> 
-       {r : Ip -> Iq -> Set}
-    -> {V : Ip -> Iq -> Set}
-    -> ( {ixp : Ip} {ixq : Iq} -> V ixp ixq                     -> r ixp ixq)
-    -> ( {ixp : Ip} {ixq : Iq} -> r ixp ixq -> (V ixp ixq -> r ixp ixq) -> r ixp ixq)
-    -> ( {ixp : Ip} {ixq : Iq} ->        F r ixp ixq            -> r ixp ixq) 
-    -> ( {ixp : Ip} {ixq : Iq} -> HGraph F   ixp ixq            -> r ixp ixq)
+    → ∀ {F} → {{ functor : HFunctor F }} → 
+       {r : Ip → Iq → Set}
+    → {V : Ip → Iq → Set}
+    → ( {ixp : Ip} {ixq : Iq} → V ixp ixq                     → r ixp ixq)
+    → ( {ixp : Ip} {ixq : Iq} → r ixp ixq → (V ixp ixq → r ixp ixq) → r ixp ixq)
+    → ( {ixp : Ip} {ixq : Iq} →        F r ixp ixq            → r ixp ixq) 
+    → ( {ixp : Ip} {ixq : Iq} → HGraph F   ixp ixq            → r ixp ixq)
 foldGraphFull l v alg (mkHGraph g) = foldGraph' l v alg g
 \end{code}
 %</foldGraphFull>
@@ -432,11 +432,11 @@ foldGraphFull l v alg (mkHGraph g) = foldGraph' l v alg g
 \begin{code}
 foldGraph :
        {Ip Iq : Set} 
-    -> {F : (Ip -> Iq -> Set) -> (Ip -> Iq -> Set)} -> 
+    → {F : (Ip → Iq → Set) → (Ip → Iq → Set)} → 
        {{ functor : HFunctor F }}    
-    -> {r : Ip -> Iq -> Set}
-    -> ( {ixp : Ip} {ixq : Iq} ->        F r ixp ixq -> r ixp ixq) 
-    -> ( {ixp : Ip} {ixq : Iq} -> HGraph F   ixp ixq -> r ixp ixq)
+    → {r : Ip → Iq → Set}
+    → ( {ixp : Ip} {ixq : Iq} →        F r ixp ixq → r ixp ixq) 
+    → ( {ixp : Ip} {ixq : Iq} → HGraph F   ixp ixq → r ixp ixq)
 foldGraph = foldGraphFull (λ v → v) (λ e f → f e)
 \end{code}
 %</foldGraph>
@@ -447,30 +447,30 @@ foldGraph = foldGraphFull (λ v → v) (λ e f → f e)
 \begin{code}
 unravel : 
      {Ip Iq : Set} 
-  -> ∀ {F} -> {{ functor : HFunctor F }} -> 
-     {ipx : Ip} -> {ipq : Iq} 
-  -> HGraph F ipx ipq -> HTree F ipx ipq
+  → ∀ {F} → {{ functor : HFunctor F }} → 
+     {ipx : Ip} → {ipq : Iq} 
+  → HGraph F ipx ipq → HTree F ipx ipq
 unravel = foldGraph HTreeIn
 \end{code}
 %</unravel>
 \begin{code}
 
-SKIP_T : ∀ {s} -> HTree BytecodeF s s
+SKIP_T : ∀ {s} → HTree BytecodeF s s
 SKIP_T = HTreeIn SKIP'
 
 \end{code}
 %<*PUSH_T>
 \begin{code}
-PUSH_T : ∀ {α s} -> (x : ⁅ α ⁆) → HTree BytecodeF s (α ∷ s)
+PUSH_T : ∀ {α s} → (x : [[ α ]]) → HTree BytecodeF s (α ∷ s)
 PUSH_T x = HTreeIn (PUSH' x) 
 \end{code}
 %</PUSH_T>
 \begin{code}
 
-ADD_T : ∀ {s} -> HTree BytecodeF (ℕₛ ∷ ℕₛ ∷ s) (ℕₛ ∷ s)
+ADD_T : ∀ {s} → HTree BytecodeF (ℕₛ ∷ ℕₛ ∷ s) (ℕₛ ∷ s)
 ADD_T = HTreeIn ADD'
 
-IF_T : ∀ {s s'} -> HTree BytecodeF s s' -> HTree BytecodeF s s' -> HTree BytecodeF (𝔹ₛ ∷ s) s'
+IF_T : ∀ {s s'} → HTree BytecodeF s s' → HTree BytecodeF s s' → HTree BytecodeF (𝔹ₛ ∷ s) s'
 IF_T t f = HTreeIn (IF' t f)
 
 _⟫T_  : ∀ {s₀ s₁ s₂} → (HTree BytecodeF s₀ s₁) → (HTree BytecodeF s₁ s₂) → HTree BytecodeF s₀ s₂
@@ -479,23 +479,23 @@ _⟫T_ f g = HTreeIn (f ⟫' g)
 \end{code}
 %<*foldSKIP>
 \begin{code}
-postulate foldSKIP : ∀ {r} → {{functor : HFunctor BytecodeF}} → (alg : ∀ {s s'} → BytecodeF r s s' -> r s s') -> ∀ {s} → foldTree {{functor}} alg {s} {s} (HTreeIn SKIP') ≡ alg {s} {s} SKIP'
+postulate foldSKIP : ∀ {r} → {{functor : HFunctor BytecodeF}} → (alg : ∀ {s s'} → BytecodeF r s s' → r s s') → ∀ {s} → foldTree {{functor}} alg {s} {s} (HTreeIn SKIP') ≡ alg {s} {s} SKIP'
 \end{code}
 %</foldSKIP>
 \begin{code}
 
-postulate foldPUSH : ∀ {r} → {{functor : HFunctor BytecodeF}} → (alg : ∀ {s s'} → BytecodeF r s s' -> r s s') -> ∀ {α} → {x : ⁅ α ⁆} → ∀ {s} → foldTree {{functor}} alg {s} {α ∷ s} (HTreeIn (PUSH' x)) ≡ alg {s} {α ∷ s} (PUSH' x)
+postulate foldPUSH : ∀ {r} → {{functor : HFunctor BytecodeF}} → (alg : ∀ {s s'} → BytecodeF r s s' → r s s') → ∀ {α} → {x : [[ α ]]} → ∀ {s} → foldTree {{functor}} alg {s} {α ∷ s} (HTreeIn (PUSH' x)) ≡ alg {s} {α ∷ s} (PUSH' x)
 
-postulate foldADD : ∀ {r} → {{functor : HFunctor BytecodeF}} → (alg : ∀ {s s'} → BytecodeF r s s' -> r s s') -> ∀ {s} → foldTree {{functor}} alg {ℕₛ ∷ ℕₛ ∷ s} {ℕₛ ∷ s} (HTreeIn ADD') ≡ alg {ℕₛ ∷ ℕₛ ∷ s} {ℕₛ ∷ s} ADD'
+postulate foldADD : ∀ {r} → {{functor : HFunctor BytecodeF}} → (alg : ∀ {s s'} → BytecodeF r s s' → r s s') → ∀ {s} → foldTree {{functor}} alg {ℕₛ ∷ ℕₛ ∷ s} {ℕₛ ∷ s} (HTreeIn ADD') ≡ alg {ℕₛ ∷ ℕₛ ∷ s} {ℕₛ ∷ s} ADD'
 
-postulate foldIF : ∀ {r} → {{functor : HFunctor BytecodeF}} → (alg : ∀ {s s'} → BytecodeF r s s' -> r s s') -> ∀ {s s'} → ∀ t e → foldTree {{functor}} alg {𝔹ₛ ∷ s} {s'} (HTreeIn (IF' t e)) ≡ alg {𝔹ₛ ∷ s} {s'} (IF' (foldTree {{functor}} alg t) (foldTree {{functor}} alg e))
+postulate foldIF : ∀ {r} → {{functor : HFunctor BytecodeF}} → (alg : ∀ {s s'} → BytecodeF r s s' → r s s') → ∀ {s s'} → ∀ t e → foldTree {{functor}} alg {𝔹ₛ ∷ s} {s'} (HTreeIn (IF' t e)) ≡ alg {𝔹ₛ ∷ s} {s'} (IF' (foldTree {{functor}} alg t) (foldTree {{functor}} alg e))
 
-postulate fold⟫ : ∀ {r} → {{functor : HFunctor BytecodeF}} → (alg : ∀ {s s'} → BytecodeF r s s' -> r s s') -> ∀ {s₁ s₂ s₃} → (f : HTree BytecodeF s₁ s₂) (g : HTree BytecodeF s₂ s₃) → foldTree {{functor}} alg {s₁} {s₃} (HTreeIn (f ⟫' g)) ≡ alg {s₁} {s₃} (foldTree {{functor}} alg f ⟫' foldTree {{functor}} alg g)
+postulate fold⟫ : ∀ {r} → {{functor : HFunctor BytecodeF}} → (alg : ∀ {s s'} → BytecodeF r s s' → r s s') → ∀ {s₁ s₂ s₃} → (f : HTree BytecodeF s₁ s₂) (g : HTree BytecodeF s₂ s₃) → foldTree {{functor}} alg {s₁} {s₃} (HTreeIn (f ⟫' g)) ≡ alg {s₁} {s₃} (foldTree {{functor}} alg f ⟫' foldTree {{functor}} alg g)
 
 \end{code}
 %<*toTree>
 \begin{code}
-toTree : {ixp ixq : StackType} -> Bytecode ixp ixq -> HTree BytecodeF ixp ixq
+toTree : {ixp ixq : StackType} → Bytecode ixp ixq → HTree BytecodeF ixp ixq
 \end{code}
 %</toTree>
 \begin{code}
@@ -508,7 +508,7 @@ toTree (bc₁ Bytecode.⟫ bc₂) = HTreeIn (toTree bc₁ ⟫' toTree bc₂)
 \end{code}
 %<*fromTree>
 \begin{code}
-fromTree : {ixp ixq : StackType} -> HTree BytecodeF ixp ixq -> Bytecode ixp ixq
+fromTree : {ixp ixq : StackType} → HTree BytecodeF ixp ixq → Bytecode ixp ixq
 \end{code}
 %</fromTree>
 \begin{code}
@@ -522,7 +522,7 @@ fromTree (HTreeIn (c₁ ⟫' c₂)) = fromTree c₁ Bytecode.⟫ fromTree c₂
 \end{code}
 %<*isoToTree>
 \begin{code}
-treeIsoTo : {ixp ixq : StackType} -> (code : Bytecode ixp ixq) -> fromTree (toTree code) ≡ code
+treeIsoTo : {ixp ixq : StackType} → (code : Bytecode ixp ixq) → fromTree (toTree code) ≡ code
 \end{code}
 %</isoToTree>
 \begin{code}
@@ -535,7 +535,7 @@ treeIsoTo (a ⟫ b) rewrite treeIsoTo a | treeIsoTo b = refl
 \end{code}
 %<*isoFromTree>
 \begin{code}
-treeIsoFrom : {ixp ixq : StackType} -> (tree : HTree BytecodeF ixp ixq) -> toTree (fromTree tree) ≡ tree
+treeIsoFrom : {ixp ixq : StackType} → (tree : HTree BytecodeF ixp ixq) → toTree (fromTree tree) ≡ tree
 \end{code}
 %</isoFromTree>
 \begin{code}
@@ -548,14 +548,14 @@ treeIsoFrom (HTreeIn (a ⟫' b)) rewrite treeIsoFrom a | treeIsoFrom b = refl
 \end{code}
 %<*execT>
 \begin{code}
-execT : ∀ {s s'} → HTree BytecodeF s s' -> Stack s -> Stack s'
+execT : ∀ {s s'} → HTree BytecodeF s s' → Stack s → Stack s'
 execT = foldTree execAlg
 \end{code}
 %</execT>
 
 %<*execTcorrect>
 \begin{code}
-execTcorrect : ∀ {s s'} → (tree : HTree BytecodeF s s') -> {t : Stack s} -> execT tree t ≡ exec (fromTree tree) t
+execTcorrect : ∀ {s s'} → (tree : HTree BytecodeF s s') → {t : Stack s} → execT tree t ≡ exec (fromTree tree) t
 \end{code}
 %</execTcorrect>
 \begin{code}
@@ -577,30 +577,30 @@ execTcorrect (HTreeIn (f ⟫' g)) {w} | p
 \end{code}
 %<*compileT>
 \begin{code}
-compileT : ∀ {σ z s} → Src σ z → HTree BytecodeF s (replicate z σ ++ₗ s)
+compileT : ∀ {t z s} → Src t z → HTree BytecodeF s (replicate z t ++ₗ s)
 compileT (vₛ x)                  = PUSH_T x
 compileT (e₁ +ₛ e₂)              = (compileT e₂ ⟫T compileT e₁) ⟫T ADD_T
 \end{code}
 %</compileT>
 \begin{code}
 compileT (ifₛ c thenₛ t elseₛ e) = compileT c ⟫T IF_T (compileT t) (compileT e)
-compileT {.σ} {.(suc n + suc m)} {s} (_⟫ₛ_ {σ} {m} {n} e₁ e₂) 
+compileT {.t} {.(suc n + suc m)} {s} (_⟫ₛ_ {t} {m} {n} e₁ e₂) 
     = coerce (HTree BytecodeF s)
-      (lemmaConsAppend n m σ s
-       ~ cong (λ l → σ ∷ l ++ₗ s) (lemmaPlusAppend n (suc m) σ))
+      (lemmaConsAppend n m t s
+       ~ cong (λ l → t ∷ l ++ₗ s) (lemmaPlusAppend n (suc m) t))
       (compileT e₁ ⟫T compileT e₂)
 
 mutual 
-  coerceIdCompile : ∀ {m n σ} -> (f : Src σ m) -> (g : Src σ n) -> {s : StackType} -> {b : StackType} -> (p : replicate n σ ++ₗ replicate m σ ++ₗ s ≡ b) -> toTree {s} {b} (coerce (Bytecode s) p (compile f Bytecode.⟫ compile g)) 
+  coerceIdCompile : ∀ {m n t} → (f : Src t m) → (g : Src t n) → {s : StackType} → {b : StackType} → (p : replicate n t ++ₗ replicate m t ++ₗ s ≡ b) → toTree {s} {b} (coerce (Bytecode s) p (compile f Bytecode.⟫ compile g)) 
                                   ≡ coerce (HTree BytecodeF s) p (compileT f ⟫T compileT g)
-  coerceIdCompile {m} {n} {σ} f g {s} .{replicate n σ ++ₗ replicate m σ ++ₗ s} refl = cong₂ (λ x y → HTreeIn (x ⟫' y)) (compileTcorrect f) (compileTcorrect g)
+  coerceIdCompile {m} {n} {t} f g {s} .{replicate n t ++ₗ replicate m t ++ₗ s} refl = cong₂ (λ x y → HTreeIn (x ⟫' y)) (compileTcorrect f) (compileTcorrect g)
 
-  compileTcorrect : ∀ {σ z s} → (e : Src σ z) -> toTree {s} (compile e) ≡ compileT e
+  compileTcorrect : ∀ {t z s} → (e : Src t z) → toTree {s} (compile e) ≡ compileT e
   compileTcorrect (vₛ v) = refl
   compileTcorrect (p +ₛ q) = cong₂ (λ a x → HTreeIn (HTreeIn (a ⟫' x) ⟫' HTreeIn ADD')) (compileTcorrect q) (compileTcorrect p)
   compileTcorrect (ifₛ c thenₛ t elseₛ e) = cong₃ (λ a x p → HTreeIn (a ⟫' HTreeIn (IF' x p))) (compileTcorrect c) (compileTcorrect t) (compileTcorrect e)
-  compileTcorrect .{σ} .{suc n + suc m} {s} (_⟫ₛ_ {σ} {m} {n} f g) 
-    = coerceIdCompile {suc m} {suc n} {σ} f g {s} {σ ∷ replicate (n + suc m) σ ++ₗ s} (lemmaConsAppend n m σ s ~ cong (λ l → σ ∷ l ++ₗ s) (lemmaPlusAppend n (suc m) σ))
+  compileTcorrect .{t} .{suc n + suc m} {s} (_⟫ₛ_ {t} {m} {n} f g) 
+    = coerceIdCompile {suc m} {suc n} {t} f g {s} {t ∷ replicate (n + suc m) t ++ₗ s} (lemmaConsAppend n m t s ~ cong (λ l → t ∷ l ++ₗ s) (lemmaPlusAppend n (suc m) t))
 \end{code}
 
 
@@ -609,7 +609,7 @@ mutual
 \end{code}
 %<*SKIP_G>
 \begin{code}
-SKIP_G : ∀ {v s} -> HGraph' BytecodeF v s s
+SKIP_G : ∀ {v s} → HGraph' BytecodeF v s s
 SKIP_G = HGraphIn SKIP'
 \end{code}
 %</SKIP_G>
@@ -618,22 +618,22 @@ SKIP_G = HGraphIn SKIP'
 \end{code}
 %<*PUSH_G>
 \begin{code}
-PUSH_G : ∀ {v α s} -> (x : ⁅ α ⁆) → HGraph' BytecodeF v s (α ∷ s)
+PUSH_G : ∀ {v α s} → (x : [[ α ]]) → HGraph' BytecodeF v s (α ∷ s)
 PUSH_G x = HGraphIn (PUSH' x) 
 \end{code}
 %</PUSH_G>
 \begin{code}
 
-ADD_G : ∀ {v s} -> HGraph' BytecodeF v (ℕₛ ∷ ℕₛ ∷ s) (ℕₛ ∷ s)
+ADD_G : ∀ {v s} → HGraph' BytecodeF v (ℕₛ ∷ ℕₛ ∷ s) (ℕₛ ∷ s)
 ADD_G = HGraphIn ADD'
 
-IF_G : ∀ {v s s'} -> HGraph' BytecodeF v s s' -> HGraph' BytecodeF v s s' -> HGraph' BytecodeF v (𝔹ₛ ∷ s) s'
+IF_G : ∀ {v s s'} → HGraph' BytecodeF v s s' → HGraph' BytecodeF v s s' → HGraph' BytecodeF v (𝔹ₛ ∷ s) s'
 IF_G t f = HGraphIn (IF' t f)
 
 _⟫G_  : ∀ {v s₀ s₁ s₂} → (HGraph' BytecodeF v s₀ s₁) → (HGraph' BytecodeF v s₁ s₂) → HGraph' BytecodeF v s₀ s₂
 _⟫G_ f g = HGraphIn (f ⟫' g)
 
-execG : ∀ {s s'} → HGraph BytecodeF s s' -> Stack s -> Stack s'
+execG : ∀ {s s'} → HGraph BytecodeF s s' → Stack s → Stack s'
 execG = foldGraph execAlg
 
 
@@ -641,20 +641,20 @@ execG = foldGraph execAlg
 \end{code}
 %<*compileG'>
 \begin{code}
-compileG' : ∀ {σ z s} → Src σ z → ∀ {v} → HGraph' BytecodeF v s (replicate z σ ++ₗ s)
+compileG' : ∀ {t z s} → Src t z → ∀ {v} → HGraph' BytecodeF v s (replicate z t ++ₗ s)
 \end{code}
 %</compileG'>
 \begin{code}
 compileG' (vₛ x)                  = PUSH_G x
 compileG' (e₁ +ₛ e₂)              = (compileG' e₂ ⟫G compileG' e₁) ⟫G ADD_G
 compileG' (ifₛ c thenₛ t elseₛ e) = compileG' c ⟫G IF_G (compileG' t) (compileG' e)
-compileG' {.σ} {.(suc n + suc m)} {s} (_⟫ₛ_ {σ} {m} {n} e₁ e₂) {v}
+compileG' {.t} {.(suc n + suc m)} {s} (_⟫ₛ_ {t} {m} {n} e₁ e₂) {v}
     = coerce (HGraph' BytecodeF v s)
-      (lemmaConsAppend n m σ s
-       ~ cong (λ l → σ ∷ l ++ₗ s) (lemmaPlusAppend n (suc m) σ))
+      (lemmaConsAppend n m t s
+       ~ cong (λ l → t ∷ l ++ₗ s) (lemmaPlusAppend n (suc m) t))
       (compileG' e₁ ⟫G compileG' e₂)
 
-compileG : {s : StackType} → ∀ {z σ} -> Src σ z → HGraph BytecodeF s (replicate z σ ++ₗ s)
+compileG : {s : StackType} → ∀ {z t} → Src t z → HGraph BytecodeF s (replicate z t ++ₗ s)
 compileG src = mkHGraph (compileG' src)
 \end{code}
 
@@ -667,7 +667,7 @@ compileG src = mkHGraph (compileG' src)
 \end{code}
 %<*prepend>
 \begin{code}
-prepend : ∀ {t n σ} → (v : Vec ⁅ σ ⁆ n) → Stack t → Stack (rep n σ ++ₗ t)
+prepend : ∀ {t n st} → (v : Vec [[ t ]] n) → Stack st → Stack (rep n t ++ₗ st)
 prepend ε        s = s
 prepend (x ◁ xs) s = x ▽ prepend xs s
 \end{code}
@@ -675,13 +675,13 @@ prepend (x ◁ xs) s = x ▽ prepend xs s
 \begin{code}
 
 
-postulate closeHole0 : {σ : Tyₛ} {z : Sizeₛ} {s' : StackType} (e : Src σ z) (s : Stack s') → prepend ⟦ e ⟧ s ≡ exec (compile e) s
+postulate closeHole0 : {t : Tyₛ} {z : Sizeₛ} {s' : StackType} (e : Src t z) (s : Stack s') → prepend ⟦ e ⟧ s ≡ exec (compile e) s
 
 \end{code}
 
 %<*correct>
 \begin{code}
-correct : {σ : Tyₛ} {z : Sizeₛ} {s' : StackType} (e : Src σ z) (s : Stack s')
+correct : {t : Tyₛ} {z : Sizeₛ} {s' : StackType} (e : Src t z) (s : Stack s')
           → prepend ⟦ e ⟧ s ≡ exec (compile e) s
 \end{code}
 %</correct>
@@ -702,7 +702,7 @@ correct (ifₛ c thenₛ t elseₛ e) s | .(prepend ⟦ c ⟧ s) | refl | false 
 correct src s = closeHole0 src s
 
 
-postulate Lemma₁ : {s : StackType} → ∀ {σ z} → ( src : Src σ z) → compileT {σ} {z} {s} src ≡ unravel (compileG {s} src)
+postulate Lemma₁ : {s : StackType} → ∀ {t z} → ( src : Src t z) → compileT {t} {z} {s} src ≡ unravel (compileG {s} src)
 \end{code}
 
 \begin{code}
@@ -715,7 +715,7 @@ postulate Lemma₁ : {s : StackType} → ∀ {σ z} → ( src : Src σ z) → co
 \end{code}
 %<*correctT>
 \begin{code}
-correctT : ∀ {s σ z} → (e : Src σ z) → execT {s} (compileT e) ≡ prepend ⟦ e ⟧
+correctT : ∀ {s t z} → (e : Src t z) → execT {s} (compileT e) ≡ prepend ⟦ e ⟧
 \end{code}
 %</correctT>
 \begin{code}
@@ -730,26 +730,26 @@ correctT e = funext (λ r → sym
 
 \begin{code}
 
-module Lifting ( IndexType : Set -> Set 
-    ) ( post : (σ : Tyₛ) → (z : ℕ) → IndexType Tyₛ → IndexType Tyₛ
-  ) { F : (IndexType Tyₛ -> IndexType Tyₛ -> Set) -> IndexType Tyₛ -> IndexType Tyₛ -> Set
+module Lifting ( IndexType : Set → Set 
+    ) ( post : (t : Tyₛ) → (z : ℕ) → IndexType Tyₛ → IndexType Tyₛ
+  ) { F : (IndexType Tyₛ → IndexType Tyₛ → Set) → IndexType Tyₛ → IndexType Tyₛ → Set
   }{{ functor : HFunctor F
   }}( target : IndexType Tyₛ → IndexType Tyₛ → Set
   ) ( execAlg : ∀ {s s′} → F target s s′ → target s s′
-  ) ( compileT : ∀ {s σ z} → Src σ z → HTree  F s (post σ z s)
-  ) ( compileG : ∀ {s σ z} → Src σ z → HGraph F s (post σ z s)
-  ) ( unravelLemma : ∀ {s σ z} 
-                   → (src : Src σ z) → compileT {s} src ≡ unravel (compileG {s} src)
-  ) ( prepend : ∀ {t n σ} → (v : Vec ⁅ σ ⁆ n) → target t (post σ n t)
-  ) ( correctT : ∀ {s σ z} 
-               → (e : Src σ z) → foldTree execAlg {s} {post σ z s} (compileT e) ≡ prepend ⟦ e ⟧
+  ) ( compileT : ∀ {s t z} → Src t z → HTree  F s (post t z s)
+  ) ( compileG : ∀ {s t z} → Src t z → HGraph F s (post t z s)
+  ) ( unravelLemma : ∀ {s t z} 
+                   → (src : Src t z) → compileT {s} src ≡ unravel (compileG {s} src)
+  ) ( prepend : ∀ {st n t} → (v : Vec [[ t ]] n) → target st (post t n st)
+  ) ( correctT : ∀ {s t z} 
+               → (e : Src t z) → foldTree execAlg {s} {post t z s} (compileT e) ≡ prepend ⟦ e ⟧
   )
  where
 
-  execT' :  ∀ {s s'} → HTree F s s' -> target s s'
+  execT' :  ∀ {s s'} → HTree F s s' → target s s'
   execT' = foldTree execAlg
 
-  execG' :  ∀ {s s'} → HGraph F s s' -> target s s'
+  execG' :  ∀ {s s'} → HGraph F s s' → target s s'
   execG' = foldGraph execAlg
 
 
@@ -766,8 +766,8 @@ module Lifting ( IndexType : Set -> Set
         → (graph : HGraph F s s') → execG' graph ≡ execT' (unravel graph)
   Lemma graph = Theorem execAlg graph
 
-  graphCorrectness : ∀ {s σ z}
-                   → (e : Src σ z) → execG' {s} (compileG e) ≡ prepend ⟦ e ⟧ 
+  graphCorrectness : ∀ {s t z}
+                   → (e : Src t z) → execG' {s} (compileG e) ≡ prepend ⟦ e ⟧ 
   graphCorrectness e = 
     let step1 = cong' (λ g → execG' g) 
              (λ g → execT' (unravel g)) 
@@ -783,14 +783,14 @@ module Lifting ( IndexType : Set -> Set
 
 %<*correctG>
 \begin{code}
-correctG : ∀ {s σ z}
-         → (e : Src σ z) → execG {s} (compileG e) ≡ prepend ⟦ e ⟧
+correctG : ∀ {s t z}
+         → (e : Src t z) → execG {s} (compileG e) ≡ prepend ⟦ e ⟧
 \end{code}
 %</correctG>
 \begin{code}
 correctG =  graphCorrectness 
-  where open Lifting List (λ σ n s → replicate n σ ++ₗ s) 
-                          (λ s s' → Stack s -> Stack s')
+  where open Lifting List (λ t n s → replicate n t ++ₗ s) 
+                          (λ s s' → Stack s → Stack s')
                           execAlg 
                           compileT compileG  Lemma₁ 
                           prepend  correctT
