@@ -68,11 +68,13 @@
         for the C language, which had its proof written in the \emph{Coq} proof assistant.
 
         %Comparing our work to ComCert seems a bit pretentious?
-        Our work (definitions and proofs) is, on the other hand, written in the
-        \emph{Agda} programming language instead of emph{Coq} It also also differs from CompCert
-        in that we use dependent types to make source and object languages (as well as the compiler)
-        have some meta-theoretical properties (for example, type preservation) \emph{by construction},
-        instead of proving them separately.
+        
+        %TODO: rewrite this, remove pretentiousness, keep relevant information
+        %Our work (definitions and proofs) is, on the other hand, written in the
+        %\emph{Agda} programming language instead of emph{Coq} It also also differs from CompCert
+        %in that we use dependent types to make source and object languages (as well as the compiler)
+        %have some meta-theoretical properties (for example, type preservation) \emph{by construction},
+        %instead of proving them separately.
 
         Dependent types allow us to embed, as indices to the language definitions and in the type
         of the ``compile'' function, constraints which make these definitions correct.
@@ -317,8 +319,8 @@ lemmaPrepend : ∀ {m n t st}
 
 
 
-    \section{Lifting to shared setting}
-    \label{sec:lifting}
+    \section{Graph Representation}
+    \label{sec:lifting_introduction}
         % What is the sharing opportunity (diamond diagram or just Src code example)
            % single Src term
            % smart and dumb bytecode generated
@@ -339,7 +341,65 @@ lemmaPrepend : ∀ {m n t st}
                 %% Lemmas, lemma
                      %% Fusion (mention paper with simple (non-indexed) proof).
 
-
+                     
+        \subsection{Introduction}
+        The compiler in the version currently given generates bytecode where common substructures aren't explicitly shared. A piece of code
+        sequenced after an if-then-else branching statement gets copied to both the true and the false branch. This
+        gives the generated code a tree like structure which (allegedly) makes it easy to reason about. Unfortunately, 
+        the duplication results in exponential memory usage: for every branching statement appearing in the code, two 
+        copies of the code below it must be kept in memory. The following example shows this behaviour:
+        
+        \ExecuteMetaData[agda/tex/Report.tex]{dupSource}
+        
+        The following code is generated:
+        
+        \ExecuteMetaData[agda/tex/Report.tex]{dupTarget}
+        
+        One can see that the code generated for the expression \texttt{vₛ 5 ⟫ₛ vₛ 7} is generated twice.
+        
+        A solution to this problem is given in \cite{compiler-correctness-structured-graphs},
+        where instead of as a tree, the bytecode is now represented as an acyclic graph. In this representation, structures
+        can be given names which can be used to refer to the substructure. Only one copy of the structure is kept in memory, 
+        independent of the number of times this structure is referred to. This more efficient representation
+        is nice if performance is a concern, but it arguably makes to harder to reason about. Ideally, one would like to 
+        write proofs using the tree represenation while making use of the graph representation when actually using the compiler. 
+        Luckily, \cite{compiler-correctness-structured-graphs} also describes how correctness proofs from the tree repesentation 
+        can be transferred ('lifted') to the graph representation. To make this lifting machinery work we first have to make the 
+        tree structure explicit.
+                     
+        
+        \subsection{Explicit Tree Structure}
+        
+        An explicit tree description of the \texttt{Bytecode} datatype is obtained by representing it as the fixed point of 
+        some functor. This makes the recursive positions explicit and will later allow us to label them. Because \textt{Bytecode} 
+        is an \emph{indexed} datatype, we represent it using an \emph{indexed} functor. Fixed points of indexed functors are obtained 
+        by instantiating them using the following datatype:
+        
+        
+        \ExecuteMetaData[agda/tex/Report.tex]{HTree}
+        
+        One should notice that that this datatype doesn't actually meet the no-positivity requirement \ref{sec:goals}. We've locally disabled the 
+        no-positivity check as to allow us to continue work in this direction. We reasoned that instantiating \texttt{HTree} with a stricly 
+        positive functor would not allow any inconsistencies to leak out of the module. Unfortunately, disabling this check resulted in a number
+        of compiler bugs (or maybe expected behaviour? we don't know) which resulted in stack overflows when querying types and memory exhaustion
+        compiling certain functions. The compromises that had to be made to work around these problems will be addressed in the end of this section.
+        
+        
+        \subsection{Graph Structure}
+        
+        
+        %correctness for graph structure
+        
+        \subsection{Lifting Proofs}
+        
+        
+        %module lifting
+        
+        %
+        
+        
+        %open with correct parameters
+        
     \section{Conclusions}
     \label{sec:conclusions}
         % Summarize contributions

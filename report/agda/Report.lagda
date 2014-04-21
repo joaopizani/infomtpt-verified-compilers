@@ -312,10 +312,20 @@ compile (e₁ ⟫ₛ e₂) = ∘ (compile e₁ ⟫ compile e₂)
 \begin{code}
 
 
-srcCode : Src ℕₛ 2
-srcCode = ifₛ vₛ true thenₛ vₛ zero elseₛ vₛ (suc zero) ⟫ₛ vₛ (suc (suc zero))  
-generatedTree : ∀ {s} → Bytecode s (ℕₛ ∷ ℕₛ ∷ s)
-generatedTree = PUSH true ⟫ IF (PUSH zero ⟫ PUSH (suc (suc zero))) (PUSH (suc zero) ⟫ PUSH (suc (suc zero)))
+\end{code}
+%<*dupSource>
+\begin{code}
+dupSource : Src ℕₛ 3
+dupSource = ifₛ vₛ true thenₛ vₛ 2 elseₛ vₛ 3 ⟫ₛ (vₛ 5 ⟫ₛ vₛ 7) 
+\end{code}
+%</dupSource>
+
+%<*dupTarget>
+\begin{code}
+dupTarget : ∀ {s} → Bytecode s (ℕₛ ∷ ℕₛ ∷ ℕₛ ∷ s)
+dupTarget = PUSH true ⟫ IF (PUSH 2 ⟫ PUSH 5 ⟫ PUSH 7) (PUSH 3 ⟫ PUSH 5 ⟫ PUSH 7)
+\end{code}
+%</dupTarget>
 {-
 generatedGraph : ∀ {s} → HGraph BytecodeF s (ℕₛ ∷ ℕₛ ∷ s)
 generatedGraph = PUSH_G true ⟫G IF_G (PUSH_G zero ⟫G PUSH_G (suc (suc zero))) (PUSH_G (suc zero) ⟫G PUSH_G (suc (suc zero)))
