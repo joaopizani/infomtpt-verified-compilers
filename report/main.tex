@@ -355,7 +355,7 @@ lemmaPrepend : ∀ {m n t st}
         
         \ExecuteMetaData[agda/tex/Report.tex]{dupTarget}
         
-        One can see that the code generated for the expression \texttt{vₛ 5 ⟫ₛ vₛ 7} is generated twice.
+        One can see that the code the expression \texttt{vₛ 5 ⟫ₛ vₛ 7} is generated twice.
         
         A solution to this problem is given in \cite{compiler-correctness-structured-graphs},
         where instead of as a tree, the bytecode is now represented as an acyclic graph. In this representation, structures
@@ -371,7 +371,7 @@ lemmaPrepend : ∀ {m n t st}
         \subsection{Explicit Tree Structure}
         
         An explicit tree description of the \texttt{Bytecode} datatype is obtained by representing it as the fixed point of 
-        some functor. This makes the recursive positions explicit and will later allow us to label them. Because \textt{Bytecode} 
+        some functor. This makes the recursive positions explicit and will later allow us to label them. Because \texttt{Bytecode} 
         is an \emph{indexed} datatype, we represent it using an \emph{indexed} functor. Fixed points of indexed functors are obtained 
         by instantiating them using the following datatype:
         
@@ -384,9 +384,44 @@ lemmaPrepend : ∀ {m n t st}
         of compiler bugs (or maybe expected behaviour? we don't know) which resulted in stack overflows when querying types and memory exhaustion
         compiling certain functions. The compromises that had to be made to work around these problems will be addressed in the end of this section.
         
+        Using \texttt{HTree}, one can use the following functor
+        
+        \ExecuteMetaData[agda/tex/Report.tex]{BytecodeF}
+ 
+        to obtain an datatype isomorphic to the original: \texttt{∀ s s' . Bytecode s s' ~ HTree BytecodeF s s'}
+        
+        The isomorphism is witnessed by the following two functions:
+        
+        \ExecuteMetaData[agda/tex/Report.tex]{isoToTree}
+        \ExecuteMetaData[agda/tex/Report.tex]{isoFromTree}
+        
+        The functions \texttt{compile} and \texttt{exec} have counterparts defined on this fixed point representation 
+        which are called \texttt{compileT} and \texttt{execT} respectively. Correctness for the tree represenation can now be stated as follows:
+        
+        \ExecuteMetaData[agda/tex/Report.tex]{correctT}
+        
+        
+        
+        
+        One final word about trees: by defining trees we had to disable the positivity check. This resulted in bugs in agda that were triggered 
+        whenever a proof involved the fold function that accompanies \texttt{HTree}. To workout these issues, we had to omit the implementation of fold
+        and postulate the relevant properties so that the typechecker would never actually have to inspect the \texttt{HTree} datatype. Proving things using
+        these postulates is straightforward, albeit cumbersome.  
         
         \subsection{Graph Structure}
         
+        Our goal now is to define a graph structure which allows for automatic lifting of proofs from the tree structure. In the end we'd like a proof lifting
+        function so that the correctness proof for graphs can be obtained as
+        \begin{verbatim}
+correctG = lift correctT
+        \end{verbatim}
+        
+        Let us first start with the basics. A graph representation is obtained by the following modification of the \texttt{HTree} datatype:
+        
+        \ExecuteMetaData[agda/tex/Report.tex]{HGraph'}
+        
+        In addition to constructors representing the recursive positions, there are two constructors for representing and using shared substructures.
+        The \texttt{HGraphLet} constructor is used to give tag a given substructure, which can then be referred to by the \texttt{HGraphVar} constructor. 
         
         %correctness for graph structure
         

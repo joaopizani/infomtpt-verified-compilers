@@ -223,16 +223,17 @@ infixl 4 _⟫_
 \end{code}
 %<*BytecodeF>
 \begin{code}
-data BytecodeF (r : StackType → StackType → Set) : (StackType → StackType → Set) where  
+data BytecodeF (r : StackType → StackType → Set) 
+  : (StackType → StackType → Set) where  
     SKIP' : ∀ {s}    → BytecodeF r s s
-    PUSH' : ∀ {α s}  → (x : [[ α ]]) → BytecodeF r s (α ∷ s)
+    PUSH' : ∀ {t s}  → (x : [[ t ]]) → BytecodeF r s (t ∷ s)
     ADD'  : ∀ {s}    → BytecodeF r (ℕₛ ∷ ℕₛ ∷ s) (ℕₛ ∷ s)
     IF'   : ∀ {s s′} → (t : r s s′) → (e : r s s′) → BytecodeF r (𝔹ₛ ∷ s) s′
-    _⟫'_  : ∀ {s₀ s₁ s₂} → (c₁ : r s₀ s₁) → (c₂ : r s₁ s₂) → BytecodeF r s₀ s₂
 \end{code}
 %</BytecodeF>
 \begin{code}
 
+    _⟫'_  : ∀ {s₀ s₁ s₂} → (c₁ : r s₀ s₁) → (c₂ : r s₁ s₂) → BytecodeF r s₀ s₂
 mapBytecodeF : {a b : StackType → StackType → Set} → ( {ixp ixq : StackType} →           a ixp ixq →           b ixp ixq) 
                                                      → ( {ixp ixq : StackType} → BytecodeF a ixp ixq → BytecodeF b ixp ixq)
 mapBytecodeF f SKIP' = SKIP'
@@ -660,6 +661,18 @@ _⟫G_ f g = HGraphIn (f ⟫' g)
 
 execG : ∀ {s s'} → HGraph BytecodeF s s' → Stack s → Stack s'
 execG = foldGraph execAlg
+
+
+dupTree : ∀ {s} → HTree BytecodeF s (ℕₛ ∷ ℕₛ ∷ ℕₛ ∷ s)
+dupTree = PUSH_T true ⟫T IF_T (PUSH_T 2 ⟫T (PUSH_T 5 ⟫T PUSH_T 7)) (PUSH_T 3 ⟫T (PUSH_T 5 ⟫T PUSH_T 7))
+
+
+dupGraph : ∀ {s v} → HGraph' BytecodeF v s (ℕₛ ∷ ℕₛ ∷ ℕₛ ∷ s)
+dupGraph = HGraphLet {!!} (λ v → PUSH true G ⟫G
+                                   IF PUSH 2 G ⟫G (PUSH 5 G ⟫G PUSH 7 G) G
+                                   (PUSH 3 G ⟫G HGraphVar v))
+
+--PUSH_G true ⟫G IF_G (PUSH_G 2 ⟫G (PUSH_G 5 ⟫G PUSH_G 7)) (PUSH_G 3 ⟫G (PUSH_G 5 ⟫G PUSH_G 7))
 
 
 
