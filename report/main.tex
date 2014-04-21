@@ -167,7 +167,7 @@
         
 
 
-    \section{Compiler}
+    \section{Source and Target Language}
     \label{sec:basic}
         % Introduce compiler correctness in general (no models mentioned)
 
@@ -277,7 +277,11 @@
             }
         \end{figure}
 
-        With both source and target languages of our compiler defined, the final compiler is presented in \fref{compile}.
+        
+    \section{Compiler Correctness}
+    \label{sec:correctness}
+        
+        With both source and target languages of our compiler in place, the compiler itself is now easily defined (\fref{compile}).
 
         %% compiler
         \begin{figure}[h!]
@@ -287,11 +291,14 @@
             }
         \end{figure}
 
-    \section{Correctness}
-    \label{sec:correctness}
+        Correctness of the compiler is defined as stating that \texttt{compile} should respect both evaluation an execution semantics: executing
+        the code directly with the \texttt{eval} function should result in the same value as first compiling to \texttt{Bytecode} and
+        then executing the \texttt{Bytecode} on an empty initial stack. Formally we need to proof the following:
         
+        \ExecuteMetaData[agda/tex/Report.tex]{correct}
         
-        
+        %Joao, can you show how?? :)
+        This is easily done.
 
 
     \section{Lifting to shared setting}
