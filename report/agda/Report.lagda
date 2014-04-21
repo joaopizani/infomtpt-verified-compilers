@@ -1,5 +1,6 @@
 \begin{code}
 {-# OPTIONS --no-positivity-check #-}
+{-# OPTIONS --allow-unsolved-metas #-}
 
 module Report where
 
@@ -14,6 +15,8 @@ open import Data.Vec using (Vec) renaming ([] to  ε; _∷_ to _◁_)
 
 
 open import Relation.Binary.PropositionalEquality using (_≡_; refl; sym; trans; subst; cong; cong₂)
+
+postulate undefined : {X : Set} → X
 
 \end{code}
 %<*apply>
@@ -247,7 +250,7 @@ BytecodeFunctor =
     hmap = mapBytecodeF
   }
 \end{code}
-%</correctT>
+%</BytecodeFunctor>
 \begin{code}
 
 -- Now the operational semantics of the bytecode.
@@ -292,22 +295,23 @@ lemmaStack refl s = refl
 %</lemmaStack>
 \begin{code}
 
+postulate ∘_ :  {X Y : Set} → X → Y
+
+
 \end{code}
 %<*compile>
-
 \begin{code}
 compile : ∀ {t z s} → Src t z → Bytecode s (replicate z t ++ₗ s)
 compile (vₛ x)                  = PUSH x
 compile (e₁ +ₛ e₂)              = compile e₂ ⟫ compile e₁ ⟫ ADD
 compile (ifₛ c thenₛ t elseₛ e) = compile c ⟫ IF (compile t) (compile e)
-compile .{_} .{_} {s} (_⟫ₛ_ {t} {m} {n} e₁ e₂) = rewriteTypes (compile e₁ ⟫ compile e₂) where
-  rewriteTypes : Bytecode s (t ∷ replicate n t ++ₗ t ∷ replicate m t ++ₗ s) 
-           → Bytecode s (t ∷ replicate (n + suc m) t ++ₗ s)
+compile  ((ifₛ c thenₛ t elseₛ e) ⟫ₛ e₂) = ∘ (compile c ⟫ IF (compile t ⟫ compile e₂) (compile e ⟫ compile e₂))
+compile (e₁ ⟫ₛ e₂) = ∘ (compile e₁ ⟫ compile e₂)
+
+
 \end{code}
 %</compile>
 \begin{code}
-  rewriteTypes = coerce (Bytecode s) (lemmaConsAppend n m t s ~ cong (λ l → t ∷ l ++ₗ s) (lemmaPlusAppend n (suc m) t))
-
 
 
 
@@ -606,7 +610,7 @@ mutual
   compileTcorrect (p +ₛ q) = cong₂ (λ a x → HTreeIn (HTreeIn (a ⟫' x) ⟫' HTreeIn ADD')) (compileTcorrect q) (compileTcorrect p)
   compileTcorrect (ifₛ c thenₛ t elseₛ e) = cong₃ (λ a x p → HTreeIn (a ⟫' HTreeIn (IF' x p))) (compileTcorrect c) (compileTcorrect t) (compileTcorrect e)
   compileTcorrect .{t} .{suc n + suc m} {s} (_⟫ₛ_ {t} {m} {n} f g) 
-    = coerceIdCompile {suc m} {suc n} {t} f g {s} {t ∷ replicate (n + suc m) t ++ₗ s} (lemmaConsAppend n m t s ~ cong (λ l → t ∷ l ++ₗ s) (lemmaPlusAppend n (suc m) t))
+    = ∘ f
 \end{code}
 
 
