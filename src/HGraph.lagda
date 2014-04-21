@@ -1,6 +1,5 @@
 \begin{code}
 {-# OPTIONS --no-positivity-check #-}
-{-# OPTIONS --allow-unsolved-metas #-}
 module HGraph where
 
 open import HFunctor using ( HFunctor )

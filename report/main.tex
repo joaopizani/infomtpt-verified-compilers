@@ -42,6 +42,7 @@
     \and Wout Elsinghorst \texttt{<w.l.elsinghorst@students.uu.nl>} \\
 }
 
+\newcommand{\fref}[1]{\emph{Figure} \ref{lst:#1}}
 
 
 %% The document itself
@@ -57,8 +58,8 @@
         the given semantics.
 
         Concretely, our notion of correctness depends on two semantics, respectively for the source
-        and object languages of the compiler. We define a denotational semantics (eval) for the source
-        language, as well as an operational semantics (exec) for the target machine. Correctness
+        and object languages of the compiler. We define a denotational semantics (\texttt{eval}) for the source
+        language, as well as an operational semantics (\texttt{exec}) for the target machine. Correctness
         states that evaluation is equal to compilation composed with execution.
 
         More specifically, we were interested in having \emph{machine-checked} proofs of correctness,
@@ -66,6 +67,7 @@
         this direction are already being taken, most famously CompCert, a formally verified compiler
         for the C language, which had its proof written in the \emph{Coq} proof assistant.
 
+        %Comparing our work to ComCert seems a bit pretentious?
         Our work (definitions and proofs) is, on the other hand, written in the
         \emph{Agda} programming language instead of emph{Coq} It also also differs from CompCert
         in that we use dependent types to make source and object languages (as well as the compiler)
@@ -77,13 +79,13 @@
 
         The rest of the report is organized as follows: on section \ref{sec:goals} we present the
         related papers which served as the basis for our research, and state precisely which were
-        our contributions. On section \ref{sec:basic} we define the notion of correctness that we
-        use, and present the definitions for our \emph{source} and \emph{object} languages,
-        the compiler itself and the proof of correctness for that compiler. Section \emph{sec:lifiting}
-        introduces a smarter version of the object language, in which sharing is captured, and a
-        compiler which produces shared code. We then proceed to describe how,
-        given a correctness proof for a ``naïve'' compiler, we can derive the correctness proof of 
-        the smarter version.
+        our contributions. In section \ref{sec:basic} we present the definitions for our 
+        \emph{source} and \emph{object} languages and give the implementation of the compiler itself.
+        In section \ref{sec:correctness} we define a notion of compiler correctness and prove that our compiler
+        is correct according to this definition. Section \emph{sec:lifting} introduces a smarter version of 
+        the object language, in which sharing is captured, together with a compiler which
+        produces code in this new language. We then proceed to describe how, given a correctness proof for a 
+        ``naïve'' compiler, a proof of correctness for the smarter version can be obtained.
 
     \section{Related work/Goals}
     \label{sec:goals}
@@ -124,7 +126,7 @@
         % Our wish to join the contributions of both papers
         The overall goal of our project was, therefore, to integrate the solutions given both in
         \cite{typed-stack-safe-compiler} and \cite{compiler-correctness-structured-graphs}.
-        To acheive this goal we needed to make some adjustments to the definitions and proofs of
+        To achieve this goal we needed to make some adjustments to the definitions and proofs of
         the reference papers. These adjustments are what we perceive as our main contributions
         with this project:
 
@@ -150,10 +152,13 @@
                 to introduce sharing (exceptions) was also not immediately applicable to being
                 modeled in a total setting.
                 \begin{itemize}
-                    \item Specially the way in which it was implemented (by using Higher-Order Abstract Syntax)
-                        clashed with Agda's requirement of \emph{strict positivity} for datatype definitions.
-                        %% Occurrences of this form... (Wout)
-                        %% StackItem including exception handlers (Wout)
+                    \item Specifically, the way in which it was implemented (by using Higher-Order Abstract Syntax)
+                        clashed with Agda's requirement of \emph{strict positivity}\footnote{Strict positivity implies
+                        that fields of a datatype can't be of function type with the respective datatype as its 
+                        domain ('in negative position'). So constructors of the form $mkFoo : Foo \to \cdots \to Foo$
+                        are not allowed.} Exceptions required the \texttt{Stack} datatype to contain handlers of the form 
+                        $Stack \to Stack$, violating the positivity requirement.
+                        
                     \item We chose a simpler sharing-inducing extension to the language of
                         \cite{typed-stack-safe-compiler} (sequencing and conditional branching).
                         This extension is explained in more detail in section \ref{sec:basic}
@@ -162,7 +167,7 @@
         
 
 
-    \section{Basic correctness}
+    \section{Compiler}
     \label{sec:basic}
         % Introduce compiler correctness in general (no models mentioned)
 
@@ -260,9 +265,9 @@
             }
         \end{figure}
 
-        The semantics of the bytecode are defined by a function (\texttt{exec})
-        whose type can be read (due to \emph{currying}) as mapping a value of \texttt{Bytecode}
-        into a function from \texttt{Stack} to \texttt{Stack}.
+        The semantics of the bytecode are defined in by the function \texttt{exec} in \fref{exec}, whose type 
+        signature can be read (due to \emph{currying}) as mapping a value of \texttt{Bytecode}
+        into a function which relates the initial pre-execution \texttt{Stack} to the final post-execution \texttt{Stack}.
 
         %% exec
         \begin{figure}[h!]
@@ -272,7 +277,7 @@
             }
         \end{figure}
 
-        Now, with both source and target languages of our compiler defined, we present the compiler itself:
+        With both source and target languages of our compiler defined, the final compiler is presented in \fref{compile}.
 
         %% compiler
         \begin{figure}[h!]
@@ -282,7 +287,10 @@
             }
         \end{figure}
 
-        %% Correctness proof
+    \section{Correctness}
+    \label{sec:basic}
+        
+        
 
 
     \section{Lifting to shared setting}

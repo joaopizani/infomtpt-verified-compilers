@@ -255,15 +255,17 @@ BytecodeFunctor =
 %<*exec>
 \begin{code}
 exec : ∀ {s s′} → Bytecode s s′ → Stack s → Stack s′
-\end{code}
-%</exec>
-\begin{code}
 exec SKIP        s           = s
 exec (PUSH v)    s           = v ▽ s
 exec ADD         (n ▽ m ▽ s) = (n + m) ▽ s
 exec (IF t e)    (true  ▽ s) = exec t s
 exec (IF t e)    (false ▽ s) = exec e s
 exec (c₁ ⟫ c₂)   s           = exec c₂ (exec c₁ s)
+\end{code}
+%</exec>
+\begin{code}
+
+
 
 \end{code}
 %<*execAlg>
@@ -292,19 +294,23 @@ lemmaStack refl s = refl
 
 \end{code}
 %<*compile>
+
 \begin{code}
 compile : ∀ {t z s} → Src t z → Bytecode s (replicate z t ++ₗ s)
-\end{code}
-%</compile>
-\begin{code}
 compile (vₛ x)                  = PUSH x
 compile (e₁ +ₛ e₂)              = compile e₂ ⟫ compile e₁ ⟫ ADD
 compile (ifₛ c thenₛ t elseₛ e) = compile c ⟫ IF (compile t) (compile e)
-compile {.t} {.(suc n + suc m)} {s} (_⟫ₛ_ {t} {m} {n} e₁ e₂)
-  = coerce (Bytecode s)
-      (lemmaConsAppend n m t s
-       ~ cong (λ l → t ∷ l ++ₗ s) (lemmaPlusAppend n (suc m) t))
-      (compile e₁ ⟫ compile e₂)
+compile .{_} .{_} {s} (_⟫ₛ_ {t} {m} {n} e₁ e₂) = rewriteTypes (compile e₁ ⟫ compile e₂) where
+  rewriteTypes : Bytecode s (t ∷ replicate n t ++ₗ t ∷ replicate m t ++ₗ s) 
+           → Bytecode s (t ∷ replicate (n + suc m) t ++ₗ s)
+\end{code}
+%</compile>
+\begin{code}
+  rewriteTypes = coerce (Bytecode s) (lemmaConsAppend n m t s ~ cong (λ l → t ∷ l ++ₗ s) (lemmaPlusAppend n (suc m) t))
+
+
+
+
 
 \end{code}
 %<*HTree>

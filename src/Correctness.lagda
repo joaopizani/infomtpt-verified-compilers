@@ -72,7 +72,7 @@ correct {.σ} {.(suc n + suc m)} {s'} (_⟫ₛ_ {σ} {m} {n} e₁ e₂) s
          {c = (compile e₁ ⟫ compile e₂)}
          (lemmaConsAppend n m σ s' ~ cong (λ l → σ ∷ l ++ₗ s') (lemmaPlusAppend n (suc m) σ)) s
   | sym (correct e₁ s)
-  | sym (correct e₂ (prepend ⟦ e₁ ⟧ s)) = fall (lemmaPrepend ⟦ e₂ ⟧ ⟦ e₁ ⟧ s ~~ {!!}) --getting there.. but now eat
+  | sym (correct e₂ (prepend ⟦ e₁ ⟧ s)) = fall (lemmaPrepend ⟦ e₂ ⟧ ⟦ e₁ ⟧ s ~~ test (prepend ⟦ e₂ ⟧ (prepend ⟦ e₁ ⟧ s)) (prepend ⟦ e₂ ⟧ (prepend ⟦ e₁ ⟧ s)) {!!} {!!}) --getting there.. but now eat
 
 mutual
   coerceIdLemma₁ : ∀ {m n σ} -> (f : Src σ m) -> (g : Src σ n) -> {s : StackType} -> {b : StackType} -> ( p : replicate n σ ++ₗ replicate m σ ++ₗ s ≡ b )
