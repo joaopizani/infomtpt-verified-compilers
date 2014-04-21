@@ -5,6 +5,7 @@ module HGraph where
 open import HFunctor using ( HFunctor )
 open import HTree
 
+
 data HGraph' {Ip Iq : Set} (F : (Ip -> Iq -> Set) -> (Ip -> Iq -> Set) ) (v : Ip -> Iq -> Set) (ixp : Ip) (ixq : Iq) : Set where
   HGraphIn  : F (HGraph' F v) ixp ixq -> HGraph' F v ixp ixq
   HGraphLet : (HGraph' F v ixp ixq) -> (v ixp ixq -> HGraph' F v ixp ixq) -> HGraph' F v ixp ixq  

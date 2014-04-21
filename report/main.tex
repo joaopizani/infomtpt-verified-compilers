@@ -396,7 +396,7 @@ lemmaPrepend : ∀ {m n t st}
         \ExecuteMetaData[agda/tex/Report.tex]{isoFromTree}
         
         The functions \texttt{compile} and \texttt{exec} have counterparts defined on this fixed point representation 
-        which are called \texttt{compileT} and \texttt{execT} respectively. Correctness for the tree represenation can now be stated as follows:
+        which are called \texttt{compileT} and \texttt{execT} respectively. Correctness for the tree representation can now be stated as follows:
         
         \ExecuteMetaData[agda/tex/Report.tex]{correctT}
         
@@ -423,7 +423,19 @@ correctG = lift correctT
         In addition to constructors representing the recursive positions, there are two constructors for representing and using shared substructures.
         The \texttt{HGraphLet} constructor is used to give tag a given substructure, which can then be referred to by the \texttt{HGraphVar} constructor. 
         
-        %correctness for graph structure
+        Bytecodes which use shared substructures can now be represented as values of the type \texttt{HGraph BytecodeF}. Every \texttt{HTree BytecodeF} 
+        can trivially be embedded in \texttt{HGraph BytecodeF} by ignoring the extra constructors. Converting in the other direction however loses sharing
+        information. Executing either the \texttt{unravel}ed graph or the original will still gave the same result. For graphs there are of course also the
+        \texttt{execG} and \texttt{compileG} functions which define how to execute graph bytecode or compile to graph bytecode, respectively. 
+        
+        Unfortunately, at this moment the previous example which was used to show code duplication cannot be rewritten in the more efficient graph 
+        representation because the graph representation has some of it's indices mixed up.
+        
+        Correctness for graphs amounts to the following statement:
+        
+        \ExecuteMetaData[agda/tex/Report.tex]{correctG}
+        
+        To prove this, we provide a framework which is generic over the base functor chosen, which is \texttt{BytecodeF} in our case. 
         
         \subsection{Lifting Proofs}
         
