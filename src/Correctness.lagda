@@ -74,21 +74,23 @@ correct {.σ} {.(suc n + suc m)} {s'} (_⟫ₛ_ {σ} {m} {n} e₁ e₂) s
   | sym (correct e₁ s)
   | sym (correct e₂ (prepend ⟦ e₁ ⟧ s)) = fall (lemmaPrepend ⟦ e₂ ⟧ ⟦ e₁ ⟧ s ~~ test (prepend ⟦ e₂ ⟧ (prepend ⟦ e₁ ⟧ s)) (prepend ⟦ e₂ ⟧ (prepend ⟦ e₁ ⟧ s)) {!!} {!!}) --getting there.. but now eat
 
+
+
 mutual
-  coerceIdLemma₁ : ∀ {m n σ} -> (f : Src σ m) -> (g : Src σ n) -> {s : StackType} -> {b : StackType} -> ( p : replicate n σ ++ₗ replicate m σ ++ₗ s ≡ b )
+  coerceIdunravelLemma : ∀ {m n σ} -> (f : Src σ m) -> (g : Src σ n) -> {s : StackType} -> {b : StackType} -> ( p : replicate n σ ++ₗ replicate m σ ++ₗ s ≡ b )
                                    -> coerce (HTree BytecodeF s) p (compileT f ⟫T compileT g)
-                                  ≡ foldGraph' (λ v → v) (λ e f → f e) (λ {ixp} {ixq} → {!!}) (coerce (HGraph' BytecodeF (HTree BytecodeF) s) p (compileG' f ⟫G compileG' g))
-  coerceIdLemma₁ {m} {n} {σ} f g {s} .{replicate n σ ++ₗ replicate m σ ++ₗ s} refl 
-    = cong₂ (λ x y → HTreeIn (x ⟫' y)) (Lemma₁ f) (Lemma₁ g)
+                                  ≡ foldGraph' (λ v → v) (λ e f → f e) (λ {ixp} {ixq} t → HTreeIn {!!}) (coerce (HGraph' BytecodeF (HTree BytecodeF) s) p (compileG' f ⟫G compileG' g))
+  coerceIdunravelLemma {m} {n} {σ} f g {s} .{replicate n σ ++ₗ replicate m σ ++ₗ s} refl 
+    = cong₂ (λ x y → HTreeIn (x ⟫' y)) (unravelLemma f) (unravelLemma g)
 
 
-  Lemma₁ : ∀ {s σ z} 
+  unravelLemma : ∀ {s σ z} 
        → ( src : Src σ z) → compileT {s} src ≡ unravel (compileG {s} src)
-  Lemma₁ (vₛ v) = refl
-  Lemma₁ (a +ₛ b) = cong₂ (λ x p → HTreeIn (HTreeIn (p ⟫' x) ⟫' HTreeIn ADD' )) (Lemma₁ a) (Lemma₁ b)
-  Lemma₁ (ifₛ c thenₛ t elseₛ e) = cong₃ (λ x p a → HTreeIn (x ⟫' HTreeIn (IF' p a))) (Lemma₁ c) (Lemma₁ t) (Lemma₁ e)
-  Lemma₁ {s} .{σ} .{suc (n + suc m)} (_⟫ₛ_ {σ} {m} {n} f g) 
-    = coerceIdLemma₁ {suc m} {suc n} {σ} f g ( lemmaConsAppend n m σ s 
+  unravelLemma (vₛ v) = refl
+  unravelLemma (a +ₛ b) = cong₂ (λ x p → HTreeIn (HTreeIn (p ⟫' x) ⟫' HTreeIn ADD' )) (unravelLemma a) (unravelLemma b)
+  unravelLemma (ifₛ c thenₛ t elseₛ e) = cong₃ (λ x p a → HTreeIn (x ⟫' HTreeIn (IF' p a))) (unravelLemma c) (unravelLemma t) (unravelLemma e)
+  unravelLemma {s} .{σ} .{suc (n + suc m)} (_⟫ₛ_ {σ} {m} {n} f g) 
+    = coerceIdunravelLemma {suc m} {suc n} {σ} f g ( lemmaConsAppend n m σ s 
                                              ~ cong (λ l → σ ∷ l ++ₗ s) (lemmaPlusAppend n (suc m) σ)
                                              )
 
@@ -108,7 +110,7 @@ correctG = graphCorrectness
   where open import Lifting List (λ σ n s → replicate n σ ++ₗ s) 
                             (λ s s' → Stack s -> Stack s')
                             execAlg 
-                            compileT compileG  Lemma₁ 
+                            compileT compileG  unravelLemma
                             prepend  correctT
 
 

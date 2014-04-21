@@ -424,9 +424,9 @@ correctG = lift correctT
         The \texttt{HGraphLet} constructor is used to give tag a given substructure, which can then be referred to by the \texttt{HGraphVar} constructor. 
         
         Bytecodes which use shared substructures can now be represented as values of the type \texttt{HGraph BytecodeF}. Every \texttt{HTree BytecodeF} 
-        can trivially be embedded in \texttt{HGraph BytecodeF} by ignoring the extra constructors. Converting in the other direction however loses sharing
-        information. Executing either the \texttt{unravel}ed graph or the original will still gave the same result. For graphs there are of course also the
-        \texttt{execG} and \texttt{compileG} functions which define how to execute graph bytecode or compile to graph bytecode, respectively. 
+        can trivially be embedded in \texttt{HGraph BytecodeF} by ignoring the extra constructors. For graphs there are of course also the
+        \texttt{execG} and \texttt{compileG} functions which define how to execute graph bytecode or compile to graph bytecode, respectively. Converting in the other direction however loses sharing
+        information. Executing either the \texttt{unravel}ed graph or the original will still gave the same result. 
         
         Unfortunately, at this moment the previous example which was used to show code duplication cannot be rewritten in the more efficient graph 
         representation because the graph representation has some of it's indices mixed up.
@@ -440,13 +440,32 @@ correctG = lift correctT
         \subsection{Lifting Proofs}
         
         
-        %module lifting
+        We've implemented a module called 'Lifting' which is parametrised by a correctness proof for trees and a proof that relates \texttt{compileG} 
+        to \texttt{compileT} via the \texttt{unravel} function. Concretely, to obtain a proof for \texttt{correctG}, one needs to open the module 
+        \texttt{Lifting} and supply it with \texttt{correctT} and following (only non-trivial) additional parameter:
         
-        %
+        \ExecuteMetaData[agda/tex/Report.tex]{unravelLemma}
         
+        The implementation of the \texttt{Lifting} module itself uses a generalization of the \texttt{Shortcut Fusion Theorem} which is mentioned but not proven in \cite{compiler-correctness-structured-graphs}.
+        The generalization, although not in contradiction with our intuition, is not proven, and is thus one of the weak spots of our system.
         
-        %open with correct parameters
+        To actually instantiate the \texttt{Lifting} module, one needs to supply a proof of the \textt{unravelLemma} tailored for the specific functor at hand. 
+        Unfortunately, we didn't manage to supply a full proof of this lemma for our \textt{BytecodeF} functor. There is only tiny hole left open, but 
+        unfortunately this hole asks us to construct an infinite type. The requested value must have type:
+        \begin{verbatim}
+BytecodeF (HTree BytecodeF) ixp ixq → HTree BytecodeF ixp ix
+        \end{verbatim}
         
+        The \texttt{HTreeIn} constructor has this type:
+        
+        \begin{verbatim}
+HTreeIn : ∀ {F} → F (HTree F) ixp ixq → HTree F ixp ix
+        \end{verbatim}
+        
+        But unfortunately we're not allowed to use it. The problem seems to be that normally such an infinite type cannot escape a datatype declaration: 
+        it is only allowed on the right hand side the declaration. Somehow, due to the our way of approaching the proof, this has leaked to the outside world.
+        We think it is possible that a different approach would avoid exposing this type and thus allow for a full proof of this lemma.
+
     \section{Conclusions}
     \label{sec:conclusions}
         % Summarize contributions

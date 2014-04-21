@@ -667,15 +667,6 @@ dupTree : ∀ {s} → HTree BytecodeF s (ℕₛ ∷ ℕₛ ∷ ℕₛ ∷ s)
 dupTree = PUSH_T true ⟫T IF_T (PUSH_T 2 ⟫T (PUSH_T 5 ⟫T PUSH_T 7)) (PUSH_T 3 ⟫T (PUSH_T 5 ⟫T PUSH_T 7))
 
 
-dupGraph : ∀ {s v} → HGraph' BytecodeF v s (ℕₛ ∷ ℕₛ ∷ ℕₛ ∷ s)
-dupGraph = HGraphLet {!!} (λ v → PUSH true G ⟫G
-                                   IF PUSH 2 G ⟫G (PUSH 5 G ⟫G PUSH 7 G) G
-                                   (PUSH 3 G ⟫G HGraphVar v))
-
---PUSH_G true ⟫G IF_G (PUSH_G 2 ⟫G (PUSH_G 5 ⟫G PUSH_G 7)) (PUSH_G 3 ⟫G (PUSH_G 5 ⟫G PUSH_G 7))
-
-
-
 \end{code}
 %<*compileG'>
 \begin{code}
@@ -776,8 +767,16 @@ module Lifting ( IndexType : Set → Set
   ) ( execAlg : ∀ {s s′} → F target s s′ → target s s′
   ) ( compileT : ∀ {s t z} → Src t z → HTree  F s (post t z s)
   ) ( compileG : ∀ {s t z} → Src t z → HGraph F s (post t z s)
-  ) ( unravelLemma : ∀ {s t z} 
-                   → (src : Src t z) → compileT {s} src ≡ unravel (compileG {s} src)
+  ) ( 
+
+\end{code}
+%<*unravelLemma>
+\begin{code}
+ unravelLemma : ∀ {s t z} 
+              → (src : Src t z) → compileT {s} src ≡ unravel (compileG {s} src)
+\end{code}
+%</unravelLemma>
+\begin{code}
   ) ( prepend : ∀ {st n t} → (v : Vec [[ t ]] n) → target st (post t n st)
   ) ( correctT : ∀ {s t z} 
                → (e : Src t z) → foldTree execAlg {s} {post t z s} (compileT e) ≡ prepend ⟦ e ⟧
