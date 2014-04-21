@@ -280,7 +280,6 @@
         
     \section{Compiler Correctness}
     \label{sec:correctness}
-        
         With both source and target languages of our compiler in place, the compiler itself is now easily defined (\fref{compile}).
 
         %% compiler
@@ -291,14 +290,28 @@
             }
         \end{figure}
 
-        Correctness of the compiler is defined as stating that \texttt{compile} should respect both evaluation an execution semantics: executing
+        Correctness of the compiler is defined as stating that \texttt{compile} should respect both evaluation and execution semantics: executing
         the code directly with the \texttt{eval} function should result in the same value as first compiling to \texttt{Bytecode} and
         then executing the \texttt{Bytecode} on an empty initial stack. Formally we need to proof the following:
         
         \ExecuteMetaData[agda/tex/Report.tex]{correct}
         
-        %Joao, can you show how?? :)
-        This is easily done.
+        The proof follows by induction on the source language expression.
+        The value case is proven using only beta reduction (and reflexivity).
+        For the cases of addition and simple conditional (no suffix) we prove correctness
+        by rewriting with the induction hypothesis and matching on the operands (in the case of addition) or the condition (in the conditional case).
+
+        The most complex case of the correctness proof is the sequencing case:
+        here we use, besides the induction hypotheses over the operands, also a lemma involving prepending lists to vectors:
+
+        %%TODO: here the type of lemmaPrepend
+        %% \begin{figure}[h!]
+        %%     \ExecuteMetaData[agda/tex/Report.tex]{lemmaPrepend}
+        %%     \caption{Prepending a concatenation equals prepending the first list then the second.
+        %%         \label{lst:lemmaprepend}
+        %%     }
+        %% \end{figure}
+
 
 
     \section{Lifting to shared setting}
