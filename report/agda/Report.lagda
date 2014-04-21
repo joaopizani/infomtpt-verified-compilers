@@ -307,15 +307,19 @@ compile (e₁ +ₛ e₂)              = compile e₂ ⟫ compile e₁ ⟫ ADD
 compile (ifₛ c thenₛ t elseₛ e) = compile c ⟫ IF (compile t) (compile e)
 compile  ((ifₛ c thenₛ t elseₛ e) ⟫ₛ e₂) = ∘ (compile c ⟫ IF (compile t ⟫ compile e₂) (compile e ⟫ compile e₂))
 compile (e₁ ⟫ₛ e₂) = ∘ (compile e₁ ⟫ compile e₂)
-
-
 \end{code}
 %</compile>
 \begin{code}
 
 
-
-
+srcCode : Src ℕₛ 2
+srcCode = ifₛ vₛ true thenₛ vₛ zero elseₛ vₛ (suc zero) ⟫ₛ vₛ (suc (suc zero))  
+generatedTree : ∀ {s} → Bytecode s (ℕₛ ∷ ℕₛ ∷ s)
+generatedTree = PUSH true ⟫ IF (PUSH zero ⟫ PUSH (suc (suc zero))) (PUSH (suc zero) ⟫ PUSH (suc (suc zero)))
+{-
+generatedGraph : ∀ {s} → HGraph BytecodeF s (ℕₛ ∷ ℕₛ ∷ s)
+generatedGraph = PUSH_G true ⟫G IF_G (PUSH_G zero ⟫G PUSH_G (suc (suc zero))) (PUSH_G (suc zero) ⟫G PUSH_G (suc (suc zero)))
+-}
 \end{code}
 %<*HTree>
 \begin{code}
@@ -372,6 +376,7 @@ postulate fusion : ∀ {Ip Iq r} → ∀ {F} → {{ functor : HFunctor F }} → 
 \begin{code}
 
 \end{code}
+
 %<*HGraph'>
 \begin{code}
 data HGraph' {Ip Iq : Set} (F : (Ip → Iq → Set) → (Ip → Iq → Set) ) (v : Ip → Iq → Set) (ixp : Ip) (ixq : Iq) : Set where
