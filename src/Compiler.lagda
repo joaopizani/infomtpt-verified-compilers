@@ -26,6 +26,10 @@ compile : ∀ {σ z s} → Src σ z → Bytecode s (replicate z σ ++ s)
 compile (vₛ x)                  = PUSH x
 compile (e₁ +ₛ e₂)              = compile e₂ ⟫ compile e₁ ⟫ ADD
 compile (ifₛ c thenₛ t elseₛ e) = compile c ⟫ IF (compile t) (compile e)
+compile {.σ} {.(suc n + suc m)} {s} (_⟫ₛ_ {σ} {m} {n} (ifₛ c thenₛ t elseₛ e) e₂)
+  = coerce (Bytecode s)
+       (lemmaConsAppend n m σ s ~ cong (λ l → σ ∷ l ++ s) (lemmaPlusAppend n (suc m) σ))
+       (compile c ⟫ IF (compile t ⟫ compile e₂) (compile e ⟫ compile e₂))
 compile {.σ} {.(suc n + suc m)} {s} (_⟫ₛ_ {σ} {m} {n} e₁ e₂)
   = coerce (Bytecode s)
       (lemmaConsAppend n m σ s
