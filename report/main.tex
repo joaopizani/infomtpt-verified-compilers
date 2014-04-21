@@ -304,13 +304,16 @@
         The most complex case of the correctness proof is the sequencing case:
         here we use, besides the induction hypotheses over the operands, also a lemma involving prepending lists to vectors:
 
-        %%TODO: here the type of lemmaPrepend
-        %% \begin{figure}[h!]
-        %%     \ExecuteMetaData[agda/tex/Report.tex]{lemmaPrepend}
-        %%     \caption{Prepending a concatenation equals prepending the first list then the second.
-        %%         \label{lst:lemmaprepend}
-        %%     }
-        %% \end{figure}
+        \begin{figure}[h!]
+\begin{verbatim}
+lemmaPrepend : ∀ {m n t st}
+               → (v₁ : Vec [[ t ]] m) (v₂ : Vec [[ t ]] n) (l : Stack st)
+               → prepend (v₁ +++ v₂) l ≅ prepend v₁ (prepend v₂ l)
+\end{verbatim}
+            \caption{Prepending a concatenation equals prepending the first list then the second.
+                \label{lst:lemmaprepend}
+            }
+        \end{figure}
 
 
 
