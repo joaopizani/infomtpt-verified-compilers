@@ -274,12 +274,12 @@
         into a function which relates the initial pre-execution \texttt{Stack} to the final post-execution \texttt{Stack}.
 
         %% exec
-        \begin{figure}[h!]
+ %       \begin{figure}[h!]
             \ExecuteMetaData[agda/tex/Report.tex]{exec}
-            \caption{Semantics for \texttt{Bytecode}.
-                \label{lst:exec}
-            }
-        \end{figure}
+ %           \caption{Semantics for \texttt{Bytecode}.
+ %               \label{lst:exec}
+ %           }
+ %       \end{figure}
 
         
     \section{Compiler Correctness}
@@ -287,12 +287,12 @@
         With both source and target languages of our compiler in place, the compiler itself is now easily defined (\fref{compile}).
 
         %% compiler
-        \begin{figure}[h!]
+ %       \begin{figure}[h!]
             \ExecuteMetaData[agda/tex/Report.tex]{compile}
-            \caption{The ``naïve'' compiler, generating tree-like bytecode.
-                \label{lst:compile}
-            }
-        \end{figure}
+ %           \caption{The ``naïve'' compiler, generating tree-like bytecode.
+ %               \label{lst:compile}
+ %           }
+ %       \end{figure}
 
         Correctness of the compiler is defined as stating that \texttt{compile} should respect both evaluation and execution semantics: executing
         the code directly with the \texttt{eval} function should result in the same value as first compiling to \texttt{Bytecode} and
