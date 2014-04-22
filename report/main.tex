@@ -269,7 +269,7 @@
             }
         \end{figure}
 
-        The semantics of the bytecode are defined in by the function \texttt{exec} in \fref{exec}, whose type 
+        The semantics of the bytecode are defined in by the function \texttt{exec}, whose type 
         signature can be read (due to \emph{currying}) as mapping a value of \texttt{Bytecode}
         into a function which relates the initial pre-execution \texttt{Stack} to the final post-execution \texttt{Stack}.
 
@@ -284,7 +284,7 @@
         
     \section{Compiler Correctness}
     \label{sec:correctness}
-        With both source and target languages of our compiler in place, the compiler itself is now easily defined (\fref{compile}).
+        With both source and target languages of our compiler in place, the compiler itself is now easily defined:
 
         %% compiler
  %       \begin{figure}[h!]
@@ -319,7 +319,10 @@ lemmaPrepend : ∀ {m n t st}
             }
         \end{figure}
 
-
+        Unfortunately, this lemma doesn't get us quite as far as we would want. What's left is a seemingly-not-so-difficult proof involving heterogeneous 
+        equality that doesn't lend itself to closure that easily. Although we're not really sure how to finish the proof, we've reduced it to two
+        self contained holes that can be attacked independently.
+        
 
     \section{Graph Representation}
     \label{sec:lifting_introduction}
@@ -403,8 +406,6 @@ lemmaPrepend : ∀ {m n t st}
         \ExecuteMetaData[agda/tex/Report.tex]{correctT}
         
         
-        
-        
         One final word about trees: by defining trees we had to disable the positivity check. This resulted in bugs in agda that were triggered 
         whenever a proof involved the fold function that accompanies \texttt{HTree}. To workout these issues, we had to omit the implementation of fold
         and postulate the relevant properties so that the typechecker would never actually have to inspect the \texttt{HTree} datatype. Proving things using
@@ -425,6 +426,9 @@ correctG = lift correctT
         In addition to constructors representing the recursive positions, there are two constructors for representing and using shared substructures.
         The \texttt{HGraphLet} constructor is used to give tag a given substructure, which can then be referred to by the \texttt{HGraphVar} constructor. 
         
+        The observant reader will notice that the indices of the \texttt{HGraphLet} constructor aren't scoped correctly. This is a minor oversight which we only
+        found out about last minute. 
+        
         Bytecodes which use shared substructures can now be represented as values of the type \texttt{HGraph BytecodeF}. Every \texttt{HTree BytecodeF} 
         can trivially be embedded in \texttt{HGraph BytecodeF} by ignoring the extra constructors. For graphs there are of course also the
         \texttt{execG} and \texttt{compileG} functions which define how to execute graph bytecode or compile to graph bytecode, respectively. Converting in the other direction however loses sharing
@@ -437,7 +441,7 @@ correctG = lift correctT
         
         \ExecuteMetaData[agda/tex/Report.tex]{correctG}
         
-        To prove this, we provide a framework which is generic over the base functor chosen, which is \texttt{BytecodeF} in our case. 
+        To prove this, we provide a framework which is generic over the base functor chosen, which in our case is \texttt{BytecodeF}. 
         
         \subsection{Lifting Proofs}
         
@@ -502,6 +506,9 @@ HTreeIn : ∀ {F} → F (HTree F) ixp ixq → HTree F ixp ix
 
             \item The remaining part of the proof of the \emph{Unravel Lemma} probably needs a different appoach. We don't think this will pose a serious
                   problem.
+            \item \texttt{HGraph} still needs some generalization to allow for more general (read: non-useless) let bindings. At the moment they are not
+                  sufficient to allow us to implement the provided examples in their efficient graph form. This is a minor oversight which should require only
+                  a few (but technical) local changes to fix.
         \end{enumerate}
 
         Finally, we would like to comment on some of the main difficulties we ran into during the

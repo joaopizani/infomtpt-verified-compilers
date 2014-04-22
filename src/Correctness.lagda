@@ -33,9 +33,6 @@ prepend (x ◁ xs) s = x ▽ prepend xs s
 lemmaPrepend : ∀ {m n σ t} → (v₁ : Vec ⁅ σ ⁆ m) (v₂ : Vec ⁅ σ ⁆ n) (l : Stack t) → prepend (v₁ +++ v₂) l ≅ prepend v₁ (prepend v₂ l)
 lemmaPrepend v1 v2 l = {!!}
 
-lemmaRandom : ∀ n m σ s' s e₁ e₂ → let p = (trans (lemmaConsAppend n m σ s') (cong (λ l → σ ∷ l ++ₗ s') (lemmaPlusAppend n (suc m) σ))) 
-  in prepend ⟦ e₂ ⟧ (prepend ⟦ e₁ ⟧ s) ≅ coerce Stack p (prepend ⟦ e₂ ⟧ (prepend ⟦ e₁ ⟧ s))
-lemmaRandom = {!!}
 
 _~~_ : {A : Set} {B : Set} {C : Set}
       {x : A} {y : B} {z : C} →
@@ -44,12 +41,6 @@ _~~_ = htrans
 
 fall : {P : Set} {p : P} {q : P} → (p ≅ q) -> (p ≡ q)
 fall Relation.Binary.HeterogeneousEquality.refl = refl
-
-test : ∀ { σ n m s s' e₁ e₂ } → {Q : StackType} 
-  (p : Stack (σ ∷ replicate n σ ++ₗ σ ∷ replicate m σ ++ₗ s')) →
-  (q : Stack (σ ∷ replicate (n + suc m) σ ++ₗ s')) → 
-  (r : (σ ∷ replicate (n + suc m) σ ++ₗ s') ≡ (σ ∷ replicate n σ ++ₗ σ ∷ replicate m σ ++ₗ s')) → p ≅ q →  p ≅ coerce Stack r q
-test = {!!}
 
 correct : {σ : Tyₛ} {z : Sizeₛ} {s' : StackType} (e : Src σ z) (s : Stack s')
           → prepend ⟦ e ⟧ s ≡ exec (compile e) s
@@ -72,7 +63,7 @@ correct {.σ} {.(suc n + suc m)} {s'} (_⟫ₛ_ {σ} {m} {n} e₁ e₂) s
          {c = (compile e₁ ⟫ compile e₂)}
          (lemmaConsAppend n m σ s' ~ cong (λ l → σ ∷ l ++ₗ s') (lemmaPlusAppend n (suc m) σ)) s
   | sym (correct e₁ s)
-  | sym (correct e₂ (prepend ⟦ e₁ ⟧ s)) = fall (lemmaPrepend ⟦ e₂ ⟧ ⟦ e₁ ⟧ s ~~ test (prepend ⟦ e₂ ⟧ (prepend ⟦ e₁ ⟧ s)) (prepend ⟦ e₂ ⟧ (prepend ⟦ e₁ ⟧ s)) {!!} {!!}) --getting there.. but now eat
+  | sym (correct e₂ (prepend ⟦ e₁ ⟧ s)) = fall (lemmaPrepend ⟦ e₂ ⟧ ⟦ e₁ ⟧ s ~~ {!!})
 
 
 
