@@ -89,6 +89,8 @@
         produces code in this new language. We then proceed to describe how, given a correctness proof for a 
         ``naïve'' compiler, a proof of correctness for the smarter version can be obtained.
 
+        \textbf{Acknowledgments:} We are pleased to thank Wouter Swierstra for his help and valuable insights.
+        
     \section{Related work/Goals}
     \label{sec:goals}
         % Mention two papers we based our work on
@@ -449,8 +451,8 @@ correctG = lift correctT
         The implementation of the \texttt{Lifting} module itself uses a generalization of the \texttt{Shortcut Fusion Theorem} which is mentioned but not proven in \cite{compiler-correctness-structured-graphs}.
         The generalization, although not in contradiction with our intuition, is not proven, and is thus one of the weak spots of our system.
         
-        To actually instantiate the \texttt{Lifting} module, one needs to supply a proof of the \textt{unravelLemma} tailored for the specific functor at hand. 
-        Unfortunately, we didn't manage to supply a full proof of this lemma for our \textt{BytecodeF} functor. There is only tiny hole left open, but 
+        To actually instantiate the \texttt{Lifting} module, one needs to supply a proof of the \texttt{unravelLemma} tailored for the specific functor at hand. 
+        Unfortunately, we didn't manage to supply a full proof of this lemma for our \texttt{BytecodeF} functor. There is only tiny hole left open, but 
         unfortunately this hole asks us to construct an infinite type. The requested value must have type:
         \begin{verbatim}
 BytecodeF (HTree BytecodeF) ixp ixq → HTree BytecodeF ixp ix
@@ -491,11 +493,15 @@ HTreeIn : ∀ {F} → F (HTree F) ixp ixq → HTree F ixp ix
                     \item This lemma (\texttt{lemmaPrepend}) involves vector concatenation and a ``prepending'' operation,
                         but can only be stated (apparently) using heterogeneous equality, which hindered our attempts.
                 \end{itemize}
-
-            \item The \emph{fusion law} for folds over \emph{indexed functors} is a statement also left
-                to be proven.
+                
+            \item Whether the \emph{Shortcut Fusion Law} for folds also holds over \emph{indexed functors} is still a topic for further research. It
+                  is very plausible for this law to be true, but there is no proof, and any proof would most certainly be non-trivial. It is a very large
+                  gap in our framework which needs our first attention should this project be continued further.
                 % What uses it, why is it used/where?
-                % TODO: Wout, plz use your knowledge and expand this a bit :)
+                % TODO: Wout, plz use your knowledge and expand this a bit :). <-- Knowledge used. :)
+
+            \item The remaining part of the proof of the \emph{Unravel Lemma} probably needs a different appoach. We don't think this will pose a serious
+                  problem.
         \end{enumerate}
 
         Finally, we would like to comment on some of the main difficulties we ran into during the
@@ -503,14 +509,10 @@ HTreeIn : ∀ {F} → F (HTree F) ixp ixq → HTree F ixp ix
         do not fit easily the total setting, such as type-level fixpoint operators (violate the
         \emph{strict positivity} requirement of Agda) and generic folds over functors (which do not pass
         the totality checker). To be able to use these definitions we had to enable compilation flags and pragmas
-        which made programming in Agda less ``secure''. For example, when trying to ask for the context of
-        a hole involving folds sometimes we got stack overflow errors.
-
-        %% TODO Wout plz complete here :)
-        Also. infinite types.
-
-        % Domain-related (problem inherently hard)
-            % We are not sure that the fusion lemma involving XXX hold for when using indexed functors
+        which made programming in Agda less ``secure''. Enabling these flags exposed some agda bugs/expected behaviour which made our 
+        development experience less than pleasant. We had stack overflows when querying holes for their type and memory exhaustion when compiling
+        programs. Pinpointing these problems and working around them took quite a bit of our time and we hope that future versions of agda will be
+        more accommodating.
 
 
     \bibliographystyle{plain}
